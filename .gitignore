@@ -4,7 +4,6 @@
 
 # Session Data files
 .RData
-.RDataTmp
 
 # User-specific files
 .Ruserdata
@@ -39,11 +38,48 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# pkgdown site
-docs/
+# Mac stuff
+.DS_Store
 
-# translation temp files
-po/*~
+# Project file
+*.Rproj
 
-# RStudio Connect folder
-rsconnect/
+# Microsoft Office partial files
+~$*.pptx
+~$*.xlsx
+~$*.docx
+
+# Image file types
+*.png
+*.jpeg
+*.jpg
+
+# Spatial data file types
+## Shapefile components
+*.shp
+*.shx
+*.sbn
+*.sbx
+*.shp.xml
+*.shx.xml
+*.prj
+*.dbf
+*.cpg
+## Non-shapefile spatial data
+*.nc
+*.tif
+*.geojson
+
+# Other file types
+*.pdf
+*.zip
+
+# Data file types
+## Delete the hashtag (on the left in the following lines) if you _would_ like to ignore this file type
+# *.csv 
+# *.xlsx 
+# *.xls 
+# *.txt
+
+# Folders to ignore
+## Add any folders you’d like to ignore below (with or without the trailing slash)
