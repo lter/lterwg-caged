@@ -13,4 +13,5 @@ Briefly describe the purpose of each script (or folder of scripts) here as you c
 
 ## Supplementary Resources
 
-LTER Scientific Computing Team [website](https://lter.github.io/scicomp/)
+LTER Scientific Computing Team [website](https://lter.github.io/scicomp/) & NCEAS' [Resources for Working Groups](https://www.nceas.ucsb.edu/working-group-resources)
+
