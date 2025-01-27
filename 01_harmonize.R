@@ -28,7 +28,7 @@ dir.create(path = file.path("data", "raw"), showWarnings = F)
 
 # Identify wanted files
 files_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M")) %>% 
-  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv|\\.txt"))
+  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv"))
 
 # Did that work?
 files_drive
@@ -39,28 +39,45 @@ purrr::walk2(.x = files_drive$id, .y = files_drive$name,
                                                 path = file.path("data", "raw", .y)))
 
 # Grab the data key
-key <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M")) %>% 
+key_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M")) %>% 
   dplyr::filter(name == "caged_data-key")
 
 # Did that work?
-key
+key_drive
 
 # Download the data key
-googledrive::drive_download(file = key$id, overwrite = T, type = "csv",
-                            path = file.path("data", paste0(key$name, ".csv")))
+googledrive::drive_download(file = key_drive$id, overwrite = T, type = "csv",
+                            path = file.path("data", key_drive$name))
 
 ## ------------------------------------------- ##
 # Harmonize! ----
 ## ------------------------------------------- ##
 
-# Will use the follwing function
-?ltertools::harmonize
+# Read in data key
+key <- read.csv(file = file.path("data", "caged_data-key.csv"))
 
+# Check that looks roughly right
+dplyr::glimpse(key)
 
+# Begin key
+ltertools::begin_key(raw_folder = file.path("data", "raw"), data_format = "csv")
 
+# Perform harmonization
+combo_v1 <- ltertools::harmonize(key = key, raw_folder = file.path("data", "raw"),
+                                data_format = "csv", quiet = F)
 
+# Check that structure out
+dplyr::glimpse(combo_v1)
 
+## ------------------------------------------- ##
+# Coarse Wrangling ----
+## ------------------------------------------- ##
 
+# Do needed wrangling
+combo_v2 <- combo_v1
 
+# Export locally
+write.csv(x = combo_v2, row.names = F, na = '',
+          file = file.path("data", "caged_harmonized.csv"))
 
 # End ----
