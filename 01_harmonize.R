@@ -59,9 +59,6 @@ key <- read.csv(file = file.path("data", "caged_data-key.csv"))
 # Check that looks roughly right
 dplyr::glimpse(key)
 
-# Begin key
-temp <- ltertools::begin_key(raw_folder = file.path("data", "raw"), data_format = "csv")
-
 # Perform harmonization
 combo_v1 <- ltertools::harmonize(key = key, raw_folder = file.path("data", "raw"),
                                 data_format = "csv", quiet = F)
