@@ -38,6 +38,17 @@ purrr::walk2(.x = files_drive$id, .y = files_drive$name,
              .f = ~ googledrive::drive_download(file = .x, overwrite = T,
                                                 path = file.path("data", "raw", .y)))
 
+# Grab the data key
+key <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M")) %>% 
+  dplyr::filter(name == "caged_data-key")
+
+# Did that work?
+key
+
+# Download the data key
+googledrive::drive_download(file = key$id, overwrite = T, type = "csv",
+                            path = file.path("data", paste0(key$name, ".csv")))
+
 ## ------------------------------------------- ##
 # Harmonize! ----
 ## ------------------------------------------- ##
