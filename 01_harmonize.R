@@ -1,5 +1,5 @@
 ## --------------------------------------------------------------- ##
-                          # CAGED Harmonization
+                  # CAGED Harmonization Workflow
 ## --------------------------------------------------------------- ##
 # Written by: Nick J Lyon, ...
 
@@ -10,12 +10,12 @@
 # Load libraries
 librarian::shelf(tidyverse, ltertools, googledrive)
 
-# Clear environment + collect garbage
-rm(list = ls()); gc()
-
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
 dir.create(path = file.path("data", "raw"), showWarnings = F)
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Download Data ----
@@ -60,7 +60,7 @@ key <- read.csv(file = file.path("data", "caged_data-key.csv"))
 dplyr::glimpse(key)
 
 # Begin key
-ltertools::begin_key(raw_folder = file.path("data", "raw"), data_format = "csv")
+temp <- ltertools::begin_key(raw_folder = file.path("data", "raw"), data_format = "csv")
 
 # Perform harmonization
 combo_v1 <- ltertools::harmonize(key = key, raw_folder = file.path("data", "raw"),
