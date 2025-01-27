@@ -60,8 +60,9 @@ key <- read.csv(file = file.path("data", "caged_data-key.csv"))
 dplyr::glimpse(key)
 
 # Perform harmonization
-combo_v1 <- ltertools::harmonize(key = key, raw_folder = file.path("data", "raw"),
-                                data_format = "csv", quiet = F)
+combo_v1 <- ltertools::harmonize(key = key, 
+                                 raw_folder = file.path("data", "raw"),
+                                 data_format = "csv", quiet = F)
 
 # Check that structure out
 dplyr::glimpse(combo_v1)
@@ -72,14 +73,29 @@ dplyr::glimpse(combo_v1)
 
 # Need to handle data that were previously in wide format
 combo_v2 <- combo_v1 %>% 
-  ## 
   tidyr::pivot_longer(cols = dplyr::starts_with("orig.taxa_"),
                       names_to = "original.taxon",
-                      values_to = "abundance") %>% 
+                      values_to = "abundance_wide") %>% 
   ## Remove placeholder column prefix
   dplyr::mutate(original.taxon = gsub(pattern = "orig.taxa_",
                                       replacement = "",
-                                      x = original.taxon))
+                                      x = original.taxon)) %>% 
+  ## Combine 'abundance' columns
+  dplyr::rename(abundance_long = abundance) %>% 
+  ## Standardize missing values
+  dplyr::mutate(abundance_long = ifelse(nchar(abundance_long) == 0,
+                                        yes = NA, no = abundance_long),
+                abundance_wide = ifelse(nchar(abundance_wide) == 0,
+                                        yes = NA, no = abundance_wide)) %>% 
+  ## Combine abundance columns
+  dplyr::mutate(abundance = ifelse(is.na(abundance_long),
+                                   yes = abundance_wide,
+                                   no = abundance_long)) %>% 
+  ## Drop superseded columns
+  dplyr::select(-dplyr::starts_with("abundance_"))
+
+# Check only desired columns are lost
+setdiff(x = names(combo_v1), y = names(combo_v2))
 
 # Re-check structure
 dplyr::glimpse(combo_v2)
@@ -103,6 +119,9 @@ combo_v3 <- combo_v2 %>%
 
 # Check structure
 dplyr::glimpse(combo_v3)
+
+# Check that no columns are lost
+setdiff(x = names(combo_v2), y = names(combo_v3))
 
 ## ------------------------------------------- ##
 # Export ----
