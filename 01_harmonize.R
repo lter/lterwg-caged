@@ -67,14 +67,57 @@ combo_v1 <- ltertools::harmonize(key = key, raw_folder = file.path("data", "raw"
 dplyr::glimpse(combo_v1)
 
 ## ------------------------------------------- ##
-# Coarse Wrangling ----
+            # Wrangle - "Wide" Data ----
 ## ------------------------------------------- ##
 
-# Do needed wrangling
-combo_v2 <- combo_v1
+# Need to handle data that were previously in wide format
+combo_v2 <- combo_v1 %>% 
+  ## 
+  tidyr::pivot_longer(cols = dplyr::starts_with("orig.taxa_"),
+                      names_to = "original.taxon",
+                      values_to = "abundance") %>% 
+  ## Remove placeholder column prefix
+  dplyr::mutate(original.taxon = gsub(pattern = "orig.taxa_",
+                                      replacement = "",
+                                      x = original.taxon))
 
+# Re-check structure
+dplyr::glimpse(combo_v2)
+
+## ------------------------------------------- ##
+# Wrangle - Column Re-Ordering ----
+## ------------------------------------------- ##
+
+# Reorder columns more logically
+combo_v3 <- combo_v2 %>% 
+  # Treatment information first
+  dplyr::relocate(dplyr::contains("orig.treat"),
+                  .after = source) %>% 
+  # Spatial scale (lower numbers are more granular)
+  dplyr::relocate(spatial.scale.4, spatial.scale.3,
+                  spatial.scale.2, spatial.scale.1,
+                  depth, .after = year) %>% 
+  # Taxon information after spatial information
+  dplyr::relocate(original.taxon, orig.function, orig.species,
+                  .after = depth)
+
+# Check structure
+dplyr::glimpse(combo_v3)
+
+## ------------------------------------------- ##
+# Export ----
+## ------------------------------------------- ##
+
+# Final pre-export tweaks
+combo_v4 <- combo_v3 %>% 
+  # Drop duplicate rows
+  dplyr::distinct()
+
+# Check structure
+dplyr::glimpse(combo_v4)
+  
 # Export locally
-write.csv(x = combo_v2, row.names = F, na = '',
+write.csv(x = combo_v4, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
 
 # End ----
