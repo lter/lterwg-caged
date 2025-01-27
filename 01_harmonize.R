@@ -15,6 +15,7 @@ rm(list = ls()); gc()
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
+dir.create(path = file.path("data", "raw"), showWarnings = F)
 
 ## ------------------------------------------- ##
 # Download Data ----
@@ -35,7 +36,7 @@ files_drive
 # Download them!
 purrr::walk2(.x = files_drive$id, .y = files_drive$name,
              .f = ~ googledrive::drive_download(file = .x, overwrite = T,
-                                                path = file.path("data", .y)))
+                                                path = file.path("data", "raw", .y)))
 
 ## ------------------------------------------- ##
 # Harmonize! ----
