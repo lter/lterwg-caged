@@ -23,11 +23,29 @@ tidy_v1 <- read.csv(file.path("data", "caged_harmonized.csv"))
 dplyr::glimpse(tidy_v1)
 
 ## ------------------------------------------- ##
+# File Name Information ----
+## ------------------------------------------- ##
+
+# Break useful information out of file name ("source" column)
+tidy_v2 <- tidy_v1 %>% 
+  # Separate by underscore
+  tidyr::separate_wider_delim(cols = source, delim = "_",
+                              names = c("organization", "site", 
+                                        "experiment.name", "sampling.years", 
+                                        "excluded.group", "measured.group"),
+                              cols_remove = F) %>% 
+  # Relocate source back to first position
+  dplyr::relocate(source, .before = dplyr::everything())
+
+# Check structure
+dplyr::glimpse(tidy_v2)
+
+## ------------------------------------------- ##
 # Treatments ----
 ## ------------------------------------------- ##
 
 # Combine/streamline treatment information
-tidy_v2 <- tidy_v1 %>% 
+tidy_v3 <- tidy_v2 %>% 
   # Combine into a single treatment column
   dplyr::mutate(
     original.treatment = dplyr::case_when(
@@ -42,9 +60,7 @@ tidy_v2 <- tidy_v1 %>%
   dplyr::select(-dplyr::contains("orig.treat"))
   
 # Check structure
-dplyr::glimpse(tidy_v2)
-
-
+dplyr::glimpse(tidy_v3)
 
 ## ------------------------------------------- ##
 # Export ----
