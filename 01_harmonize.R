@@ -68,6 +68,76 @@ combo_v1 <- ltertools::harmonize(key = key,
 dplyr::glimpse(combo_v1)
 
 ## ------------------------------------------- ##
+# Wrangle Long vs. Wide Communities ----
+## ------------------------------------------- ##
+
+# Need to separate long/wide data to handle 0s/missing data
+combo_v2 <- combo_v1 %>% 
+  # Generate 'flag' for long versus wide data
+  dplyr::group_by(source) %>% 
+  dplyr::mutate(data_are_long = any(all(!is.na(orig.species)),
+                                    all(!is.na(orig.function)) ) )
+
+# Separate long and wide data
+long_split <- combo_v2 %>% 
+  dplyr::filter(data_are_long == TRUE) %>% 
+  dplyr::select(-data_are_long)
+
+wide_split <- combo_v2 %>% 
+  dplyr::filter(data_are_long == FALSE) %>% 
+  dplyr::select(-data_are_long)
+
+# Check that's the right number of rows
+nrow(combo_v2) == nrow(long_split) + nrow(wide_split)
+
+# Process long data
+for(focal_source in unique(long_split$source)){
+  
+  # Print progress message
+  message("Zero filling dataset: '", focal_source, "'")
+  
+  # Subset to focal dataset
+  focal_sub <- long_split %>% 
+    dplyr::filter(source == focal_source) %>% 
+    dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
+  
+  # Pivot to wide format (filling with zeros on the way)
+  focal_flip <- focal_sub
+  
+}
+
+
+
+
+
+
+# Check structure
+dplyr::glimpse(combo_v2)
+
+
+long_split <- combo_v1 %>% 
+  group_by(source) %>% 
+  dplyr::mutate(long_flag = )
+
+# Check structure
+dplyr::glimpse(combo_v2)
+
+filter(combo_v2, long_flag == T) %>% view()
+
+## ------------------------------------------- ##
+# Wrangle Wide Community Data ----
+## ------------------------------------------- ##
+
+names(combo_v1)
+
+# Pivot wide format data to long format
+combo_v2 <- combo_v1 %>%
+  
+
+
+
+
+## ------------------------------------------- ##
             # Wrangle - "Wide" Data ----
 ## ------------------------------------------- ##
 
