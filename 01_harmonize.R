@@ -68,27 +68,60 @@ combo_v1 <- ltertools::harmonize(key = key,
 dplyr::glimpse(combo_v1)
 
 ## ------------------------------------------- ##
+# Treatments ----
+## ------------------------------------------- ##
+
+# Combine/streamline treatment information
+combo_v2 <- combo_v1 %>% 
+  # Combine into a single treatment column
+  dplyr::mutate(
+    original.treatment = dplyr::case_when(
+      ## Use central treatment (if exists)
+      nchar(orig.treat) != 0 ~ orig.treat,
+      ## Combine fire/fence/gap for relevant study
+      source == "royo_westvirginia_fernow_2000-2013_deer_plants.csv" ~ paste(orig.treat_fire, orig.treat_fence, orig.treat_gap, sep = "; "),
+      ## Combine cage/disturbance/nutrients for relevant study
+      source == "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_disturbance, orig.treat_nutrients),
+      ## Otherwise, put in warning text
+      T ~ "NO TREATMENT IDENTIFIED"),
+    .before = orig.treat) %>% 
+  # Drop now superseded precursor columns
+  dplyr::select(-dplyr::contains("orig.treat"))
+
+# Check resulting treatment / source combos
+combo_v2 %>% 
+  dplyr::select(source, original.treatment) %>% 
+  dplyr::distinct() %>% 
+  as.data.frame()
+
+# Check for lost columns
+setdiff(x = names(combo_v1), y = names(combo_v2))
+
+# Check structure
+dplyr::glimpse(combo_v2)
+
+## ------------------------------------------- ##
 # Wrangle Long vs. Wide Communities ----
 ## ------------------------------------------- ##
 
 # Need to separate long/wide data to handle 0s/missing data
-combo_v2 <- combo_v1 %>% 
+combo_v3 <- combo_v2 %>% 
   # Generate 'flag' for long versus wide data
   dplyr::group_by(source) %>% 
-  dplyr::mutate(data_are_long = any(all(!is.na(orig.species)),
-                                    all(!is.na(orig.function)) ) )
+  dplyr::mutate(data_are_long = any( all(!is.na(orig.species)) ) ) %>% 
+  dplyr::ungroup()
 
 # Separate long and wide data
-long_split <- combo_v2 %>% 
+long_split <- combo_v3 %>% 
   dplyr::filter(data_are_long == TRUE) %>% 
   dplyr::select(-data_are_long)
 
-wide_split <- combo_v2 %>% 
+wide_split <- combo_v3 %>% 
   dplyr::filter(data_are_long == FALSE) %>% 
   dplyr::select(-data_are_long)
 
 # Check that's the right number of rows
-nrow(combo_v2) == nrow(long_split) + nrow(wide_split)
+nrow(combo_v3) == nrow(long_split) + nrow(wide_split)
 
 # Process long data
 for(focal_source in unique(long_split$source)){
@@ -99,10 +132,14 @@ for(focal_source in unique(long_split$source)){
   # Subset to focal dataset
   focal_sub <- long_split %>% 
     dplyr::filter(source == focal_source) %>% 
-    dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
+    dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
+    dplyr::filter(nchar(orig.species) != 0 & !is.na(orig.species)) %>% 
+    dplyr::distinct()
   
   # Pivot to wide format (filling with zeros on the way)
-  focal_flip <- focal_sub
+  focal_flip <- focal_sub %>% 
+    tidyr::pivot_wider(names_from = orig.species,
+                       values_from = abundance)
   
 }
 
