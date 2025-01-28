@@ -288,14 +288,20 @@ setdiff(x = names(combo_v4), y = names(combo_v5))
 
 # Final pre-export tweaks
 combo_v6 <- combo_v5 %>% 
+  # Remove any rows where no taxon information is included
+  dplyr::filter(all(is.na(original.taxon),
+                     is.na(original.function),
+                     is.na(original.species)) != T) %>% 
+  # Remove any rows where no metric of abundance is included
+  dplyr::filter(nchar(abundance) != 0 & is.na(abundance) != T) %>% 
   # Drop duplicate rows
   dplyr::distinct()
 
 # Check structure
-dplyr::glimpse(combo_v4)
+dplyr::glimpse(combo_v6)
   
 # Export locally
-write.csv(x = combo_v4, row.names = F, na = '',
+write.csv(x = combo_v6, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
 
 # End ----
