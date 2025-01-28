@@ -33,8 +33,23 @@ files_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.co
 # Did that work?
 files_drive
 
+# Identify local files
+files_local <- dir(path = file.path("data", "raw"))
+files_local
+
+# Overwrite local data files?
+update <- TRUE
+
+# Identify desired files
+if(update == T) {
+  files_wanted <- files_drive 
+} else {
+  files_wanted <- files_drive %>%
+    dplyr::filter(!name %in% files_local)
+}
+
 # Download them!
-purrr::walk2(.x = files_drive$id, .y = files_drive$name,
+purrr::walk2(.x = files_wanted$id, .y = files_wanted$name,
              .f = ~ googledrive::drive_download(file = .x, overwrite = T,
                                                 path = file.path("data", "raw", .y)))
 
