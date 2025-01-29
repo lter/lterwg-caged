@@ -97,6 +97,10 @@ combo_v2 <- combo_v1 %>%
       source == "royo_westvirginia_fernow_2000-2013_deer_plants.csv" ~ paste(orig.treat_fire, orig.treat_fence, orig.treat_gap, sep = "_"),
       ## Combine cage/disturbance/nutrients for relevant study
       source == "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_disturbance, orig.treat_nutrients, sep = "_"),
+      ## Combine cage/insecticide
+      source == "lter-bonanzacreek_alaska_bnz-lter_2012-2015_vertebrate_plants.csv" ~ paste(orig.treat_cage, orig.treat_insecticide, sep = "_"),
+      ## Combine prairie dog & cattle cages
+      source == "porensky_wyoming_nex_2015-2024_prairiedogs_vegetation.csv" ~ paste(orig.treat_cage.prairie.dog, orig.treat_cage.cattle, sep = "_"),
       ## Otherwise, put in warning text
       T ~ "NO TREATMENT IDENTIFIED"),
     .before = orig.treat) %>% 
