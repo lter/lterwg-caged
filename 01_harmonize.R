@@ -126,33 +126,77 @@ setdiff(x = names(combo_v1), y = names(combo_v2))
 dplyr::glimpse(combo_v2)
 
 ## ------------------------------------------- ##
+# Pivot Wide Spatial Data ----
+## ------------------------------------------- ##
+
+# Identify all data files in the key that were in wide spatial format
+spat_wide_files <- key %>% 
+  dplyr::filter(stringr::str_detect(string = tidy_name, pattern = "exp.design.1_")) %>% 
+  dplyr::select(source) %>% 
+  dplyr::distinct() %>% 
+  dplyr::pull()
+
+# Separate data
+spat_wides <- combo_v2 %>% 
+  dplyr::filter(source %in% spat_wide_files) %>% 
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
+spat_longs <- combo_v2 %>% 
+  dplyr::filter(source %in% spat_wide_files == F) %>% 
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
+
+# Check none are lost
+nrow(combo_v2) == nrow(spat_wides) + nrow(spat_longs)
+
+# Rotate wide spatial into long
+spat_wides_pivot <- spat_wides %>% 
+  tidyr::pivot_longer(cols = dplyr::starts_with("exp.design.1_"),
+                      names_to = "exp.design.1_pivot",
+                      values_to = "abundance") %>% 
+  dplyr::filter(!is.na(exp.design.1_pivot) & !is.na(abundance)) %>% 
+  dplyr::mutate(exp.design.1 = gsub(pattern = "exp.design.1_", replacement = "",
+                                    x = exp.design.1_pivot)) %>% 
+  dplyr::select(-exp.design.1_pivot)
+ 
+# Check structure
+dplyr::glimpse(spat_wides_pivot)
+
+# Recombine data
+combo_v3 <- dplyr::bind_rows(spat_longs, spat_wides_pivot)
+
+# Identify columns that are dropped
+supportR::diff_check(old = names(combo_v2), new = names(combo_v3))
+
+# Check structure
+dplyr::glimpse(combo_v3)
+
+## ------------------------------------------- ##
 # Zero Fill Long Communities ----
 ## ------------------------------------------- ##
 
 # Need to separate long/wide data to handle 0s/missing data
-combo_v3 <- combo_v2 %>% 
+combo_v4 <- combo_v3 %>% 
   # Generate 'flag' for long versus wide data
   dplyr::group_by(source) %>% 
-  dplyr::mutate(data_are_long = any( all(!is.na(orig.species)) ) ) %>% 
+  dplyr::mutate(data_are_long = !is.na(orig.taxa) ) %>% 
   dplyr::ungroup()
 
 # Also check for non-numbers in the 'abundance' column for long data
-supportR::num_check(data = combo_v3, col = "abundance")
+supportR::num_check(data = combo_v4, col = "abundance")
 
 # Separate long from wide data
-long_split <- combo_v3 %>% 
+long_split <- combo_v4 %>% 
   dplyr::filter(data_are_long == TRUE) %>% 
   dplyr::select(-data_are_long) %>% 
   # Make abundance numeric in case we need to summarize across duplicates
   dplyr::mutate(abundance = as.numeric(abundance))
 
 # Separate wide from long data
-wide_split <- combo_v3 %>% 
+wide_split <- combo_v4 %>% 
   dplyr::filter(data_are_long == FALSE) %>% 
   dplyr::select(-data_are_long)
 
 # Check that's the right number of rows
-nrow(combo_v3) == nrow(long_split) + nrow(wide_split)
+nrow(combo_v4) == nrow(long_split) + nrow(wide_split)
 
 # Make a list to store outputs
 zerofill_list <- list()
@@ -167,29 +211,29 @@ for(focal_source in unique(long_split$source)){
   focal_sub <- long_split %>% 
     dplyr::filter(source == focal_source) %>% 
     dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
-    dplyr::filter(nchar(orig.species) != 0 & !is.na(orig.species)) %>% 
+    dplyr::filter(nchar(orig.taxa) != 0 & !is.na(orig.taxa)) %>% 
     dplyr::distinct()
   
   # Identify all columns other than the 'abundance' column
-  focal_names <- setdiff(x = names(focal_sub), y = c("orig.species", "abundance"))
+  focal_names <- setdiff(x = names(focal_sub), y = c("orig.taxa", "abundance"))
   
   # Average across any duplicates (should be no duplicates)
   focal_smy <- focal_sub %>% 
-    dplyr::group_by(dplyr::across(dplyr::all_of(x = c(focal_names, "orig.species")))) %>% 
+    dplyr::group_by(dplyr::across(dplyr::all_of(x = c(focal_names, "orig.taxa")))) %>% 
     dplyr::summarize(abundance = mean(abundance, na.rm = T),
                      .groups = "keep") %>% 
     dplyr::ungroup()
   
   # Pivot to wide format (filling with zeros on the way)
   focal_flip <- focal_smy %>% 
-    tidyr::pivot_wider(names_from = orig.species,
+    tidyr::pivot_wider(names_from = orig.taxa,
                        values_from = abundance,
                        values_fill = 0)
   
   # Pivot back to long format
   focal_zerofill <- focal_flip %>% 
     tidyr::pivot_longer(cols = -dplyr::all_of(focal_names),
-                        names_to = "original.species",
+                        names_to = "original.taxa",
                         values_to = "abundance")
   
   # Add to output list
