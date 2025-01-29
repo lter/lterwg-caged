@@ -319,6 +319,8 @@ dplyr::glimpse(combo_v6)
 write.csv(x = combo_v6, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
 
-
+# Upload to Drive
+googledrive::drive_upload(media = file.path("data", "caged_harmonized.csv"), overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----
