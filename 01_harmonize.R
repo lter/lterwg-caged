@@ -94,9 +94,9 @@ combo_v2 <- combo_v1 %>%
       ## Use central treatment (if exists)
       nchar(orig.treat) != 0 ~ orig.treat,
       ## Combine fire/fence/gap for relevant study
-      source == "royo_westvirginia_fernow_2000-2013_deer_plants.csv" ~ paste(orig.treat_fire, orig.treat_fence, orig.treat_gap, sep = "; "),
+      source == "royo_westvirginia_fernow_2000-2013_deer_plants.csv" ~ paste(orig.treat_fire, orig.treat_fence, orig.treat_gap, sep = "_"),
       ## Combine cage/disturbance/nutrients for relevant study
-      source == "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_disturbance, orig.treat_nutrients),
+      source == "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_disturbance, orig.treat_nutrients, sep = "_"),
       ## Otherwise, put in warning text
       T ~ "NO TREATMENT IDENTIFIED"),
     .before = orig.treat) %>% 
@@ -285,7 +285,7 @@ combo_v5 <- combo_v4 %>%
   dplyr::relocate(original.treatment, .after = source) %>% 
   dplyr::relocate(unique.id, .after = source) %>% 
   # Spatial scale (lower numbers are more granular)
-  dplyr::relocate(spatial.scale.3, spatial.scale.2, spatial.scale.1,
+  dplyr::relocate(spatial.scale.4, spatial.scale.3, spatial.scale.2, spatial.scale.1,
                   depth, .after = year) %>% 
   # Taxon information after spatial information
   dplyr::relocate(original.taxon, original.function, original.species,
@@ -318,5 +318,7 @@ dplyr::glimpse(combo_v6)
 # Export locally
 write.csv(x = combo_v6, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
+
+
 
 # End ----
