@@ -11,6 +11,10 @@ Principal Investigators:
 
 Briefly describe the purpose of each script (or folder of scripts) here as you create them!
 
+- `01_harmonize.R` -- Accepts all raw data files (from "data" folder in Google Drive) and uses a column key method (see `?ltertools::harmonize`) to combine them into a single, standardized data table
+    - Performs some minor wrangling necessary for coalescing synonymous columns / etc.
+- `02_wrangle.R` -- Performs more involved quality control (QC) and metric calculation
+
 ## Supplementary Resources
 
 LTER Scientific Computing Team [website](https://lter.github.io/scicomp/) & NCEAS' [Resources for Working Groups](https://www.nceas.ucsb.edu/working-group-resources)
