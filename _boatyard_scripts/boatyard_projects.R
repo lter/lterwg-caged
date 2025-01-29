@@ -89,7 +89,8 @@ for(proj_file in dir(path = file.path("data", "purgatory"), pattern = "_Ranktime
   proj_df <- read.delim(file=file.path("data", "purgatory", proj_file)) %>% 
     tidyr::pivot_longer(cols = -Species,
                         names_to="Timepoint",
-                        values_to="Abundance")
+                        values_to="Abundance") %>%
+    mutate(input_file=proj_file, .before=everything())
   
   # Read in data and assign to list
   proj3_list[[proj_file]] <- proj_df
@@ -103,16 +104,30 @@ proj3 <- proj3_list %>%
                                  x = Timepoint),
                 Timepoint = gsub(pattern = "_open", replacement = "_open_",
                                  x = Timepoint)) %>% 
+  tidyr::separate_wider_delim(cols = input_file, delim="_",cols_remove=F, 
+                              names=c("site", "junk2", "junk3")) %>% 
   tidyr::separate_wider_delim(cols = Timepoint, delim="_", 
                               names=c("junk", "Treatment", "Time")) %>% 
-  dplyr::select(-junk)
+  dplyr::select(-contains("junk"))
 
 # Check structure
 dplyr::glimpse(proj3)
 
+# for loop to save each site as a separate file
+for(focalsite in unique(proj3$site)){
+  
+  #subset data to just this file (subset data to each of these sites)
+  proj3_sub <- dplyr::filter(proj3, site==focalsite)
+  
+  #assemble better filename
+  proj3_subname <- paste0("villar_brazil_",  tolower(unique(proj3_sub$site)), 
+                          "_2009-2016_tapirs_forest.csv")
+  
+  # Export locally
+  write.csv(x = proj3_sub, na = '', row.names = F,
+            file = file.path("data", "drydock", proj3_subname))
+}
 
-#export renamed csv to data/drydock 
-write.csv(proj3, file=file.path("data", "drydock", "villar_brazil_vallar_2009-2016_tapirs_forest.csv")) 
 
 
 ## ------------------------------------------- ##
