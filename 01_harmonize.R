@@ -38,7 +38,7 @@ files_local <- dir(path = file.path("data", "raw"))
 files_local
 
 # Overwrite local data files?
-update <- TRUE
+update <- FALSE
 
 # Identify desired files
 if(update == T) {
@@ -184,37 +184,37 @@ combo_v4 <- combo_v3 %>%
 supportR::num_check(data = combo_v4, col = "abundance")
 
 # Separate long from wide data
-long_split <- combo_v4 %>% 
+tax_longs <- combo_v4 %>% 
   dplyr::filter(data_are_long == TRUE) %>% 
   dplyr::select(-data_are_long) %>% 
   # Make abundance numeric in case we need to summarize across duplicates
   dplyr::mutate(abundance = as.numeric(abundance))
 
 # Separate wide from long data
-wide_split <- combo_v4 %>% 
+tax_wides <- combo_v4 %>% 
   dplyr::filter(data_are_long == FALSE) %>% 
   dplyr::select(-data_are_long)
 
 # Check that's the right number of rows
-nrow(combo_v4) == nrow(long_split) + nrow(wide_split)
+nrow(combo_v4) == nrow(tax_longs) + nrow(tax_wides)
 
 # Make a list to store outputs
 zerofill_list <- list()
 
 # Process long data
-for(focal_source in unique(long_split$source)){
+for(focal_source in unique(tax_longs$source)){
   
   # Print progress message
   message("Zero filling dataset: '", focal_source, "'")
   
   # Subset to focal dataset
-  focal_sub <- long_split %>% 
+  focal_sub <- tax_longs %>% 
     dplyr::filter(source == focal_source) %>% 
     dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
     dplyr::filter(nchar(orig.taxa) != 0 & !is.na(orig.taxa)) %>% 
     dplyr::distinct()
   
-  # Identify all columns other than the 'abundance' column
+  # Identify all columns other than the 'taxonomy' & 'abundance' columns
   focal_names <- setdiff(x = names(focal_sub), y = c("orig.taxa", "abundance"))
   
   # Average across any duplicates (should be no duplicates)
@@ -242,32 +242,32 @@ for(focal_source in unique(long_split$source)){
 }
 
 # Unlist the list
-long_v2 <- zerofill_list %>% 
+tax_longs_v2 <- zerofill_list %>% 
   purrr::list_rbind(x = .) %>% 
   # And make abundance back into a character vector
   dplyr::mutate(abundance = as.character(abundance))
 
 # Check structure
-dplyr::glimpse(long_v2)
+dplyr::glimpse(tax_longs_v2)
 
 ## ------------------------------------------- ##
 # Reshape Wide Communities to Long ----
 ## ------------------------------------------- ##
 
 # Re-check structure of wide 'split' of data
-dplyr::glimpse(wide_split)
+dplyr::glimpse(tax_wides)
 
 # Make an output list
 pivot_list <- list()
 
 # Process wide data
-for(focal_source in unique(wide_split$source)){
+for(focal_source in unique(tax_wides$source)){
   
   # Print progress message
   message("Reshaping dataset: '", focal_source, "'")
   
   # Subset data to relevant source
-  focal_sub <- wide_split %>% 
+  focal_sub <- tax_wides %>% 
     dplyr::filter(source == focal_source) %>% 
     dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
     dplyr::distinct()
@@ -288,83 +288,84 @@ for(focal_source in unique(wide_split$source)){
 }
 
 # Unlist the output
-wide_v2 <- pivot_list %>% 
+tax_wides_v2 <- pivot_list %>% 
   purrr::list_rbind(x = .) %>% 
   # Coalesce abundance information
-  dplyr::mutate(abundance = dplyr::case_when(
-    is.na(abun.species_) == F ~ abun.species_,
-    is.na(abun.taxa_) == F ~ abun.taxa_,
-    is.na(abun.function_) == F ~ abun.function_,
-    T ~ NA)) %>% 
+  dplyr::mutate(abundance = ifelse(is.na(abun.taxa_),
+                                   yes = NA, no = abun.taxa_)) %>% 
   # Drop superseded abundance columns
   dplyr::select(-dplyr::starts_with("abun.")) %>% 
   # Tidy up taxon column names
-  dplyr::rename(original.species = orig.species_,
-                original.taxon = orig.taxa_,
-                original.function = orig.function_)
+  dplyr::rename(original.taxa = orig.taxa_)
 
 # Check structure
-dplyr::glimpse(wide_v2)
+dplyr::glimpse(tax_wides_v2)
 
 # Check for lost/gained columns from pre-loop data
-supportR::diff_check(old = names(wide_split), new = names(wide_v2))
+supportR::diff_check(old = names(tax_wides), new = names(tax_wides_v2))
 
 ## ------------------------------------------- ##
 # Recombine Wide / Long Data ----
 ## ------------------------------------------- ##
 
 # Re-check structure to remind self
-dplyr::glimpse(wide_v2)
-dplyr::glimpse(long_v2)
+dplyr::glimpse(tax_wides_v2)
+dplyr::glimpse(tax_longs_v2)
 
 # Combine the data and do needed wrangling
-combo_v4 <- dplyr::bind_rows(wide_v2, long_v2)
+combo_v5 <- dplyr::bind_rows(tax_wides_v2, tax_longs_v2)
 
 # Recheck structure
-dplyr::glimpse(combo_v4)
+dplyr::glimpse(combo_v5)
 
 ## ------------------------------------------- ##
 # Column Re-Ordering ----
 ## ------------------------------------------- ##
 
 # Reorder columns more logically
-combo_v5 <- combo_v4 %>% 
-  # Treatment / unique ID information first
-  dplyr::relocate(original.treatment, .after = source) %>% 
-  dplyr::relocate(unique.id, .after = source) %>% 
-  # Spatial scale (lower numbers are more granular)
-  dplyr::relocate(spatial.scale.4, spatial.scale.3, spatial.scale.2, spatial.scale.1,
-                  depth, .after = year) %>% 
+combo_v6 <- combo_v5 %>% 
+  # Treatment information first
+  dplyr::relocate(original.treatment, exclosure.age, .after = source) %>% 
+  # Experimental design nestedness (lower numbers are more granular)
+  dplyr::relocate(exp.name, .after = year) %>% 
+  dplyr::relocate(exp.design.3, exp.design.2, exp.design.1, .after = exp.name) %>% 
+  dplyr::relocate(dplyr::starts_with("distance.from."), .after = exp.design.1) %>% 
+  # Order temporal information
+  dplyr::relocate(sampling.point, .after = year) %>% 
   # Taxon information after spatial information
-  dplyr::relocate(original.taxon, original.function, original.species,
-                  .after = depth)
+  dplyr::relocate(original.taxa, .after = dplyr::starts_with("distance.from."))
 
 # Check structure
-dplyr::glimpse(combo_v5)
+dplyr::glimpse(combo_v6)
 
-# Check that no columns are lost
-setdiff(x = names(combo_v4), y = names(combo_v5))
+# Check that no columns are lost / gained
+supportR::diff_check(old = names(combo_v5), new = names(combo_v6))
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-combo_v6 <- combo_v5 %>% 
+combo_v7 <- combo_v6 %>% 
   # Remove any rows where no taxon information is included
-  dplyr::filter(all(is.na(original.taxon),
-                     is.na(original.function),
-                     is.na(original.species)) != T) %>% 
+  dplyr::filter(is.na(original.taxa) != T) %>% 
+  # Replace "NA" with zero where appropriate
+  dplyr::mutate(abundance = dplyr::case_when(
+    source == "cain_australia_herbexclusion_2021_macropod_plants.csv" &
+      abundance == "n/a" ~ "0",
+    T ~ abundance)) %>% 
   # Remove any rows where no metric of abundance is included
-  dplyr::filter(nchar(abundance) != 0 & is.na(abundance) != T) %>% 
+  dplyr::filter(is.na(abundance) != T &
+                  nchar(abundance) != 0 &
+                  abundance != "NaN") %>% 
   # Drop duplicate rows
   dplyr::distinct()
 
 # Check structure
-dplyr::glimpse(combo_v6)
+dplyr::glimpse(combo_v7)
   
 # Export locally
-write.csv(x = combo_v6, row.names = F, na = '',
+write.csv(x = combo_v7, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
 
 # Upload to Drive
