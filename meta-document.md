@@ -34,7 +34,7 @@ unique.id = exp.design<sub>N</sub> + treatment<sub>N</sub> + year + exp.name
 - When downloading data from our list of [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit), before uploading to [google drive data folder](https://drive.google.com/drive/u/1/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M), we renamed the files using file.name  
 file.name = organization_site_experimentname_yearssampled_excluded_measured
 - If the file cannot be uploaded as is, put the file in purgatory and we will run boatyard scripts to clean it up (https://github.com/lter/lterwg-caged/issues/8)
-  - pre-harmonization "boatyard" script (`boatyard_projects.R`) to handle pernicious issues in some datasets before they can be entered into the harmonization workflow
+  - pre-harmonization "boatyard" script (`purgatory-repair.R`) to handle pernicious issues in some datasets before they can be entered into the harmonization workflow
  
 - when its uploaded, make sure to check Y in the [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)
  
