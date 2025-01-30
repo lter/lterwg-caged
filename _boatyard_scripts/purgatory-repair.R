@@ -173,29 +173,34 @@ for(focalsite3 in unique(proj3$site)){
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
-## 
+## Triple header rows
 
 # Read in data
-
+proj4_raw <- read.csv(file = file.path("data", "purgatory", "MSH-GCED-2308_Experiment_1_0.CSV"))
 
 # Check structure
-
+dplyr::glimpse(proj4_raw)
 
 # Do needed repair
-
+proj4 <- proj4_raw %>% 
+  dplyr::filter(!Year %in% c("YYYY", "datetime"))
 
 # Re-check structure
+dplyr::glimpse(proj4)
 
+# Create good/new file name
+proj4_name <- "lter-gce_georgia_pred-ex_2016-2019_predators_invertebrates.csv"
+proj4_path <- file.path("data", "drydock", proj4_name)
 
 # Export locally
-
+write.csv(x = proj4, na = "", row.names = F, file = proj4_path)
 
 # Export to Drive
-
-
+googledrive::drive_upload(media = proj4_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 ## ------------------------------------------- ##
-# Project 4 ----
+# Project 5 ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -213,6 +218,9 @@ for(focalsite3 in unique(proj3$site)){
 # Re-check structure
 
 
+# Create good/new file name
+
+
 # Export locally
 
 
@@ -220,7 +228,7 @@ for(focalsite3 in unique(proj3$site)){
 
 
 ## ------------------------------------------- ##
-# Project 4 ----
+# Project 6 ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -236,6 +244,9 @@ for(focalsite3 in unique(proj3$site)){
 
 
 # Re-check structure
+
+
+# Create good/new file name
 
 
 # Export locally
