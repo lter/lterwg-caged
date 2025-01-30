@@ -1,28 +1,22 @@
 ## --------------------------------------------------------------- ##
 # CAGED Harmonization Workflow
 ## --------------------------------------------------------------- ##
+
 # Written by: Kelly Speare, Nick J Lyon, ...
 
 ## ------------------------------------------- ##
+
 # Housekeeping ----
+
 ## ------------------------------------------- ##
 
+library(tidyverse)
+
 # Load libraries
+
 librarian::shelf(tidyverse, googledrive)
 
 # Purpose
-## this script downloads data from purgatory folder in google drive for all data files that require rangling
-## then does necessary wrangling to get the data in the needed format
-## then uploads back to google drive
-
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("data", "purgatory"), showWarnings = F)
-dir.create(path = file.path("data", "drydock"), showWarnings = F)
-
-# Clear environment + collect garbage
-rm(list = ls()); gc()
-
 ## ------------------------------------------- ##
 # Download Data ----
 ## ------------------------------------------- ##
@@ -58,9 +52,14 @@ proj1<-read.csv(file = file.path("data","purgatory","allegheny_regen_data.csv"))
 
 proj1 <- proj1 %>% select(-dplyr::ends_with(c("_germ", "_ht")))
 
-#export renamed csv to data/drydock 
-write.csv(proj1, file=file.path("data", "drydock", "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv")) 
+proj1_name<-file.path("data", "drydock", "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv")
 
+#export renamed csv to data/drydock 
+write.csv(proj1, na="", row.names=F, file=proj1_name) 
+
+# Upload to Drive
+googledrive::drive_upload(media = proj1_name, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 ## ------------------------------------------- ##
 # Project 2 ----
@@ -134,9 +133,16 @@ for(focalsite in unique(proj3$site)){
   proj3_subname <- paste0("villar_brazil_",  tolower(unique(proj3_sub$site)), 
                           "_2009-2016_tapirs_forest.csv")
   
-  # Export locally
-  write.csv(x = proj3_sub, na = '', row.names = F,
-            file = file.path("data", "drydock", proj3_subname))
+  proj3_subname_name<-file.path("data", "drydock", proj3_subname)
+
+  
+  #export renamed csv to data/drydock 
+  write.csv(proj1, na="", row.names=F, file=proj3_subname_name) 
+  
+  # Upload to Drive
+  googledrive::drive_upload(media = proj3_subname_name, overwrite = T,
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+  
 }
 
 
@@ -144,11 +150,3 @@ for(focalsite in unique(proj3$site)){
 ## ------------------------------------------- ##
 # Project 4 ----
 ## ------------------------------------------- ##
-
-
-
-
-
-
-
-# End ----
