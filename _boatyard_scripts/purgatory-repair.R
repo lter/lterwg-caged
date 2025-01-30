@@ -233,7 +233,8 @@ proj5 <- proj5_raw %>%
                       values_to = "abundance") %>% 
   # Wrangle the spatial information into separate columns
   dplyr::mutate(block.quad = gsub(pattern = "Q", replacement = "_Q", x = block.quad)) %>% 
-  tidyr::separate_wider_delim(cols = block.quad, delim = "_", names = c("Block", "Quadrat")) %>% 
+  tidyr::separate_wider_delim(cols = block.quad, delim = "_",
+                              names = c("Block", "Quadrat")) %>% 
   # Drop NA abundance values (seems like they were unsampled from structure of original data)
   dplyr::filter(abundance != "na")
 
@@ -256,29 +257,61 @@ googledrive::drive_upload(media = proj5_path, overwrite = T,
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
-## 
+## Extra headers **that contain necessary metadata**
 
-# Read in data
+# Identify the input files + what they should be called when they are output
+proj6_rawfiles <- c("Freestone_et_al_2019_data_newjersey.csv",
+                    "Freestone_et_al_2019_data_panama.csv")
+proj6_tidyfiles <- c("freestone_newjersey_year_predators_seagrass.csv",
+                     "freestone_panama_year_predators_seagrass.csv")
 
-
-# Check structure
-
-
-# Do needed repair
-
-
-# Re-check structure
-
-
-# Create good/new file name
-
-
-# Export locally
-
-
-# Export to Drive
-
-
-
+# Loop across the two files (because they share structure/problems)
+for(k in seq_along(proj6_rawfiles)){
+  
+  # Identify raw filename of specific file
+  proj6_subname <- proj6_rawfiles[k]
+  
+  # Processing message
+  message("Processing 'project 6' purgatory file: '", proj6_subname, "'")
+  
+  # Read in data
+  proj6_raw <- read.csv(file = file.path("data", "purgatory", proj6_subname))
+  
+  # Separate metadata from header
+  proj6_meta <- data.frame("Site" = names(proj6_raw),
+                           "Treatment" = as.character(proj6_raw[1, ]),
+                           "Seagrass" = as.character(proj6_raw[2, ]),
+                           "Code" = as.character(proj6_raw[3, ])) %>% 
+    dplyr::filter(Code != "Code")
+  
+  # Do needed repair on 'actual' data
+  proj6 <- proj6_raw %>% 
+    # Drop weird/empty columns
+    dplyr::select(-dplyr::starts_with("X")) %>% 
+    # Remove metadata headers
+    dplyr::filter(!Site %in% c("Treatment", "Seagrass type", "Code")) %>% 
+    # Rename faux 'site' column
+    dplyr::rename(Species = Site) %>% 
+    # Reshape spatial information into long format
+    tidyr::pivot_longer(cols = -Species,
+                        names_to = "Site",
+                        values_to = "abundance") %>% 
+    # Re-attach metadata extracted above
+    dplyr::left_join(y = proj6_meta, by = c("Site")) %>% 
+    # Relocate columns slightly
+    dplyr::relocate(Species, abundance, .after = dplyr::everything())
+  
+  # Identify file name in correct format
+  proj6_name <- proj6_tidyfiles[k]
+  proj6_path <- file.path("data", "drydock", proj6_name)
+  
+  # Export locally
+  write.csv(x = proj6, na = '', row.names = F, file = proj6_path)
+  
+  # Upload to Drive
+  googledrive::drive_upload(media = proj6_path, overwrite = T,
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+    
+}
 
 # End ----
