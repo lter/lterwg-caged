@@ -342,11 +342,32 @@ dplyr::glimpse(combo_v6)
 supportR::diff_check(old = names(combo_v5), new = names(combo_v6))
 
 ## ------------------------------------------- ##
+# File Name Information ----
+## ------------------------------------------- ##
+
+# Break useful information out of file name ("source" column)
+combo_v7 <- combo_v6 %>% 
+  # Separate by underscore
+  tidyr::separate_wider_delim(cols = source, delim = "_",
+                              names = c("organization", "site", 
+                                        "experiment.name", "sampling.years", 
+                                        "excluded.group", "measured.group"),
+                              cols_remove = F) %>%
+  # Remove file name from final bit of file
+  dplyr::mutate(measured.group = gsub(pattern = "\\.csv", replacement = "",
+                                      x = measured.group)) %>% 
+  # Relocate source back to first position
+  dplyr::relocate(source, .before = dplyr::everything())
+
+# Check structure
+dplyr::glimpse(combo_v7)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-combo_v7 <- combo_v6 %>% 
+combo_v8 <- combo_v7 %>% 
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Replace "NA" with zero where appropriate
@@ -362,10 +383,10 @@ combo_v7 <- combo_v6 %>%
   dplyr::distinct()
 
 # Check structure
-dplyr::glimpse(combo_v7)
+dplyr::glimpse(combo_v8)
   
 # Export locally
-write.csv(x = combo_v7, row.names = F, na = '',
+write.csv(x = combo_v8, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
 
 # Upload to Drive
