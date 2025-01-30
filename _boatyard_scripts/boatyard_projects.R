@@ -57,14 +57,20 @@ purrr::walk2(.x = files_drive$id, .y = files_drive$name,
 # Read in data
 proj1_raw <- read.csv(file = file.path("data", "purgatory", "allegheny_regen_data.csv"))
 
+# Check structure
+dplyr::glimpse(proj1_raw)
+
 # Remove unwanted columns
 proj1 <- proj1_raw %>%
   dplyr::select(-dplyr::ends_with(c("_germ", "_ht")))
 
+# Re-check structure
+dplyr::glimpse(proj1)
+
 # Gather the better file name
 proj1_name <- file.path("data", "drydock", "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv")
 
-#export renamed csv to data/drydock 
+# Export renamed CSV to data/drydock 
 write.csv(x = proj1, na = "", row.names = F, file = proj1_name) 
 
 # Upload to Drive
@@ -75,22 +81,26 @@ googledrive::drive_upload(media = proj1_name, overwrite = T,
 # Project 2 ----
 ## ------------------------------------------- ##
 
-# CONFUSED: need to contact these authors
+## CONFUSED: need to contact these authors
 
-# proj2<-read.csv("data/purgatory/2006lgdhbmcn.csv", stringsAsFactors = TRUE)
-# 
-# levels(proj2$Biomass.Type)
-# # data includes several biomass types, including above and below ground biomass. 
-# #we only care about above ground biomass
-# # subset to exclude  "below", "litter", "vole" and "wood"
-# # also excluding vole and wood because they are within the "litter"
-# # decided to sum the above ground biomass types "new above" and "old above"
-# 
-# 
+# Reason for purgatory status:
+## data includes several biomass types, including above and below ground biomass. 
+## we only care about above ground biomass
+## subset to exclude  "below", "litter", "vole" and "wood"
+## also excluding vole and wood because they are within the "litter"
+## decided to sum the above ground biomass types "new above" and "old above"
+
+# Read in data
+proj2_raw <- read.csv(file = file.path("data", "purgatory", "2006lgdhbmcn.csv"))
+
+# Check structure
+dplyr::glimpse(proj2_raw)
+
+# DEPRECATED: 
 # proj2<-subset(proj2, Biomass.type!="below")
-# 
-# proj2 <- proj1 %>% pivot_longer(names_to = "Block.quad", values_to = "Dry.weight")
+# proj2 <- proj2 %>% pivot_longer(names_to = "Block.quad", values_to = "Dry.weight")
 
+# UNDER CONSTRUCTION
 
 ## ------------------------------------------- ##
 # Project 3 ----
