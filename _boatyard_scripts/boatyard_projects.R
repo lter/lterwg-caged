@@ -44,24 +44,28 @@ purrr::walk2(.x = files_drive$id, .y = files_drive$name,
              .f = ~ googledrive::drive_download(file = .x, overwrite = T,
                                                 path = file.path("data", "purgatory", .y)))
 
-
 ## ------------------------------------------- ##
 # Project 1 ----
 ## ------------------------------------------- ##
 
-# data are counts of tree seedlings (all baby trees) 
-# they differentiated germinants (the newest baby trees from that year) from all seedlings. 
-# We just want the data on all seedlings because germinants are a subset of seedlings 
-# also want to drop the "ht" (height) data
+# Reason for purgatory status:
+## Data are counts of tree seedlings (all baby trees) 
+## They differentiated germinants (the newest baby trees from that year) from all seedlings. 
+## We just want the data on all seedlings because germinants are a subset of seedlings 
+## also want to drop the "ht" (height) data
 
-proj1<-read.csv(file = file.path("data","purgatory","allegheny_regen_data.csv"))
+# Read in data
+proj1_raw <- read.csv(file = file.path("data", "purgatory", "allegheny_regen_data.csv"))
 
-proj1 <- proj1 %>% select(-dplyr::ends_with(c("_germ", "_ht")))
+# Remove unwanted columns
+proj1 <- proj1_raw %>%
+  dplyr::select(-dplyr::ends_with(c("_germ", "_ht")))
 
-proj1_name<-file.path("data", "drydock", "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv")
+# Gather the better file name
+proj1_name <- file.path("data", "drydock", "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv")
 
 #export renamed csv to data/drydock 
-write.csv(proj1, na="", row.names=F, file=proj1_name) 
+write.csv(x = proj1, na = "", row.names = F, file = proj1_name) 
 
 # Upload to Drive
 googledrive::drive_upload(media = proj1_name, overwrite = T,
