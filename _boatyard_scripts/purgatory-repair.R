@@ -171,3 +171,79 @@ for(focalsite3 in unique(proj3$site)){
 ## ------------------------------------------- ##
 # Project 4 ----
 ## ------------------------------------------- ##
+
+# Reason for purgatory status
+## 
+
+# Read in data
+
+
+# Check structure
+
+
+# Do needed repair
+
+
+# Re-check structure
+
+
+# Export locally
+
+
+# Export to Drive
+
+
+
+## ------------------------------------------- ##
+# Project 4 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## 
+
+# Read in data
+
+
+# Check structure
+
+
+# Do needed repair
+
+
+# Re-check structure
+
+
+# Export locally
+
+
+# Export to Drive
+
+
+## ------------------------------------------- ##
+# Project 4 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## 
+
+# Read in data
+
+
+# Check structure
+
+
+# Do needed repair
+
+
+# Re-check structure
+
+
+# Export locally
+
+
+# Export to Drive
+
+
+
+
+# End ----
