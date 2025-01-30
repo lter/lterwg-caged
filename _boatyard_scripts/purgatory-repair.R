@@ -204,28 +204,52 @@ googledrive::drive_upload(media = proj4_path, overwrite = T,
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
-## 
+## Table is mix of wide and long format.
+## Need to parse out columns with Block and Quad info in the column name
+## Species column is a mix of species and Other functional groups
+## Biomass type column: drop "below"
+## Can drop columns AE through AX, these are all converted measurements to gram per meter squared
+## Count column is just the number of quadrats for all blocks
+## Average column is the average of all species and tissue type for all quadrats and across all blocks. So our abundance measurement should come from B#Q# columns???
 
 # Read in data
-
+proj5_raw <- read.csv(file = file.path("data", "purgatory", "1999gsexclosbm.csv"))
 
 # Check structure
-
+dplyr::glimpse(proj5_raw)
 
 # Do needed repair
-
+proj5 <- proj5_raw %>% 
+  # Drop unwanted columns
+  dplyr::select(-Average, -Std..Err., -Count, 
+                -dplyr::ends_with(".g.m.2"),
+                -dplyr::contains("Comments"),
+                -dplyr::ends_with("gm2")) %>% 
+  # Remove unwanted biomass type(s)
+  dplyr::filter(Biomass.type != "below") %>% 
+  # Pivot spatial information longer
+  tidyr::pivot_longer(cols = dplyr::contains(paste0("Q", 1:5)),
+                      names_to = "block.quad",
+                      values_to = "abundance") %>% 
+  # Wrangle the spatial information into separate columns
+  dplyr::mutate(block.quad = gsub(pattern = "Q", replacement = "_Q", x = block.quad)) %>% 
+  tidyr::separate_wider_delim(cols = block.quad, delim = "_", names = c("Block", "Quadrat")) %>% 
+  # Drop NA abundance values (seems like they were unsampled from structure of original data)
+  dplyr::filter(abundance != "na")
 
 # Re-check structure
-
+dplyr::glimpse(proj5)
 
 # Create good/new file name
-
+proj5_name <- "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv"
+proj5_path <- file.path("data", "drydock", proj5_name)
 
 # Export locally
-
+write.csv(x = proj5, na = '', row.names = F, file = proj5_path)
 
 # Export to Drive
-
+googledrive::drive_upload(media = proj5_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 ## ------------------------------------------- ##
 # Project 6 ----
