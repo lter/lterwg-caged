@@ -12,6 +12,7 @@ We were able to start each of these three tasks (we didn't finish any of them) a
 [Data Sources - Detailed](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)  
 [Harmonized Data Key](https://docs.google.com/spreadsheets/d/1SgdqsAl_yPArCaw8dCcP0KINL3Qp2qwN0ZJqWnIxGPk/edit?gid=0#gid=0)  
 [Metadata](https://docs.google.com/spreadsheets/d/1vNMYj3-xO_tmIhniGyOuj1pG4DQt9fMRAuQipPE3hys/edit?gid=0#gid=0)    
+[Metadata Instructions](https://docs.google.com/document/d/1gnFHVtSg-F6A3v3lRcJr1pGRxlhtWLQNRr4mCgxqMMQ/edit?tab=t.0)  
 
 ### Data Inclusion / Exclusion
 We will include data that 1) excludes consumers and compares to a control with consumer access, 2) measures community structure and abundance, 3) has a minimum sample size of four, and 4) is conducted in field habitats.  
@@ -33,9 +34,11 @@ unique.id = exp.design<sub>N</sub> + treatment<sub>N</sub> + year + exp.name
 - When downloading data from our list of [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit), before uploading to [google drive data folder](https://drive.google.com/drive/u/1/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M), we renamed the files using file.name  
 file.name = organization_site_experimentname_yearssampled_excluded_measured
 - If the file cannot be uploaded as is, put the file in purgatory and we will run boatyard scripts to clean it up (https://github.com/lter/lterwg-caged/issues/8)
-  - pre-harmonization "boatyard" script (`boatyard_projects.R`) to handle pernicious issues in some datasets before they can be entered into the harmonization workflow
+  - pre-harmonization "boatyard" script (`purgatory-repair.R`) to handle pernicious issues in some datasets before they can be entered into the harmonization workflow
  
-2) Create [Data-Key](https://docs.google.com/spreadsheets/d/1SgdqsAl_yPArCaw8dCcP0KINL3Qp2qwN0ZJqWnIxGPk/edit?gid=0#gid=0)  
+- when its uploaded, make sure to check Y in the [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)
+ 
+2) Create [Data-Key](https://docs.google.com/spreadsheets/d/1SgdqsAl_yPArCaw8dCcP0KINL3Qp2qwN0ZJqWnIxGPk/edit?gid=0#gid=0)   
 
 - Then we will create the data-key using the expand-key.R in boatyard scripts folder (this will only add the new data rows)  
 - Then we manually fill in the data key with our knowledge  
@@ -46,7 +49,9 @@ file.name = organization_site_experimentname_yearssampled_excluded_measured
  
 4) Fill out [Metadata](https://docs.google.com/spreadsheets/d/1vNMYj3-xO_tmIhniGyOuj1pG4DQt9fMRAuQipPE3hys/edit?gid=0#gid=0)    
 
-- lastly, we will fill out metadata for each exp.name  
+- lastly, we will fill out metadata for each exp.name
+- follow our [instructions](https://docs.google.com/document/d/1gnFHVtSg-F6A3v3lRcJr1pGRxlhtWLQNRr4mCgxqMMQ/edit?tab=t.0)
+- when its completed leadership team check Y in the [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)  
 
 
 
