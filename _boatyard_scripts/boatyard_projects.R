@@ -1,11 +1,22 @@
+## --------------------------------------------------------------- ##
+# CAGED Harmonization Workflow
+## --------------------------------------------------------------- ##
+# Written by: Kelly Speare, Nick J Lyon, ...
 
-library(tidyverse)
+## ------------------------------------------- ##
+# Housekeeping ----
+## ------------------------------------------- ##
 
+# Load libraries
+librarian::shelf(tidyverse, googledrive)
+
+# Purpose
 ## this script downloads data from purgatory folder in google drive for all data files that require rangling
 ## then does necessary wrangling to get the data in the needed format
 ## then uploads back to google drive
 
 # Create needed folder(s)
+dir.create(path = file.path("data"), showWarnings = F)
 dir.create(path = file.path("data", "purgatory"), showWarnings = F)
 dir.create(path = file.path("data", "drydock"), showWarnings = F)
 
@@ -133,3 +144,11 @@ for(focalsite in unique(proj3$site)){
 ## ------------------------------------------- ##
 # Project 4 ----
 ## ------------------------------------------- ##
+
+
+
+
+
+
+
+# End ----
