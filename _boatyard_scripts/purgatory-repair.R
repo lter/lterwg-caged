@@ -314,4 +314,45 @@ for(k in seq_along(proj6_rawfiles)){
     
 }
 
+## ------------------------------------------- ##
+# Project 7 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Abundance is implied by number of rows with particular genera so: 
+## needs to be calculated by number of rows per combination of grouping variables
+
+# Read in data
+proj7_raw <- read.csv(file = file.path("data", "purgatory", "PointCounts_Week12.csv"))
+
+# Check structure
+dplyr::glimpse(proj7_raw)
+
+# Do needed repairs
+proj7 <- proj7_raw %>% 
+  # Fill missing 'genus' info
+  dplyr::mutate(Original.Genus = ifelse(is.na(Original.Genus) |
+                                          nchar(Original.Genus) == 0,
+                                        yes = Plate.Cover.taxa,
+                                        no = Original.Genus)) %>% 
+  # Get abundance from point intercept identifications
+  dplyr::group_by(Site, Plate, Block, Treat, Treatment, Original.Genus) %>% 
+  dplyr::summarize(abundance = dplyr::n(),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Re-check structure
+dplyr::glimpse(proj7)
+
+# Create good/new file name
+proj7_name <- "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv"
+proj7_path <- file.path("data", "drydock", proj7_name)
+
+# Export locally
+write.csv(x = proj7, na = '', row.names = F, file = proj7_path)
+
+# Export to Drive
+googledrive::drive_upload(media = proj7_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
 # End ----
