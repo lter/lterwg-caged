@@ -17,7 +17,7 @@ dir.create(path = file.path("data"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Read in data
-tidy_v1 <- read.csv(file.path("data", "caged_harmonized.csv"))
+tidy_v1 <- read.csv(file.path("data", "01_caged_harmonized.csv"))
 
 # Check structure
 dplyr::glimpse(tidy_v1)
@@ -40,6 +40,6 @@ dplyr::glimpse(tidy_v99)
 
 # Export locally
 write.csv(x = tidy_v99, row.names = F, na = '',
-          file = file.path("data", "caged_tidied.csv"))
+          file = file.path("data", "02_caged_tidied.csv"))
 
 # End ----

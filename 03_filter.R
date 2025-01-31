@@ -17,7 +17,7 @@ dir.create(path = file.path("data"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Read in data
-sub_v1 <- read.csv(file.path("data", "caged_tidied.csv"))
+sub_v1 <- read.csv(file.path("data", "02_caged_tidied.csv"))
 
 # Check structure
 dplyr::glimpse(sub_v1)
@@ -35,6 +35,6 @@ sub_v99 <- sub_v1
 
 # Export
 write.csv(x = sub_v99, na = '', row.names = F,
-          file = file.path("data", "caged_filtered.csv"))
+          file = file.path("data", "03_caged_filtered.csv"))
 
 # End ----

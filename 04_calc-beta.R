@@ -17,7 +17,7 @@ dir.create(path = file.path("data"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Read in data
-beta_v1 <- read.csv(file.path("data", "caged_filtered.csv"))
+beta_v1 <- read.csv(file.path("data", "03_caged_filtered.csv"))
 
 # Check structure
 dplyr::glimpse(beta_v1)
@@ -35,6 +35,6 @@ beta_v99 <- beta_v1
 
 # Export
 write.csv(x = beta_v99, na = '', row.names = F,
-          file = file.path("data", "caged_beta-disp.csv"))
+          file = file.path("data", "04_caged_beta-disp.csv"))
 
 # End ----
