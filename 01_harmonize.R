@@ -367,7 +367,7 @@ dplyr::glimpse(combo_v7)
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-combo_v8 <- combo_v7 %>% 
+combo_v99 <- combo_v7 %>% 
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Replace "NA" with zero where appropriate
@@ -383,10 +383,10 @@ combo_v8 <- combo_v7 %>%
   dplyr::distinct()
 
 # Check structure
-dplyr::glimpse(combo_v8)
+dplyr::glimpse(combo_v99)
   
 # Export locally
-write.csv(x = combo_v8, row.names = F, na = '',
+write.csv(x = combo_v99, row.names = F, na = '',
           file = file.path("data", "caged_harmonized.csv"))
 
 # Upload to Drive

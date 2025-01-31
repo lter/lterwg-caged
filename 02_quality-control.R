@@ -22,21 +22,24 @@ tidy_v1 <- read.csv(file.path("data", "caged_harmonized.csv"))
 # Check structure
 dplyr::glimpse(tidy_v1)
 
+
+
+
+
+
+
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-tidy_v2 <- tidy_v1 %>% 
-  # Drop duplicate rows
-  dplyr::distinct()
+tidy_v99 <- tidy_v1
 
 # Check structure
-dplyr::glimpse(tidy_v2)
+dplyr::glimpse(tidy_v99)
 
 # Export locally
-write.csv(x = tidy_v2, row.names = F, na = '',
+write.csv(x = tidy_v99, row.names = F, na = '',
           file = file.path("data", "caged_tidied.csv"))
-
 
 # End ----
