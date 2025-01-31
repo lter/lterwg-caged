@@ -13,7 +13,7 @@ Briefly describe the purpose of each script (or folder of scripts) here as you c
 
 - `01_harmonize.R` -- Accepts all raw data files (from "data" folder in Google Drive) and uses a column key method (see `?ltertools::harmonize`) to combine them into a single, standardized data table
     - Performs some minor wrangling necessary for coalescing synonymous columns / etc.
-- `02_wrangle.R` -- Performs more involved quality control (QC) and metric calculation
+- `02_quality-control.R` -- Performs more involved quality control (QC) and metric calculation
 
 ## Supplementary Resources
 
