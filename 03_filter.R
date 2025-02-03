@@ -22,16 +22,29 @@ sub_v1 <- read.csv(file.path("data", "02_caged_tidied.csv"))
 # Check structure
 dplyr::glimpse(sub_v1)
 
+## ------------------------------------------- ##
+# Drop Unwanted Rows ----
+## ------------------------------------------- ##
+
+# Check structure
+dplyr::glimpse(sub_v1)
+
+# Do desired filtering
+sub_v2 <- sub_v1
 
 
+# Check number of lost rows
+message(nrow(sub_v1) - nrow(sub_v2), " rows lost")
 
+# Re-check structure
+dplyr::glimpse(sub_v2)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v1
+sub_v99 <- sub_v2
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
