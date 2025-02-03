@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools)
+librarian::shelf(tidyverse, ltertools, vegan)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -22,16 +22,26 @@ beta_v1 <- read.csv(file.path("data", "03_caged_filtered.csv"))
 # Check structure
 dplyr::glimpse(beta_v1)
 
+## ------------------------------------------- ##
+# Calculate Beta Dispersion ----
+## ------------------------------------------- ##
+
+# The group suggests the following function:
+?vegan::betadisper
 
 
 
+
+
+# Create new object (post-betadisp calculation)
+beta_v2 <- beta_v1
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-beta_v99 <- beta_v1
+beta_v99 <- beta_v2
 
 # Identify tidy file name / path
 beta_name <- "04_caged_beta-disp.csv"
