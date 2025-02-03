@@ -313,7 +313,10 @@ dplyr::glimpse(tax_wides_v2)
 dplyr::glimpse(tax_longs_v2)
 
 # Combine the data and do needed wrangling
-combo_v5 <- dplyr::bind_rows(tax_wides_v2, tax_longs_v2)
+combo_v5 <- dplyr::bind_rows(tax_wides_v2, tax_longs_v2) %>% 
+  # Clean up taxa names
+  dplyr::mutate(original.taxa = gsub(pattern = "orig\\.taxa_", replacement = "",
+                                     x = original.taxa))
 
 # Recheck structure
 dplyr::glimpse(combo_v5)
