@@ -33,8 +33,15 @@ dplyr::glimpse(sub_v1)
 # Create final object name
 sub_v99 <- sub_v1
 
-# Export
-write.csv(x = sub_v99, na = '', row.names = F,
-          file = file.path("data", "03_caged_filtered.csv"))
+# Identify tidy file name / path
+filter_name <- "03_caged_filtered.csv"
+filter_path <- file.path("data", filter_name)
+
+# Export locally
+write.csv(x = sub_v99, row.names = F, na = '', file = filter_path)
+
+# Upload to Drive
+googledrive::drive_upload(media = filter_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----
