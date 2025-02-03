@@ -63,19 +63,35 @@ tidy_v3 %>%
   dplyr::distinct()
 
 ## ------------------------------------------- ##
+# Standardize Taxon Names ----
+## ------------------------------------------- ##
+
+# Check current taxa names
+sort(unique(tidy_v3$original.taxa))
+
+# Do desired wrangling
+tidy_v4 <- tidy_v3 %>% 
+  dplyr::mutate(original.taxa = dplyr::case_when(
+    
+    T ~ original.taxa))
+
+# Re-check taxa names
+sort(unique(tidy_v4$original.taxa))
+
+## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
 ## ------------------------------------------- ##
 
 # Re-check structure
-dplyr::glimpse(tidy_v3)
+dplyr::glimpse(tidy_v4)
 
 # Do desired standardization
-tidy_v4 <- tidy_v3 %>% 
+tidy_v5 <- tidy_v4 %>% 
   # Standardize casing for distance from surface
   dplyr::mutate(distance.from.surface = tolower(distance.from.surface))
 
 # Re-check structure
-dplyr::glimpse(tidy_v4)
+dplyr::glimpse(tidy_v5)
 
 ## ------------------------------------------- ##
 # Download Group-Defined Metadata ----
@@ -130,21 +146,21 @@ meta_v2 %>%
 ## ------------------------------------------- ##
 
 # Attach metadata to QC'd data
-tidy_v5 <- tidy_v4 %>% 
+tidy_v6 <- tidy_v5 %>% 
   dplyr::left_join(y = meta_v2, by = c("source")) %>% 
   # Re-arrange slightly
   dplyr::relocate(region:resource.taxa, 
                   .after = measured.group)
 
 # Check structure
-dplyr::glimpse(tidy_v5)
+dplyr::glimpse(tidy_v6)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-tidy_v99 <- tidy_v5
+tidy_v99 <- tidy_v6
 
 # Check structure
 dplyr::glimpse(tidy_v99)
