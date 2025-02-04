@@ -52,10 +52,19 @@ tidy_v2 %>%
   dplyr::distinct()
 
 # Do needed standardization
-tidy_v3 <- tidy_v2
-## NOTE
-### LEAVING ALONE (FOR NOW)
-### Need to discuss with group
+tidy_v3 <- tidy_v2 %>% 
+  # Conditionally change any that need changing
+  dplyr::mutate(exp.design.1 = dplyr::case_when(
+    
+    T ~ exp.design.1)) %>% 
+  # Fill any missing values with more granular values
+  ## (All have 'exp.design.1' but not all have higher levels)
+  dplyr::mutate(
+    exp.design.2 = ifelse(nchar(exp.design.2) == 0 | is.na(exp.design.2),
+                          yes = exp.design.1, no = exp.design.2),
+    exp.design.3 = ifelse(nchar(exp.design.3) == 0 | is.na(exp.design.3),
+                          yes = exp.design.2, no = exp.design.3)
+    )
 
 # Re-check
 tidy_v3 %>% 
