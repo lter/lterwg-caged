@@ -27,7 +27,9 @@ dplyr::glimpse(beta_v1)
 ## ------------------------------------------- ##
 
 # Create a list for storing outputs
-beta_list <- list()
+beta_des1_list <- list()
+beta_des2_list <- list()
+beta_des3_list <- list()
 
 # Loop across original data source
 for(focal_src in unique(beta_v1$source)){
@@ -88,13 +90,129 @@ for(focal_src in unique(beta_v1$source)){
                                          no = NA_real_))
       
       # Add to list
-      beta_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_sub_out
+      beta_des1_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_sub_out
       
     } # Close "exp.design.1" loop
+    
+    # Loop across experimental design level 2
+    for(focal_des2 in unique(trt_sub$exp.design.2)){
+      
+      # Subset yet again
+      des2_sub <- trt_sub %>% 
+        dplyr::filter(exp.design.2 == focal_des2) %>% 
+        # Summarizing across more granular spatial scale(s)
+        dplyr::group_by(
+          dplyr::across(
+            dplyr::all_of(setdiff(x = names(trt_sub), 
+                                  y = c("exp.design.1", "abundance"))))) %>% 
+        dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                         .groups = "keep") %>% 
+        dplyr::ungroup()
+      
+      # Prepare output (post-calculation)
+      des2_sub_out <- des2_sub %>% 
+        dplyr::select(source:distance.from.source) %>% 
+        dplyr::distinct()
+      
+      # Pivot to wide format & drop all non-taxa columns
+      des2_sub_wide <- des2_sub %>% 
+        tidyr::pivot_wider(names_from = original.taxa,
+                           values_from = abundance,
+                           values_fill = 0) %>% 
+        dplyr::select(-source:-distance.from.source)
+      
+      # Get distance/dissimilarity matrix
+      des2_sub_dist <- vegan::vegdist(x = des2_sub_wide, method = "bray")
+      
+      # Skip beta dispersion calculation if no distance found (n = 1)
+      if(length(des2_sub_dist) > 0){
+        
+        # Calculate beta dispersion
+        des2_sub_beta <- vegan::betadisper(d = des2_sub_dist,
+                                           group = as.factor(rep(x = "x", 
+                                                                 times = nrow(des2_sub_wide))),
+                                           type = "centroid", bias.adjust = F, 
+                                           sqrt.dist = F, add = F)
+      }
+      
+      # Finalize outputs
+      des2_sub_out %<>%
+        dplyr::mutate(
+          exp.design.2.n = nrow(des2_sub_wide),
+          exp.design.2.betadisp = ifelse(length(des2_sub_dist) > 0,
+                                         yes = des2_sub_beta$distances,
+                                         no = NA_real_))
+      
+      # Add to list
+      beta_des2_list[[paste0(focal_src, focal_trt, focal_des2)]] <- des2_sub_out
+      
+    } # Close "exp.design.2" loop
+    
+    # Loop across experimental design level 3
+    for(focal_des3 in unique(trt_sub$exp.design.3)){
+      
+      # Subset yet again
+      des3_sub <- trt_sub %>% 
+        dplyr::filter(exp.design.3 == focal_des3) %>% 
+        # Summarizing across more granular spatial scale(s)
+        dplyr::group_by(
+          dplyr::across(
+            dplyr::all_of(setdiff(x = names(trt_sub), 
+                                  y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
+        dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                         .groups = "keep") %>% 
+        dplyr::ungroup()
+      
+      # Prepare output (post-calculation)
+      des3_sub_out <- des3_sub %>% 
+        dplyr::select(source:distance.from.source) %>% 
+        dplyr::distinct()
+      
+      # Pivot to wide format & drop all non-taxa columns
+      des3_sub_wide <- des3_sub %>% 
+        tidyr::pivot_wider(names_from = original.taxa,
+                           values_from = abundance,
+                           values_fill = 0) %>% 
+        dplyr::select(-source:-distance.from.source)
+      
+      # Get distance/dissimilarity matrix
+      des3_sub_dist <- vegan::vegdist(x = des3_sub_wide, method = "bray")
+      
+      # Skip beta dispersion calculation if no distance found (n = 1)
+      if(length(des3_sub_dist) > 0){
+        
+        # Calculate beta dispersion
+        des3_sub_beta <- vegan::betadisper(d = des3_sub_dist,
+                                           group = as.factor(rep(x = "x", 
+                                                                 times = nrow(des3_sub_wide))),
+                                           type = "centroid", bias.adjust = F, 
+                                           sqrt.dist = F, add = F)
+      }
+      
+      # Finalize outputs
+      des3_sub_out %<>%
+        dplyr::mutate(
+          exp.design.3.n = nrow(des3_sub_wide),
+          exp.design.3.betadisp = ifelse(length(des3_sub_dist) > 0,
+                                         yes = des3_sub_beta$distances,
+                                         no = NA_real_))
+      
+      # Add to list
+      beta_des3_list[[paste0(focal_src, focal_trt, focal_des3)]] <- des3_sub_out
+      
+    } # Close "exp.design.3" loop
   } # Close treatment loop
 } # Close source loop
 
-# Unlist the list
+# Unlist the output lists
+beta_des1 <- purrr::list_rbind(x = beta_des1_list)
+beta_des2 <- purrr::list_rbind(x = beta_des2_list)
+beta_des3 <- purrr::list_rbind(x = beta_des3_list)
+
+# Combine them!
+beta_v2 <- beta_des1 %>% 
+  dplyr::left_join(y = beta_des2)
+
 beta_v2 <- purrr::list_rbind(x = beta_list)
 
 # Check structure
