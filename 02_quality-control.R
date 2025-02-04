@@ -57,13 +57,13 @@ tidy_v3 <- tidy_v2 %>%
   dplyr::mutate(exp.design.1 = dplyr::case_when(
     
     T ~ exp.design.1)) %>% 
-  # Fill any missing values with more granular values
-  ## (All have 'exp.design.1' but not all have higher levels)
+  # Fill any missing values with experiment name
+  ## (All have 'exp.design.1' but not necessarily all have higher levels)
   dplyr::mutate(
     exp.design.2 = ifelse(nchar(exp.design.2) == 0 | is.na(exp.design.2),
-                          yes = exp.design.1, no = exp.design.2),
+                          yes = experiment.name, no = exp.design.2),
     exp.design.3 = ifelse(nchar(exp.design.3) == 0 | is.na(exp.design.3),
-                          yes = exp.design.2, no = exp.design.3)
+                          yes = experiment.name, no = exp.design.3)
     )
 
 # Re-check
