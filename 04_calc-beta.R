@@ -22,6 +22,22 @@ beta_v1 <- read.csv(file.path("data", "03_caged_filtered.csv"))
 # Check structure
 dplyr::glimpse(beta_v1)
 
+# Summarize to only one replicate within the finest design scale
+## Should already be one rep by now but better to make sure
+beta_v2 <- beta_v1 %>% 
+  dplyr::group_by(
+    dplyr::across(
+      dplyr::all_of(setdiff(x = names(beta_v1), y = "abundance")))) %>% 
+  dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Re-check structure
+dplyr::glimpse(beta_v2)
+
+# How many reps were summarized across?
+message(nrow(beta_v1) - nrow(beta_v2), " rows lost by summarizing within 'exp.design.1'")
+
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
 ## ------------------------------------------- ##
@@ -38,7 +54,7 @@ for(focal_src in unique(beta_v1$source)){
   message("Processing source '", focal_src, "'")
   
   # Subset data
-  src_sub <- beta_v1 %>% 
+  src_sub <- beta_v2 %>% 
     dplyr::filter(source == focal_src)
   
   # Loop across treatments
@@ -210,34 +226,18 @@ beta_des2 <- purrr::list_rbind(x = beta_des2_list)
 beta_des3 <- purrr::list_rbind(x = beta_des3_list)
 
 # Combine them!
-beta_v2 <- beta_des1 %>% 
+beta_v3 <- beta_des1 %>% 
   dplyr::left_join(y = beta_des2)
 
-beta_v2 <- purrr::list_rbind(x = beta_list)
-
 # Check structure
-dplyr::glimpse(beta_v2)
-
-
-str(trt_sub)
-
-
-# The group suggests the following function:
-?vegan::betadisper
-
-
-
-
-
-# Create new object (post-betadisp calculation)
-beta_v2 <- beta_v1
+dplyr::glimpse(beta_v3)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-beta_v99 <- beta_v2
+beta_v99 <- beta_v3
 
 # Identify tidy file name / path
 beta_name <- "04_caged_beta-disp.csv"
