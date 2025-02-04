@@ -23,15 +23,25 @@ sub_v1 <- read.csv(file.path("data", "02_caged_tidied.csv"))
 dplyr::glimpse(sub_v1)
 
 ## ------------------------------------------- ##
-# Drop Unwanted Rows ----
+# Drop Zero-Abundance Samples ----
 ## ------------------------------------------- ##
 
 # Check structure
 dplyr::glimpse(sub_v1)
 
-# Do desired filtering
-sub_v2 <- sub_v1
-
+# Remove 'exp.design.1' levels without any abundance
+sub_v2 <- sub_v1 %>% 
+  # Average abundance withing experimental design level 1
+  dplyr::group_by(
+    dplyr::across(dplyr::all_of(setdiff(x = names(.),
+                                        y = c("original.taxa", "abundance"))))
+  ) %>% 
+  dplyr::mutate(avg.abun = mean(abundance, na.rm = T)) %>% 
+  dplyr::ungroup() %>% 
+  # Drop any rows where the average is 0 (i.e., no observations of any taxon)
+  dplyr::filter(avg.abun > 0) %>% 
+  # Ditch column used to do this subsetting
+  dplyr::select(-avg.abun)
 
 # Check number of lost rows
 message(nrow(sub_v1) - nrow(sub_v2), " rows lost")
