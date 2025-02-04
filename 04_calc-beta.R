@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, vegan)
+librarian::shelf(tidyverse, magrittr, ltertools, vegan)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -53,27 +53,39 @@ for(focal_src in unique(beta_v1$source)){
       des1_sub <- trt_sub %>% 
         dplyr::filter(exp.design.1 == focal_des1)
       
-      # Pivot to wide format & drop all empty columns
+      # Prepare output (post-calculation)
+      des1_sub_out <- des1_sub %>% 
+        dplyr::select(source:distance.from.source) %>% 
+        dplyr::distinct()
+      
+      # Pivot to wide format & drop all non-taxa columns
       des1_sub_wide <- des1_sub %>% 
         tidyr::pivot_wider(names_from = original.taxa,
-                           values_from = abundance) %>% 
+                           values_from = abundance,
+                           values_fill = 0) %>% 
         dplyr::select(-source:-distance.from.source)
       
       # Get distance/dissimilarity matrix
       des1_sub_dist <- vegan::vegdist(x = des1_sub_wide, method = "bray")
       
+      # Skip beta dispersion calculation if no distance found (n = 1)
+      if(length(des1_sub_dist) > 0){
+        
       # Calculate beta dispersion
       des1_sub_beta <- vegan::betadisper(d = des1_sub_dist,
                                          group = as.factor(rep(x = "x", 
                                                                times = nrow(des1_sub_wide))),
                                          type = "centroid", bias.adjust = F, 
                                          sqrt.dist = F, add = F)
-      # Prepare output(s)
-      des1_sub_out <- des1_sub %>% 
-        dplyr::select(source:distance.from.source) %>% 
-        dplyr::distinct() %>% 
-        dplyr::mutate(exp.design.1.n = nrow(des1_sub_wide),
-                      exp.design.1.betadisp = des1_sub_beta$distances)
+      }
+      
+      # Finalize outputs
+      des1_sub_out %<>%
+        dplyr::mutate(
+          exp.design.1.n = nrow(des1_sub_wide),
+          exp.design.1.betadisp = ifelse(length(des1_sub_dist) > 0,
+                                         yes = des1_sub_beta$distances,
+                                         no = NA_real_))
       
       # Add to list
       beta_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_sub_out
