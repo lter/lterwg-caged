@@ -27,7 +27,8 @@ dplyr::glimpse(beta_v1)
 beta_v2 <- beta_v1 %>% 
   dplyr::group_by(
     dplyr::across(
-      dplyr::all_of(setdiff(x = names(beta_v1), y = "abundance")))) %>% 
+      dplyr::all_of(setdiff(x = names(beta_v1),
+                            y = c("sampling.point", "abundance"))))) %>% 
   dplyr::summarize(abundance = mean(abundance, na.rm = T),
                    .groups = "keep") %>% 
   dplyr::ungroup()
@@ -227,7 +228,24 @@ beta_des3 <- purrr::list_rbind(x = beta_des3_list)
 
 # Combine them!
 beta_v3 <- beta_des1 %>% 
-  dplyr::left_join(y = beta_des2)
+  dplyr::left_join(y = beta_des2,
+                   by = c("source", "organization", "site", 
+                          "experiment.name", "sampling.years", "excluded.group", 
+                          "measured.group", "region", "lter.site", "ecosystem", 
+                          "consumer.taxa", "resource.taxa", 
+                          "original.treatment", "exclosure.age", "year", 
+                          "exp.name", "exp.design.3", "exp.design.2",
+                          "distance.from.surface", "distance.from.source")) %>% 
+  dplyr::left_join(y = beta_des3,
+                   by = c("source", "organization", "site", 
+                          "experiment.name", "sampling.years", "excluded.group", 
+                          "measured.group", "region", "lter.site", "ecosystem", 
+                          "consumer.taxa", "resource.taxa", 
+                          "original.treatment", "exclosure.age", "year", 
+                          "exp.name", "exp.design.3",
+                          "distance.from.surface", "distance.from.source")) %>% 
+# Drop non-unique rows that may result from this joining process
+dplyr::distinct()
 
 # Check structure
 dplyr::glimpse(beta_v3)
