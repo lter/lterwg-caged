@@ -84,3 +84,5 @@ vignettes/*.pdf
 # Folders to ignore
 ## Add any folders you’d like to ignore below (with or without the trailing slash)
 data/
+graphs/
+
