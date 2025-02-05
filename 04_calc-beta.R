@@ -12,6 +12,7 @@ librarian::shelf(tidyverse, magrittr, ltertools, vegan)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
+dir.create(path = file.path("graphs"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -267,5 +268,89 @@ write.csv(x = beta_v99, row.names = F, na = '', file = beta_path)
 # Upload to Drive
 googledrive::drive_upload(media = beta_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+
+## ------------------------------------------- ##
+# Exploratory Graphs ----
+## ------------------------------------------- ##
+
+# Clear environment & collect garbage
+rm(list = ls()); gc()
+
+# Read beta dispersion data back in
+beta_v99 <- read.csv(file.path("data", "04_caged_beta-disp.csv"))
+
+# Check structure
+dplyr::glimpse(beta_v99)
+
+# Do some pre-visualization wrangling
+beta_viz <- beta_v99 %>% 
+  dplyr::mutate(
+    exp.design.1.n.bin = dplyr::case_when(
+      exp.design.1.n == 1 ~ "N = 1",
+      exp.design.1.n > 1 & exp.design.1.n <= 5 ~ "N = 2-5",
+      exp.design.1.n > 5 & exp.design.1.n <= 15 ~ "N = 6-15",
+      exp.design.1.n > 15 & exp.design.1.n <= 30 ~ "N = 16-30",
+      exp.design.1.n > 30 ~ "N > 30"),
+    exp.design.2.n.bin = dplyr::case_when(
+      exp.design.2.n == 1 ~ "N = 1",
+      exp.design.2.n > 1 & exp.design.2.n <= 5 ~ "N = 2-5",
+      exp.design.2.n > 5 & exp.design.2.n <= 15 ~ "N = 6-15",
+      exp.design.2.n > 15 & exp.design.2.n <= 30 ~ "N = 16-30",
+      exp.design.2.n > 30 ~ "N > 30"),
+    exp.design.3.n.bin = dplyr::case_when(
+      exp.design.3.n == 1 ~ "N = 1",
+      exp.design.3.n > 1 & exp.design.3.n <= 5 ~ "N = 2-5",
+      exp.design.3.n > 5 & exp.design.3.n <= 15 ~ "N = 6-15",
+      exp.design.3.n > 15 & exp.design.3.n <= 30 ~ "N = 16-30",
+      exp.design.3.n > 30 ~ "N > 30")
+  ) %>% 
+  dplyr::mutate(
+    dplyr::across(.cols = dplyr::ends_with(".n.bin"),
+                  .fns = ~ factor(x = ., levels = c("N = 1", "N = 2-5", 
+                                                    "N = 6-15", "N = 16-30", 
+                                                    "N > 30"))))
+
+# Re-check structure
+dplyr::glimpse(beta_viz)
+
+# Design level 1 graph
+ggplot(beta_viz, aes(x = organization, y = exp.design.1.betadisp,
+                     fill = exp.design.1.n.bin)) +
+  geom_violin() +
+  labs(x = "Organization", y = "Beta Dispersion (Design Level 1)") +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 35, hjust = 1))
+
+# Export locally
+ggsave(filename = file.path("graphs", "04_betadisp-violins_exp-design-1.png"),
+       width = 10, height = 5, units = "in")
+
+# Design level 2 graph
+ggplot(beta_viz, aes(x = organization, y = exp.design.2.betadisp,
+                     fill = exp.design.2.n.bin)) +
+  geom_violin() +
+  labs(x = "Organization", y = "Beta Dispersion (Design Level 2)") +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 35, hjust = 1))
+
+# Export locally
+ggsave(filename = file.path("graphs", "04_betadisp-violins_exp-design-2.png"),
+       width = 10, height = 5, units = "in")
+
+# Design level 3 graph
+ggplot(beta_viz, aes(x = organization, y = exp.design.3.betadisp,
+                     fill = exp.design.3.n.bin)) +
+  geom_violin() +
+  labs(x = "Organization", y = "Beta Dispersion (Design Level 3)") +
+  theme(legend.position = "top",
+        legend.title = element_blank(),
+        axis.text.x = element_text(angle = 35, hjust = 1))
+
+# Export locally
+ggsave(filename = file.path("graphs", "04_betadisp-violins_exp-design-3.png"),
+       width = 10, height = 5, units = "in")
+
 
 # End ----
