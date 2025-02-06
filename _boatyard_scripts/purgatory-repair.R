@@ -355,4 +355,36 @@ write.csv(x = proj7, na = '', row.names = F, file = proj7_path)
 googledrive::drive_upload(media = proj7_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
+## ------------------------------------------- ##
+# Purgatory TEMPLATE ----
+## ------------------------------------------- ##
+## Duplicate and flesh out one copy!
+
+# Reason for purgatory status
+## 
+
+# Read in data
+proj0_raw <- read.csv(file.path("data", "purgatory", "BAD_FILE.csv"))
+
+# Check structure
+dplyr::glimpse(proj0_raw)
+
+# Do needed repairs
+proj0 <- proj0_raw
+
+# Re-check structure
+dplyr::glimpse(proj0)
+
+# Create good/new file name
+proj0_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
+proj0_path <- file.path("data", "drydock", proj0_name)
+
+# Export locally
+write.csv(x = proj0, file = proj0_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj0_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+
 # End ----
