@@ -41,7 +41,12 @@ file.name = organization_site_experimentname_yearssampled_excluded_measured
 2) Create [Data-Key](https://docs.google.com/spreadsheets/d/1SgdqsAl_yPArCaw8dCcP0KINL3Qp2qwN0ZJqWnIxGPk/edit?gid=0#gid=0)   
 
 - Then we will create the data-key using the expand-key.R in boatyard scripts folder (this will only add the new data rows)  
-- Then we manually fill in the data key with our knowledge  
+- Then we manually fill in the data key with our knowledge
+- Column names for data key
+    - exp.design.1-N: Block, transect, site, etc. each of those get a different number. These categories denote different aspects of the experimental design
+    - exp.name: Unique name for the experiment. We use this if the sites are uniquely different from one another (this shouldn’t happen often) and is only if the authors have said there are unique differences across sites that make it interesting (and not part of exp.design)
+    - sampling.point: Unique sampling time point. When experiments are sampled / data is recorded at multiple timepoints
+    - orig.treat:  Denotes the original treatment of the experiment, however the author described them. Any time we put anything but orig.treat we have to put another line of code (Nick). Only use if there is only one treatment given. For example, if they concatenate all treatments into one variable- orig.treat_nutirents, orig.treat_fire, orig.treat_cage, etc.  
 
 3) Harmonize Data  
 - Then we run the harmonize script (01_harmonize) and hopefully! we end up with a beautiful happy dataset :)
