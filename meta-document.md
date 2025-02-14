@@ -46,7 +46,9 @@ file.name = organization_site_experimentname_yearssampled_excluded_measured
     - exp.design.1-N: Block, transect, site, etc. each of those get a different number. These categories denote different aspects of the experimental design
     - exp.name: Unique name for the experiment. We use this if the sites are uniquely different from one another (this shouldn’t happen often) and is only if the authors have said there are unique differences across sites that make it interesting (and not part of exp.design)
     - sampling.point: Unique sampling time point. When experiments are sampled / data is recorded at multiple timepoints
-    - orig.treat:  Denotes the original treatment of the experiment, however the author described them. Any time we put anything but orig.treat we have to put another line of code (Nick). Only use if there is only one treatment given. For example, if they concatenate all treatments into one variable- orig.treat_nutirents, orig.treat_fire, orig.treat_cage, etc.  
+    - orig.treat:  Denotes the original treatment of the experiment, however the author described them. Any time we put anything but orig.treat we have to put another line of code (Nick). Only use if there is only one treatment given. For example, if they concatenate all treatments into one variable- orig.treat_nutirents, orig.treat_fire, orig.treat_cage, etc.
+    - abundance: whatever we are using as abundance (relative, biomass, cover, etc.)
+    - orig.taxa_NAMEFROMORIGINAL: if its in long format, then there will only be one column 
 
 3) Harmonize Data  
 - Then we run the harmonize script (01_harmonize) and hopefully! we end up with a beautiful happy dataset :)
