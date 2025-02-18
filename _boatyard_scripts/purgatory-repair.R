@@ -34,7 +34,7 @@ rm(list = ls()); gc()
 
 # Identify wanted files
 files_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iH9CHW7xS0ZWk7LdB2Glb0LrfJF8dUOL")) %>% 
-  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv|\\.txt"))
+  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv|\\.txt|\\.xlsx|\\.xls"))
 
 # Did that work?
 files_drive
@@ -388,6 +388,44 @@ write.csv(x = proj8, file = proj8_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj8_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+## ------------------------------------------- ##
+# Project 9 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Bad header in first two rows & inclusion of standard error columns
+## Deleted bad header manually and re-uploaded to purgatory as a CSV
+## Removal of standard error columns accomplished below
+
+# Read in data
+proj9_raw <- read.csv(file.path("data", "purgatory", "41467_2016_BFncomms11833_MOESM1571_ESM.csv"))
+
+# Check structure
+dplyr::glimpse(proj9_raw)
+
+# Do needed repairs
+proj9 <- proj9_raw %>% 
+  dplyr::select(-dplyr::ends_with(".Std.Err")) %>% 
+  tidyr::pivot_longer(cols = dplyr::ends_with(".Mean"),
+                      names_to = "Species",
+                      values_to = "Abundance") %>% 
+  dplyr::mutate(Species = gsub(pattern = "\\.Mean|\\.\\.Mean",
+                               replacement = "", x = Species))
+
+# Re-check structure
+dplyr::glimpse(proj9)
+
+# Create good/new file name
+proj9_name <- "burkepile_florida_herbvr_2009-2012_fish_benthic.csv"
+proj9_path <- file.path("data", "drydock", proj9_name)
+
+# Export locally
+write.csv(x = proj9, file = proj9_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj9_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 ## ------------------------------------------- ##
