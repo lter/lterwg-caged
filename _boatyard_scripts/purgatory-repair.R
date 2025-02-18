@@ -44,6 +44,9 @@ purrr::walk2(.x = files_drive$id, .y = files_drive$name,
              .f = ~ googledrive::drive_download(file = .x, overwrite = T,
                                                 path = file.path("data", "purgatory", .y)))
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Project 1 ----
 ## ------------------------------------------- ##
@@ -77,6 +80,9 @@ write.csv(x = proj1, na = "", row.names = F, file = proj1_name)
 googledrive::drive_upload(media = proj1_name, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Project 2 ----
 ## ------------------------------------------- ##
@@ -101,6 +107,9 @@ dplyr::glimpse(proj2_raw)
 # proj2 <- proj2 %>% pivot_longer(names_to = "Block.quad", values_to = "Dry.weight")
 
 # UNDER CONSTRUCTION
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Project 3 ----
@@ -168,6 +177,9 @@ for(focalsite3 in unique(proj3$site)){
   
 }
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Project 4 ----
 ## ------------------------------------------- ##
@@ -198,6 +210,9 @@ write.csv(x = proj4, na = "", row.names = F, file = proj4_path)
 # Export to Drive
 googledrive::drive_upload(media = proj4_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Project 5 ----
@@ -251,6 +266,9 @@ write.csv(x = proj5, na = '', row.names = F, file = proj5_path)
 # Export to Drive
 googledrive::drive_upload(media = proj5_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Project 6 ----
@@ -314,6 +332,9 @@ for(k in seq_along(proj6_rawfiles)){
     
 }
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Project 7 ----
 ## ------------------------------------------- ##
@@ -355,6 +376,9 @@ write.csv(x = proj7, na = '', row.names = F, file = proj7_path)
 googledrive::drive_upload(media = proj7_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Project 8 ----
 ## ------------------------------------------- ##
@@ -389,6 +413,9 @@ write.csv(x = proj8, file = proj8_path, na = '', row.names = F)
 # Export to Drive
 googledrive::drive_upload(media = proj8_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Project 9 ----
@@ -428,6 +455,9 @@ write.csv(x = proj9, file = proj9_path, na = '', row.names = F)
 googledrive::drive_upload(media = proj9_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
@@ -459,5 +489,7 @@ write.csv(x = proj0, file = proj0_path, na = '', row.names = F)
 googledrive::drive_upload(media = proj0_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 # End ----
