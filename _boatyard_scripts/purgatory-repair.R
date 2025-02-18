@@ -356,6 +356,41 @@ googledrive::drive_upload(media = proj7_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 ## ------------------------------------------- ##
+# Project 8 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Data collected per tree / seedling
+## Need to summarize within spatial groups & species to get tree counts
+
+# Read in data
+proj8_raw <- read.csv(file.path("data", "purgatory", "hf174-06-tree-seedlings-2010.csv"))
+
+# Check structure
+dplyr::glimpse(proj8_raw)
+
+# Do needed repairs
+proj8 <- proj8_raw %>% 
+  dplyr::group_by(site, treatment, species) %>% 
+  dplyr::summarize(abundance = dplyr::n(),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Re-check structure
+dplyr::glimpse(proj8)
+
+# Create good/new file name
+proj8_name <- "lter-harvard_newengland_plantcover_2008_2019_moose_treeseedling.csv"
+proj8_path <- file.path("data", "drydock", proj8_name)
+
+# Export locally
+write.csv(x = proj8, file = proj8_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj8_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
