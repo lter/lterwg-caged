@@ -532,7 +532,7 @@ for(focal_site in unique(proj10_prep$reserve_site)){
     # Combine with good treatment subsetted (never messed with it)
     proj10_sub_fix <- dplyr::bind_rows(proj10_ug, proj10_sub_gz) %>% 
       ## Document dropped plot(s) as 'notes' (even if ultimately ignored, good to know)
-      dplyr::mutate(notes = paste0("Following plot(s) randomly removed: ",
+      dplyr::mutate(notes = paste0("Following GRAZED plot(s) randomly removed: ",
                                    paste(proj10_unwantplots, collapse = ", ")))
     
     ## If more ungrazed, do the same set of operations
@@ -550,7 +550,7 @@ for(focal_site in unique(proj10_prep$reserve_site)){
     
     # Combine with good treatment subsetted (never messed with it)
     proj10_sub_fix <- dplyr::bind_rows(proj10_sub_ug, proj10_gz) %>% 
-      dplyr::mutate(notes = paste0("Following plot(s) randomly removed: ",
+      dplyr::mutate(notes = paste0("Following UNGRAZED plot(s) randomly removed: ",
                                    paste(proj10_unwantplots, collapse = ", ")))
     
   }
