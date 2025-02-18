@@ -459,6 +459,143 @@ googledrive::drive_upload(media = proj9_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 10 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Unequal numbers of plots within treatments
+## Need to **randomly** subset within grouping variables to make reps equal
+
+# Read in data
+proj10_raw <- read.csv(file.path("data", "purgatory", "boer-ca-n4.csv"))
+
+# Check structure
+dplyr::glimpse(proj10_raw)
+
+# Do some generally-useful repairs
+proj10_prep <- proj10_raw %>% 
+  ## Drop unwanted column(s)
+  dplyr::select(-X) %>% 
+  ## Summarize within provided variables (several instances of multiple observations of same species within same plot)
+  dplyr::group_by(reserve_site, reserve, site, treatment, plot, taxa) %>% 
+  dplyr::summarize(cover = mean(cover, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup() 
+
+# Check structure
+dplyr::glimpse(proj10_prep)
+
+# Make a list for storing outputs
+proj10_list <- list()
+
+# Set seed for reproducibility of randomness
+set.seed(seed = 53)
+
+# Loop across "reserve_site" values
+for(focal_site in unique(proj10_prep$reserve_site)){
+  
+  # Processing message
+  message("Working on site '", focal_site, "'")
+  
+  # Subset to this site
+  proj10_sub <- proj10_prep %>% 
+    dplyr::filter(reserve_site == focal_site)
+  
+  # Split to grazed and ungrazed
+  proj10_gz <- dplyr::filter(proj10_sub, treatment == "GRAZED")
+  proj10_ug <- dplyr::filter(proj10_sub, treatment == "UNGRAZED")
+  
+  # Identify number of plots in each
+  proj10_gz_plotct <- length(unique(proj10_gz$plot))
+  proj10_ug_plotct <- length(unique(proj10_ug$plot))
+  
+  # Now handle the three possibilities:
+  ## If they are equal, simply recombine and move on
+  if(proj10_gz_plotct == proj10_ug_plotct){
+    
+    proj10_sub_fix <- proj10_sub
+    
+    ## If more grazed,
+  } else if(proj10_gz_plotct > proj10_ug_plotct){
+    
+    # Randomly identify subset of plot IDs
+    proj10_wantplots <- sample(x = unique(proj10_gz$plot), size = proj10_ug_plotct)
+    
+    # Identify unwanted plots
+    proj10_unwantplots <- setdiff(x = unique(proj10_gz$plot), y = proj10_wantplots)
+    
+    # Process the grazed data (ungrazed is fine if there are fewer)
+    proj10_sub_gz <- proj10_gz %>% 
+      ## Subset to only these plots
+      dplyr::filter(plot %in% proj10_wantplots)
+    
+    # Combine with good treatment subsetted (never messed with it)
+    proj10_sub_fix <- dplyr::bind_rows(proj10_ug, proj10_sub_gz) %>% 
+      ## Document dropped plot(s) as 'notes' (even if ultimately ignored, good to know)
+      dplyr::mutate(notes = paste0("Following plot(s) randomly removed: ",
+                                   paste(proj10_unwantplots, collapse = ", ")))
+    
+    ## If more ungrazed, do the same set of operations
+  } else {
+    
+    # Randomly identify subset of plot IDs
+    proj10_wantplots <- sample(x = unique(proj10_ug$plot), size = proj10_gz_plotct)
+    
+    # Identify unwanted plots
+    proj10_unwantplots <- setdiff(x = unique(proj10_ug$plot), y = proj10_wantplots)
+    
+    # Process the data
+    proj10_sub_ug <- proj10_ug %>% 
+      dplyr::filter(plot %in% proj10_wantplots)
+    
+    # Combine with good treatment subsetted (never messed with it)
+    proj10_sub_fix <- dplyr::bind_rows(proj10_sub_ug, proj10_gz) %>% 
+      dplyr::mutate(notes = paste0("Following plot(s) randomly removed: ",
+                                   paste(proj10_unwantplots, collapse = ", ")))
+    
+  }
+  
+  # Regardless of how it was handled, add fixed site-specific data to list
+  proj10_list[[focal_site]] <- proj10_sub_fix
+  
+  # Clear environment of intermediary objects to reduce error chances
+  ## Suppressing warnings because each run of the loop may have either "proj10_sub_gz" OR "proj10_sub_ug" (or neither)
+  suppressWarnings(rm(list = c("proj10_sub", "proj10_gz", "proj10_ug", "proj10_sub_fix",
+                               "proj10_sub_gz", "proj10_sub_ug",
+                               "proj10_gz_plotct", "proj10_ug_plotct",
+                               "proj10_wantplots", "proj10_unwantplots")))
+  
+}
+
+# Unlist and do any other needed repairs (if any)
+proj10 <- proj10_list %>% 
+  purrr::list_rbind(x = .)
+
+# Re-check structure
+dplyr::glimpse(proj10)
+
+# Re-count plots to make sure that worked
+proj10 %>% 
+  dplyr::group_by(reserve_site, treatment) %>% 
+  dplyr::summarize(plot_ct = length(unique(plot)),
+                   .groups = "keep") %>% 
+  tidyr::pivot_wider(names_from = treatment, values_from = plot_ct)
+
+# Create good/new file name
+proj10_name <- "gex_boer-ca-n4_grazing_year_grazers_plants.csv"
+proj10_path <- file.path("data", "drydock", proj10_name)
+
+# Export locally
+write.csv(x = proj10, file = proj10_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj10_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
