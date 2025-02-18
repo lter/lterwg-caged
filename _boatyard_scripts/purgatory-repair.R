@@ -156,11 +156,11 @@ for(focalsite3 in unique(proj3$site)){
   proj3_subname <- paste0("villar_brazil_",  tolower(unique(proj3_sub$site)), 
                           "_2009-2016_tapirs_forest.csv")
   
-  proj3_subpath<-file.path("data", "drydock", proj3_subname)
+  proj3_subpath <- file.path("data", "drydock", proj3_subname)
 
   
   #export renamed csv to data/drydock 
-  write.csv(proj1, na = "", row.names = F, file = proj3_subpath) 
+  write.csv(proj3_sub, na = "", row.names = F, file = proj3_subpath) 
   
   # Upload to Drive
   googledrive::drive_upload(media = proj3_subpath, overwrite = T,
