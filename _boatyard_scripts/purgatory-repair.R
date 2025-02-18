@@ -638,6 +638,79 @@ googledrive::drive_upload(media = proj11_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 12 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Too many plots in one treatment versus the other two
+
+# Read in data
+proj12_raw <- read.csv(file.path("data", "purgatory", "Bakker_ShortGrassSteppe.csv")) %>% 
+  ## Fix obvious issue with column names
+  dplyr::rename(SITE = SITE..,
+                Plot = Plot..)
+
+# Check structure
+dplyr::glimpse(proj12_raw)
+
+# Count number of plots / treatment
+proj12_raw %>% 
+  dplyr::group_by(YEAR, SITE, Grazing) %>% 
+  dplyr::summarize(plot_ct = length(unique(Plot)),
+                   .groups = "keep") %>% 
+  tidyr::pivot_wider(names_from = Grazing, values_from = plot_ct)
+
+# Separate the problem treatment from the others
+proj12_bad <- dplyr::filter(proj12_raw, Grazing == "UU")
+proj12_good <- dplyr::filter(proj12_raw, Grazing != "UU")
+
+# Check that lost nothing
+nrow(proj12_raw) == nrow(proj12_bad) + nrow(proj12_good)
+
+# Identify a smaller number of plots in the treatment with too many
+proj12_wantplots <- sample(x = unique(proj12_bad$Plot),
+                           ## Hard-coding correct number of plots
+                           size = 35)
+
+# Identify unwanted plots
+proj12_unwantplots <- setdiff(x = unique(proj12_bad$Plot), y = proj12_wantplots)
+
+# Do needed repairs
+proj12_fix <- proj12_bad %>% 
+  ## Keep only desired plots
+  dplyr::filter(Plot %in% proj12_wantplots) %>% 
+  ## Add note about dropped plot IDs
+  dplyr::mutate(notes = paste0("Following UU plot(s) randomly removed: ",
+                               paste(proj12_unwantplots, collapse = ", ")))
+
+# Recombine with rows that were good from outset
+proj12 <- dplyr::bind_rows(proj12_good, proj12_fix)
+
+# Re-check structure
+dplyr::glimpse(proj12)
+
+# Re-count number of plots / treatment
+proj12 %>% 
+  dplyr::group_by(YEAR, SITE, Grazing) %>% 
+  dplyr::summarize(plot_ct = length(unique(Plot)),
+                   .groups = "keep") %>% 
+  tidyr::pivot_wider(names_from = Grazing, values_from = plot_ct)
+
+# Create good/new file name
+proj12_name <- "gex_bakker-sgs_bakker-sgs_2001_cattle&lagomorphs_plants.csv"
+proj12_path <- file.path("data", "drydock", proj12_name)
+
+# Export locally
+write.csv(x = proj12, file = proj12_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj12_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
