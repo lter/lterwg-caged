@@ -13,7 +13,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, googledrive)
+librarian::shelf(tidyverse, googledrive, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -590,6 +590,48 @@ write.csv(x = proj10, file = proj10_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj10_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 11 ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Includes "old" biomass (needs to be removed)
+## Other tissue types must be summed across
+
+# Read in data
+proj11_raw <- read.csv(file.path("data", "purgatory", "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv"))
+
+# Check structure
+dplyr::glimpse(proj11_raw)
+
+# Do needed repairs
+proj11 <- proj11_raw %>% 
+  dplyr::filter(Biomass.type != "old above") %>% 
+  dplyr::group_by(Date, Site, Block, Quadrat, Treatment, Growth.Form, Species) %>% 
+  dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Re-check structure
+dplyr::glimpse(proj11)
+
+# Check gained/lost columns
+supportR::diff_check(old = names(proj11_raw), new = names(proj11))
+
+# Create good/new file name
+proj11_name <- "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv"
+proj11_path <- file.path("data", "drydock", proj11_name)
+
+# Export locally
+write.csv(x = proj11, file = proj11_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj11_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 # Clear environment + collect garbage
