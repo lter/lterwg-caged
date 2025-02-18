@@ -613,7 +613,7 @@ dplyr::glimpse(proj11_raw)
 proj11 <- proj11_raw %>% 
   dplyr::filter(Biomass.type != "old above") %>% 
   dplyr::group_by(Date, Site, Block, Quadrat, Treatment, Growth.Form, Species) %>% 
-  dplyr::summarize(abundance = mean(abundance, na.rm = T),
+  dplyr::summarize(abundance = sum(abundance, na.rm = T),
                    .groups = "keep") %>% 
   dplyr::ungroup()
 
