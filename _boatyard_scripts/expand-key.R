@@ -60,7 +60,7 @@ dplyr::glimpse(key_df)
 
 # Identify harmonized data
 drive_harmony <- googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
-  dplyr::filter(name == "caged_harmonized.csv")
+  dplyr::filter(name == "01_caged_harmonized.csv")
 
 # Check that worked
 drive_harmony
@@ -70,7 +70,7 @@ googledrive::drive_download(file = drive_harmony$id, overwrite = T,
                             path = file.path("data", drive_harmony$name))
 
 # Read in harmonized data
-harmony_df <- read.csv(file = file.path("data", "caged_harmonized.csv"))
+harmony_df <- read.csv(file = file.path("data", "01_caged_harmonized.csv"))
 
 # Check structure
 dplyr::glimpse(harmony_df)
