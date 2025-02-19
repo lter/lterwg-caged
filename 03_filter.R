@@ -46,6 +46,9 @@ sub_v2 <- sub_v1 %>%
 # Check number of lost rows
 message(nrow(sub_v1) - nrow(sub_v2), " rows lost")
 
+# Identify any datasets dropped entirely (shouldn't be any)
+setdiff(x = unique(sub_v1$source), y = unique(sub_v2$source))
+
 # Re-check structure
 dplyr::glimpse(sub_v2)
 
@@ -60,36 +63,31 @@ dplyr::glimpse(sub_v2)
 sub_v3 <- sub_v2 %>% 
   # Identify cases with more than one sampling point within dataset/year
   dplyr::group_by(source, year) %>% 
-  dplyr::mutate(tmp_time.ct = length(unique(sampling.point))) %>% 
+  dplyr::mutate(time.ct = length(unique(sampling.point))) %>% 
   dplyr::ungroup() %>% 
-  # Separate types of "sampling points"
-  dplyr::mutate(tmp_date = ifelse(stringr::str_detect(sampling.point, pattern = "\\/") == T,
-                                  yes = sampling.point, no = NA),
-                tmp_num = ifelse(stringr::str_detect(sampling.point, pattern = "\\/") != T & 
-                                   nchar(sampling.point) != 0,
-                                 yes = sampling.point, no = NA)) %>% 
-  # Do some necessary further tidying of those
-  tidyr::separate_wider_delim(cols = tmp_date, into = c("tmp_mo", "tmp_d", "tmp_y"), delim = "\\/") %>% 
-  dplyr::mutate(tmp_num = as.numeric(tmp_num))
+  # Filter to only either the _last_ sampling point or any dataset without that info
+  dplyr::filter(
+    time.ct == 1 |
+      (source == "gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv" & 
+         sampling.point == "11") | 
+      (source == "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv" & 
+         sampling.point == "12") | 
+      (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
+         sampling.point == "7/5/13") | 
+      (source == "pelinson_brazil_predatorisolationcomm_2017_tilapia_insects.csv" & 
+         sampling.point == "3")
+  ) %>% 
+  # Drop "sampling.point" column plus any temporary columns
+  dplyr::select(-sampling.point, -time.ct)
+
+# Check number of lost rows
+message(nrow(sub_v2) - nrow(sub_v3), " rows lost")
+
+# Identify any datasets dropped entirely (shouldn't be any)
+setdiff(x = unique(sub_v2$source), y = unique(sub_v3$source))
 
 # Re-check structure
 dplyr::glimpse(sub_v3)
-
-"\\d{2}(?=\\d{2}$)"
-
-sort(unique(sub_v3$tmp_num))
-sort(unique(sub_v3$tmp_date))
-as.Date(sub_v3$tmp_date)
-
-
-
-
-
-
-sub_v3 %>% 
-  filter(tmp_time.ct != 1) %>% 
-  view()
-
 
 ## ------------------------------------------- ##
 # Export ----
