@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, ltertools, vegan)
+librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -197,13 +197,44 @@ dplyr::distinct()
 # Check structure
 dplyr::glimpse(beta_v3)
 
+## ------------------------------------------- ##
+# Coalesce Beta Dispersion Values ----
+## ------------------------------------------- ##
+
+# Do needed wrangling
+beta_v4 <- beta_v3 %>% 
+  # Want finest non-NA level of beta dispersion for each dataset
+  dplyr::mutate(
+    ## Beta dispersion
+    betadisp = dplyr::coalesce(exp.design.1.betadisp, exp.design.2.betadisp, exp.design.3.betadisp),
+    ## Respective sample size
+    betadisp.sample.size = dplyr::case_when(
+      exp.design.1.n >= min_reps ~ exp.design.1.n,
+      exp.design.2.n >= min_reps ~ exp.design.2.n,
+      exp.design.3.n >= min_reps ~ exp.design.3.n),
+    ## Original design level corresponding to that beta dispersion value
+    betadisp.design.level = dplyr::case_when(
+      exp.design.1.n >= min_reps ~ "exp.design.1",
+      exp.design.2.n >= min_reps ~ "exp.design.2",
+      exp.design.3.n >= min_reps ~ "exp.design.3")
+  ) %>% 
+  # Drop the now-superseded beta dispersion columns / experimental design level
+  dplyr::select(-dplyr::ends_with(c(".n", ".betadisp"))) %>% 
+  # Drop non-unique rows
+  dplyr::distinct()
+
+# Check for gained/lost columns
+supportR::diff_check(old = names(beta_v3), new = names(beta_v4))
+
+# Re-check structure
+dplyr::glimpse(beta_v4)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-beta_v99 <- beta_v3
+beta_v99 <- beta_v4
 
 # Identify tidy file name / path
 beta_name <- "04_caged_beta-disp.csv"
