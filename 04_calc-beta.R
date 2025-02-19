@@ -39,8 +39,7 @@ dplyr::glimpse(beta_v1)
 beta_v2 <- beta_v1 %>% 
   dplyr::group_by(
     dplyr::across(
-      dplyr::all_of(setdiff(x = names(beta_v1),
-                            y = c("sampling.point", "abundance"))))) %>% 
+      dplyr::all_of(setdiff(x = names(beta_v1), y = "abundance")))) %>% 
   dplyr::summarize(abundance = mean(abundance, na.rm = T),
                    .groups = "keep") %>% 
   dplyr::ungroup()
@@ -50,6 +49,7 @@ dplyr::glimpse(beta_v2)
 
 # How many reps were summarized across?
 message(nrow(beta_v1) - nrow(beta_v2), " rows lost by summarizing within 'exp.design.1'")
+## Need to double check source of this if this number is non-zero!
 
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
@@ -79,84 +79,92 @@ for(focal_src in unique(beta_v2$source)){
     trt_sub <- src_sub %>% 
       dplyr::filter(original.treatment == focal_trt)
     
-    # Loop across most granular level of experimental design
-    for(focal_des1 in unique(trt_sub$exp.design.1)){
-      # focal_des1 <- "A2"
+    # Loop across study years
+    for(focal_yr in unique(trt_sub$year)){
       
-      # Subset yet again
-      des1_sub <- trt_sub %>% 
-        dplyr::filter(exp.design.1 == focal_des1)
+      # Subset again
+      yr_sub <- trt_sub %>% 
+        dplyr::filter(year == focal_yr)
       
-      # Calculate beta dispersion
-      des1_sub_out <- calc_betadisp(df = des1_sub, floor = min_reps,
-                                    taxa_col = "original.taxa", abun_col = "abundance",
-                                    dist_method = "bray", result_prefix = "exp.design.1")
-      
-      # Add to list
-      beta_des1_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_sub_out
-      
-    } # Close "exp.design.1" loop
-    
-    # Loop across experimental design level 2
-    for(focal_des2 in unique(trt_sub$exp.design.2)){
-      # focal_des2 <- "herbexclusion"
-      
-      # Subset yet again
-      des2_sub <- trt_sub %>% 
-        dplyr::filter(exp.design.2 == focal_des2)
-      
-      # Calculate beta dispersion
-      des2_sub_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
-                                     taxa_col = "original.taxa", abun_col = "abundance",
-                                     dist_method = "bray", result_prefix = "exp.design.2")
-      
-      # Drop finer experimental design level(s)
-      des2_sub_out <- des2_sub_beta %>% 
-        dplyr::select(-exp.design.1) %>% 
-        dplyr::distinct()
-      
-      # Add to list
-      beta_des2_list[[paste0(focal_src, focal_trt, focal_des2)]] <- des2_sub_out
-      
-    } # Close "exp.design.2" loop
-    
-    # Loop across experimental design level 3
-    for(focal_des3 in unique(trt_sub$exp.design.3)){
-      # focal_des3 <- "herbexclusion"
-      
-      # Subset yet again
-      des3_sub <- trt_sub %>% 
-        dplyr::filter(exp.design.3 == focal_des3)
-      
-      # If there is more than one experimental design level 2...
-      if(length(unique(des3_sub$exp.design.2)) > 1){
+      # Loop across most granular level of experimental design
+      for(focal_des1 in unique(yr_sub$exp.design.1)){
+        # focal_des1 <- "A2"
         
-        # Average across experimental design 1 (within exp. design 2 levels)
-        des3_sub %<>% 
-          dplyr::group_by(
-            dplyr::across(
-              dplyr::all_of(setdiff(x = names(trt_sub), 
-                                    y = c("exp.design.1", "abundance"))))) %>% 
-          dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                           .groups = "keep") %>% 
-          dplyr::ungroup()
+        # Subset yet again
+        des1_sub <- yr_sub %>% 
+          dplyr::filter(exp.design.1 == focal_des1)
         
-      } # Close conditional aggregation
+        # Calculate beta dispersion
+        des1_sub_out <- calc_betadisp(df = des1_sub, floor = min_reps,
+                                      taxa_col = "original.taxa", abun_col = "abundance",
+                                      dist_method = "bray", result_prefix = "exp.design.1")
+        
+        # Add to list
+        beta_des1_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_sub_out
+        
+      } # Close "exp.design.1" loop
       
-      # Calculate beta dispersion
-      des3_sub_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
-                                     taxa_col = "original.taxa", abun_col = "abundance",
-                                     dist_method = "bray", result_prefix = "exp.design.3")
+      # Loop across experimental design level 2
+      for(focal_des2 in unique(yr_sub$exp.design.2)){
+        # focal_des2 <- "herbexclusion"
+        
+        # Subset yet again
+        des2_sub <- yr_sub %>% 
+          dplyr::filter(exp.design.2 == focal_des2)
+        
+        # Calculate beta dispersion
+        des2_sub_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
+                                       taxa_col = "original.taxa", abun_col = "abundance",
+                                       dist_method = "bray", result_prefix = "exp.design.2")
+        
+        # Drop finer experimental design level(s)
+        des2_sub_out <- des2_sub_beta %>% 
+          dplyr::select(-exp.design.1) %>% 
+          dplyr::distinct()
+        
+        # Add to list
+        beta_des2_list[[paste0(focal_src, focal_trt, focal_des2)]] <- des2_sub_out
+        
+      } # Close "exp.design.2" loop
       
-      # Drop finer experimental design level(s)
-      des3_sub_out <- des3_sub_beta %>% 
-        dplyr::select(-dplyr::ends_with(c("exp.design.1", "exp.design.2"))) %>% 
-        dplyr::distinct()
-      
-      # Add to list
-      beta_des3_list[[paste0(focal_src, focal_trt, focal_des3)]] <- des3_sub_out
-      
-    } # Close "exp.design.3" loop
+      # Loop across experimental design level 3
+      for(focal_des3 in unique(yr_sub$exp.design.3)){
+        # focal_des3 <- "herbexclusion"
+        
+        # Subset yet again
+        des3_sub <- yr_sub %>% 
+          dplyr::filter(exp.design.3 == focal_des3)
+        
+        # If there is more than one experimental design level 2...
+        if(length(unique(des3_sub$exp.design.2)) > 1){
+          
+          # Average across experimental design 1 (within exp. design 2 levels)
+          des3_sub %<>% 
+            dplyr::group_by(
+              dplyr::across(
+                dplyr::all_of(setdiff(x = names(trt_sub), 
+                                      y = c("exp.design.1", "abundance"))))) %>% 
+            dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                             .groups = "keep") %>% 
+            dplyr::ungroup()
+          
+        } # Close conditional aggregation
+        
+        # Calculate beta dispersion
+        des3_sub_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
+                                       taxa_col = "original.taxa", abun_col = "abundance",
+                                       dist_method = "bray", result_prefix = "exp.design.3")
+        
+        # Drop finer experimental design level(s)
+        des3_sub_out <- des3_sub_beta %>% 
+          dplyr::select(-dplyr::ends_with(c("exp.design.1", "exp.design.2"))) %>% 
+          dplyr::distinct()
+        
+        # Add to list
+        beta_des3_list[[paste0(focal_src, focal_trt, focal_des3)]] <- des3_sub_out
+        
+      } # Close "exp.design.3" loop
+    } # Close year loop
   } # Close treatment loop
 } # Close source loop
 
@@ -188,6 +196,7 @@ dplyr::distinct()
 
 # Check structure
 dplyr::glimpse(beta_v3)
+
 
 ## ------------------------------------------- ##
 # Export ----
