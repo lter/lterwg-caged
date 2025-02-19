@@ -1,25 +1,19 @@
-## --------------------------------------------------------------- ##
-# CAGED Beta Dispersion Calculation Function
-## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
-
-# Purpose
-## Calculate beta dispersion for provided (long-format) community data
-## Returns dataframe with number of replicates as well as beta dispersion value
-
-
-# Define function
+#' @title Calculate Beta Dispersion
+#' 
+#' @description Calculates beta dispersion for provided (long-format) community data.
+#' 
+#' @param df (dataframe-like) long-format dataframe of community comp.
+#' @param floor (numeric) minimum number of replicates for which to calculate beta dispersion. Inclusive of provided value (e.g., `floor = 4` will calculate beta dispersion for n = 4 data)
+#' @param taxa_col (character) name of column in 'df' containing taxonomic ID
+#' @param abun_col (character) name of column in 'df' containing numeric abundance values. (e.g., species, functional group, etc.)
+#' @param dist_method (character) distance method shorthand accepted by `vegan::vegdist`
+#' @param result_prefix (character) prefix to use when creating results columns. This argument is used to define the start of new columns containing results (end of columns determined inside of function)
+#' 
+#' @return (dataframe-like) data object without taxa/abundance information but with added columns for sample size and beta dispersion.
+#' 
 calc_betadisp <- function(df = NULL, floor = 4,
                           taxa_col = NULL, abun_col = NULL,
                           dist_method = "bray", result_prefix = "result"){
-  ## `df` = long-format dataframe of community comp.
-  ## `floor` = minimum number (inclusive) of replicates for which to calculate beta dispersion
-  ## `taxa_col` = name of column in 'df' containing taxonomic ID
-  ### (e.g., species, functional group, etc.)
-  ## `abun_col` = name of column in 'df' containing abundance values
-  ## `dist_method` = distance method shorthand accepted by `vegan::vegdist`
-  ## `result_prefix` = result columns' prefix
-  ### (used to informatively add outputs to input data object)
   
   # Error if missing data or df is not provided as a dataframe-like object
   if(is.null(df) || "data.frame" %in% class(df) != T)
