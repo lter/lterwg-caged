@@ -53,11 +53,11 @@ calc_betadisp <- function(df = NULL, floor = 4,
   if(reps >= floor){
     
     # Get distance/dissimilarity matrix
-    dist_val <- vegan::vegdist(x = comm_wide, method = "bray")
+    dist_val <- vegan::vegdist(x = comm_wide, method = dist_method)
     
     # Calculate beta dispersion
     beta_val <- vegan::betadisper(d = dist_val, group = as.factor(rep(x = "x", times = reps)),
-                              type = "centroid", bias.adjust = F, 
+                              type = "median", bias.adjust = F, 
                               sqrt.dist = F, add = F)
     
     
