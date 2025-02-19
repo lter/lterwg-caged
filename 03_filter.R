@@ -50,11 +50,53 @@ message(nrow(sub_v1) - nrow(sub_v2), " rows lost")
 dplyr::glimpse(sub_v2)
 
 ## ------------------------------------------- ##
+# Handle Sub-Annual Sampling ----
+## ------------------------------------------- ##
+
+# Check structure
+dplyr::glimpse(sub_v2)
+
+# Do needed processing
+sub_v3 <- sub_v2 %>% 
+  # Identify cases with more than one sampling point within dataset/year
+  dplyr::group_by(source, year) %>% 
+  dplyr::mutate(tmp_time.ct = length(unique(sampling.point))) %>% 
+  dplyr::ungroup() %>% 
+  # Separate types of "sampling points"
+  dplyr::mutate(tmp_date = ifelse(stringr::str_detect(sampling.point, pattern = "\\/") == T,
+                                  yes = sampling.point, no = NA),
+                tmp_num = ifelse(stringr::str_detect(sampling.point, pattern = "\\/") != T & 
+                                   nchar(sampling.point) != 0,
+                                 yes = sampling.point, no = NA)) %>% 
+  # Do some necessary further tidying of those
+  tidyr::separate_wider_delim(cols = tmp_date, into = c("tmp_mo", "tmp_d", "tmp_y"), delim = "\\/") %>% 
+  dplyr::mutate(tmp_num = as.numeric(tmp_num))
+
+# Re-check structure
+dplyr::glimpse(sub_v3)
+
+"\\d{2}(?=\\d{2}$)"
+
+sort(unique(sub_v3$tmp_num))
+sort(unique(sub_v3$tmp_date))
+as.Date(sub_v3$tmp_date)
+
+
+
+
+
+
+sub_v3 %>% 
+  filter(tmp_time.ct != 1) %>% 
+  view()
+
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v2
+sub_v99 <- sub_v3
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
