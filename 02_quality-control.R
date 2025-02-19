@@ -88,19 +88,45 @@ tidy_v4 <- tidy_v3 %>%
 sort(unique(tidy_v4$original.taxa))
 
 ## ------------------------------------------- ##
+# Standardize Study Years ----
+## ------------------------------------------- ##
+
+# Check current years
+tidy_v4 %>% 
+  dplyr::group_by(source, sampling.years) %>% 
+  dplyr::summarize(years = paste(unique(year), collapse = ", "))
+
+# Fill in missing years as appropriate
+tidy_v5 <- tidy_v4 %>% 
+  dplyr::mutate(year = dplyr::case_when(
+    !is.na(year) ~ as.character(year),
+    source %in% c("hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv") ~ paste0(sampling.point, "_"),
+    T ~ sampling.years)) %>% 
+  # Do any needed post-processing
+  dplyr::mutate(year = dplyr::case_when(
+    stringr::str_detect(string = year, pattern = "\\/") ~ paste0("20", gsub(pattern = "\\/|_", replacement = "", x = stringr::str_extract(string = year, pattern = "\\/[:digit:]{2}_"))),
+    T ~ year))
+
+# Re-check years
+tidy_v5 %>% 
+  dplyr::group_by(source, sampling.years) %>% 
+  dplyr::summarize(years = paste(unique(year), collapse = ", "))
+
+
+## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
 ## ------------------------------------------- ##
 
 # Re-check structure
-dplyr::glimpse(tidy_v4)
+dplyr::glimpse(tidy_v5)
 
 # Do desired standardization
-tidy_v5 <- tidy_v4 %>% 
+tidy_v6 <- tidy_v5 %>% 
   # Standardize casing for distance from surface
   dplyr::mutate(distance.from.surface = tolower(distance.from.surface))
 
 # Re-check structure
-dplyr::glimpse(tidy_v5)
+dplyr::glimpse(tidy_v6)
 
 ## ------------------------------------------- ##
 # Download Group-Defined Metadata ----
@@ -155,21 +181,21 @@ meta_v2 %>%
 ## ------------------------------------------- ##
 
 # Attach metadata to QC'd data
-tidy_v6 <- tidy_v5 %>% 
+tidy_v7 <- tidy_v6 %>% 
   dplyr::left_join(y = meta_v2, by = c("source")) %>% 
   # Re-arrange slightly
   dplyr::relocate(region:resource.taxa, 
                   .after = measured.group)
 
 # Check structure
-dplyr::glimpse(tidy_v6)
+dplyr::glimpse(tidy_v7)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-tidy_v99 <- tidy_v6
+tidy_v99 <- tidy_v7
 
 # Check structure
 dplyr::glimpse(tidy_v99)
