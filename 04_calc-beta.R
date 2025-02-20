@@ -234,11 +234,50 @@ supportR::diff_check(old = names(beta_v3), new = names(beta_v4))
 dplyr::glimpse(beta_v4)
 
 ## ------------------------------------------- ##
+# Consolidate 'Design' Columns ----
+## ------------------------------------------- ##
+
+# Check structure
+dplyr::glimpse(beta_v4)
+
+# Want to simplify design columns to only relevant one(s) for each dataset
+beta_v5 <- beta_v4 %>% 
+  dplyr::mutate(exp.design = dplyr::case_when(
+    ## Design level 3 is the finest level available
+    betadisp.design.level == "exp.design.3" ~ exp.design.3,
+    ## Design level 2 is the finest level available
+    betadisp.design.level == "exp.design.2" & 
+      exp.design.2 == exp.design.3 ~ exp.design.2,
+    betadisp.design.level == "exp.design.2" & 
+      exp.design.2 != exp.design.3 ~ paste(exp.design.3, exp.design.2, sep = "___"),
+    ## Design level 1 is the finest level available
+    betadisp.design.level == "exp.design.1" & 
+      exp.design.1 != exp.design.2 & exp.design.2 != exp.design.3 ~ paste(exp.design.3, exp.design.2, exp.design.1, sep = "___"),
+    betadisp.design.level == "exp.design.1" & 
+      exp.design.1 != exp.design.2 & exp.design.2 == exp.design.3 ~ paste(exp.design.2, exp.design.1, sep = "___"),
+    exp.design.1 == exp.design.2 & exp.design.2 != exp.design.3 ~ paste(exp.design.3, exp.design.1, sep = "___"),
+    exp.design.1 == exp.design.2 & exp.design.2 == exp.design.3 ~ paste(exp.design.1, sep = "___"),
+    T ~ NA), .after = exp.name) %>% 
+  # Drop now-superseded experimental design columns
+  dplyr::select(-exp.design.1, -exp.design.2, -exp.design.3) %>% 
+  # Drop non-unique rows
+  dplyr::distinct()
+
+# Make sure all datasets have a value in the new "exp.design" column
+beta_v5 %>% 
+  dplyr::filter(is.na(exp.design) == T) %>% 
+  dplyr::select(source, betadisp.design.level) %>% 
+  dplyr::distinct()
+
+# Re-check structure
+dplyr::glimpse(beta_v5)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-beta_v99 <- beta_v4
+beta_v99 <- beta_v5
 
 # Identify tidy file name / path
 beta_name <- "04_caged_beta-disp.csv"
