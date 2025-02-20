@@ -28,19 +28,67 @@ dplyr::glimpse(tidy_v1)
 
 # Check current treatments
 tidy_v1 %>% 
-  dplyr::select(source, organization, original.treatment) %>% 
+  dplyr::select(organization, original.treatment) %>% 
   dplyr::distinct()
 
 # Perform needed standardization
-tidy_v2 <- tidy_v1
-## NOTE
-### LEAVING ALONE (FOR NOW)
-### Need to discuss with group
+tidy_v2 <- tidy_v1 %>% 
+  dplyr::mutate(cage.treatment = dplyr::case_when(
+    organization == "cain" & original.treatment == "Open" ~ "uncaged",
+    organization == "cain" & original.treatment == "Exclosure" ~ "caged",
+    organization == "cper" & original.treatment == "AH" ~ "uncaged",
+    organization == "cper" & original.treatment == "CE" ~ "caged",
+    organization == "cper" & original.treatment == "CRE" ~ "uncaged",
+    organization == "cper" & original.treatment == "RE" ~ "caged",
+    organization == "gex" & original.treatment == "G" ~ "uncaged",
+    organization == "gex" & original.treatment == "U" ~ "caged",
+    organization == "hensel" & original.treatment == "Control" ~ "uncaged",
+    organization == "hensel" & original.treatment == "Exclusion" ~ "caged",
+    organization == "lter-bonanzacreek" & original.treatment == "Fenced_Sprayed" ~ "caged",
+    organization == "lter-bonanzacreek" & original.treatment == "Fenced_Unsprayed" ~ "caged",
+    organization == "lter-bonanzacreek" & original.treatment == "Unfenced_Sprayed" ~ "uncaged",
+    organization == "lter-bonanzacreek" & original.treatment == "Unfenced_Unsprayed" ~ "uncaged",
+    organization == "lter-mcr" & stringr::str_detect(string = original.treatment, pattern = "Open_") ~ "uncaged",
+    organization == "lter-mcr" & stringr::str_detect(string = original.treatment, pattern = "1X1_") ~ "caged",
+    organization == "lter-mcr" & stringr::str_detect(string = original.treatment, pattern = "2X2_") ~ "caged",
+    organization == "lter-mcr" & stringr::str_detect(string = original.treatment, pattern = "3X3_") ~ "caged",
+    organization == "mcdevittirwin" & original.treatment == "Caged" ~ "caged",
+    organization == "mcdevittirwin" & original.treatment == "Uncaged" ~ "uncaged",
+    organization == "mcdevittirwin" & original.treatment == "Partial" ~ "uncaged",
+    organization == "pelinson" & original.treatment == "present" ~ "caged",
+    organization == "pelinson" & original.treatment == "absent" ~ "uncaged",
+    organization == "porensky" & original.treatment == "n_out" ~ "uncaged",
+    organization == "porensky" & original.treatment == "y_out" ~ "caged",
+    organization == "porensky" & original.treatment == "y_livestock ex" ~ "caged",
+    organization == "porensky" & original.treatment == "n_livestock ex" ~ "caged",
+    organization == "porensky" & original.treatment == "y_ungulate ex" ~ "caged",
+    organization == "porensky" & original.treatment == "n_ungulate ex" ~ "caged",
+    organization == "gilson" & original.treatment == "C" ~ "uncaged",
+    organization == "gilson" & original.treatment == "F" ~ "caged",
+    organization == "gilson" & original.treatment == "H" ~ "caged",
+    organization == "lter-arc" & original.treatment %in% c("LFNP", "N", "NFNP", 
+                                                           "NP", "P", "SFNP", "Nitrogen",
+                                                           "Nitrogen Phosphorus", "Phosphorus",
+                                                           "Small Fenced No Fertilizer") ~ "caged",
+    organization == "lter-arc" & original.treatment %in% c("LFCT", "LFCT17",  "CT", 
+                                                           "MFCT17", "NFCT", "SFCT", 
+                                                           "SFCT17", "Control", "Control Unfenced",
+                                                           "Greenhouse Control", 
+                                                           "Nitrogen Phosphorus Unfenced") ~ "uncaged",
+    organization == "royo" & stringr::str_detect(string = original.treatment, pattern = "_NoDeer_") ~ "caged",
+    organization == "royo" & stringr::str_detect(string = original.treatment, pattern = "_Deer_") ~ "uncaged",
+    organization == "lter-andrewsforest" & original.treatment == "IN" ~ "uncaged",
+    organization == "lter-andrewsforest" & original.treatment == "OUT" ~ "caged",
+    T ~ original.treatment), .after = original.treatment)
 
-# Check standardized treatments
+# Check for any un-standardized treatments
 tidy_v2 %>% 
-  dplyr::select(source, organization, original.treatment) %>% 
+  dplyr::filter(!cage.treatment %in% c("caged", "uncaged")) %>% 
+  dplyr::select(organization, cage.treatment) %>% 
   dplyr::distinct()
+
+# Re-check structure
+dplyr::glimpse(tidy_v2)
 
 ## ------------------------------------------- ##
 # Standardize Experimental Design Facets ----
@@ -53,10 +101,6 @@ tidy_v2 %>%
 
 # Do needed standardization
 tidy_v3 <- tidy_v2 %>% 
-  # Conditionally change any that need changing
-  dplyr::mutate(exp.design.1 = dplyr::case_when(
-    
-    T ~ exp.design.1)) %>% 
   # Fill any missing values with experiment name
   ## (All have 'exp.design.1' but not necessarily all have higher levels)
   dplyr::mutate(
