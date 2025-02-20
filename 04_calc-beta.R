@@ -353,11 +353,12 @@ beta_viz <- beta_v99 %>%
 dplyr::glimpse(beta_viz)
 
 # Exploratory graph
-ggplot(beta_viz, aes(x = cage.treatment, y = betadisp, fill = betadisp.n.bin)) +
-  geom_violin() +
+ggplot(beta_viz, aes(x = cage.treatment, y = betadisp)) +
+  geom_jitter(aes(fill = cage.treatment), width = 0.15,
+              alpha = 0.3, size = 1, pch = 21) +
   facet_wrap(. ~ source) +
   labs(x = "Cage Treatment", y = "Beta Dispersion") +
-  theme(legend.position = "top",
+  theme(legend.position = "none",
         legend.title = element_blank(),
         axis.text.x = element_text(angle = 35, hjust = 1))
 
