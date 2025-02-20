@@ -124,12 +124,12 @@ sort(unique(tidy_v3$original.taxa))
 
 # Do desired wrangling
 tidy_v4 <- tidy_v3 %>% 
-  dplyr::mutate(original.taxa = dplyr::case_when(
+  dplyr::mutate(taxa = dplyr::case_when(
     
-    T ~ original.taxa))
+    T ~ original.taxa), .after = original.taxa)
 
 # Re-check taxa names
-sort(unique(tidy_v4$original.taxa))
+sort(unique(tidy_v4$taxa))
 
 ## ------------------------------------------- ##
 # Standardize Study Years ----
@@ -155,7 +155,6 @@ tidy_v5 <- tidy_v4 %>%
 tidy_v5 %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "))
-
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
@@ -193,6 +192,9 @@ googledrive::drive_download(file = meta_drive$id, overwrite = T, type = "csv",
 
 # Read in metadata
 meta_v1 <- read.csv(file = file.path("data", "caged_metadata.csv"))
+
+# Check structure
+dplyr::glimpse(meta_v1)
 
 # Do needed wrangling
 meta_v2 <- meta_v1 %>% 
