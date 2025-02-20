@@ -338,72 +338,31 @@ dplyr::glimpse(beta_v99)
 # Do some pre-visualization wrangling
 beta_viz <- beta_v99 %>% 
   dplyr::mutate(
-    exp.design.1.n.bin = dplyr::case_when(
-      exp.design.1.n == 1 ~ "N = 1",
-      exp.design.1.n > 1 & exp.design.1.n <= 5 ~ "N = 2-5",
-      exp.design.1.n > 5 & exp.design.1.n <= 15 ~ "N = 6-15",
-      exp.design.1.n > 15 & exp.design.1.n <= 30 ~ "N = 16-30",
-      exp.design.1.n > 30 ~ "N > 30"),
-    exp.design.2.n.bin = dplyr::case_when(
-      exp.design.2.n == 1 ~ "N = 1",
-      exp.design.2.n > 1 & exp.design.2.n <= 5 ~ "N = 2-5",
-      exp.design.2.n > 5 & exp.design.2.n <= 15 ~ "N = 6-15",
-      exp.design.2.n > 15 & exp.design.2.n <= 30 ~ "N = 16-30",
-      exp.design.2.n > 30 ~ "N > 30"),
-    exp.design.3.n.bin = dplyr::case_when(
-      exp.design.3.n == 1 ~ "N = 1",
-      exp.design.3.n > 1 & exp.design.3.n <= 5 ~ "N = 2-5",
-      exp.design.3.n > 5 & exp.design.3.n <= 15 ~ "N = 6-15",
-      exp.design.3.n > 15 & exp.design.3.n <= 30 ~ "N = 16-30",
-      exp.design.3.n > 30 ~ "N > 30")
-  ) %>% 
-  dplyr::mutate(
-    dplyr::across(.cols = dplyr::ends_with(".n.bin"),
-                  .fns = ~ factor(x = ., levels = c("N = 1", "N = 2-5", 
-                                                    "N = 6-15", "N = 16-30", 
-                                                    "N > 30"))))
-
+    betadisp.n.bin = dplyr::case_when(
+      betadisp.sample.size == 1 ~ "N = 1",
+      betadisp.sample.size > 1 & betadisp.sample.size <= 5 ~ "N = 2-5",
+      betadisp.sample.size > 5 & betadisp.sample.size <= 15 ~ "N = 6-15",
+      betadisp.sample.size > 15 & betadisp.sample.size <= 30 ~ "N = 16-30",
+      betadisp.sample.size > 30 ~ "N > 30",
+      T ~ NA)) %>% 
+  dplyr::mutate(betadisp.n.bin = factor(x = betadisp.n.bin, 
+                                        levels = c("N = 1", "N = 2-5", 
+                                                   "N = 6-15", "N = 16-30", 
+                                                   "N > 30")))
 # Re-check structure
 dplyr::glimpse(beta_viz)
 
-# Design level 1 graph
-ggplot(beta_viz, aes(x = organization, y = exp.design.1.betadisp,
-                     fill = exp.design.1.n.bin)) +
+# Exploratory graph
+ggplot(beta_viz, aes(x = cage.treatment, y = betadisp, fill = betadisp.n.bin)) +
   geom_violin() +
-  labs(x = "Organization", y = "Beta Dispersion (Design Level 1)") +
+  facet_wrap(. ~ source) +
+  labs(x = "Cage Treatment", y = "Beta Dispersion") +
   theme(legend.position = "top",
         legend.title = element_blank(),
         axis.text.x = element_text(angle = 35, hjust = 1))
 
 # Export locally
-ggsave(filename = file.path("graphs", "04_betadisp-violins_exp-design-1.png"),
-       width = 10, height = 5, units = "in")
-
-# Design level 2 graph
-ggplot(beta_viz, aes(x = organization, y = exp.design.2.betadisp,
-                     fill = exp.design.2.n.bin)) +
-  geom_violin() +
-  labs(x = "Organization", y = "Beta Dispersion (Design Level 2)") +
-  theme(legend.position = "top",
-        legend.title = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-# Export locally
-ggsave(filename = file.path("graphs", "04_betadisp-violins_exp-design-2.png"),
-       width = 10, height = 5, units = "in")
-
-# Design level 3 graph
-ggplot(beta_viz, aes(x = organization, y = exp.design.3.betadisp,
-                     fill = exp.design.3.n.bin)) +
-  geom_violin() +
-  labs(x = "Organization", y = "Beta Dispersion (Design Level 3)") +
-  theme(legend.position = "top",
-        legend.title = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-# Export locally
-ggsave(filename = file.path("graphs", "04_betadisp-violins_exp-design-3.png"),
-       width = 10, height = 5, units = "in")
-
+ggsave(filename = file.path("graphs", "04_betadisp-violins.png"),
+       width = 12, height = 12, units = "in")
 
 # End ----
