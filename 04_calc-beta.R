@@ -234,14 +234,43 @@ supportR::diff_check(old = names(beta_v3), new = names(beta_v4))
 dplyr::glimpse(beta_v4)
 
 ## ------------------------------------------- ##
+# Check for Missing Beta Dispersions ----
+## ------------------------------------------- ##
+
+# Any datasets without beta dispersion?
+beta_v4 %>% 
+  dplyr::filter(is.na(betadisp)) %>% 
+  dplyr::select(source, exp.design.3, exp.design.2, exp.design.1) %>% 
+  dplyr::distinct()
+
+# Remove missing beta dispersion values
+beta_v5 <- beta_v4 %>% 
+  dplyr::filter(is.na(betadisp) != T)
+
+# Double check that worked (below pipe should return 0 rows)
+beta_v5 %>% 
+  dplyr::filter(is.na(betadisp)) %>% 
+  dplyr::select(source, exp.design.3, exp.design.2, exp.design.1) %>% 
+  dplyr::distinct()
+
+# How many rows are lost?
+message(nrow(beta_v4) - nrow(beta_v5), " rows lost")
+
+# Any entire datasets lost?
+supportR::diff_check(old = unique(beta_v4$source), new = unique(beta_v5$source))
+
+# General structure check
+dplyr::glimpse(beta_v5)
+
+## ------------------------------------------- ##
 # Consolidate 'Design' Columns ----
 ## ------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(beta_v4)
+dplyr::glimpse(beta_v5)
 
 # Want to simplify design columns to only relevant one(s) for each dataset
-beta_v5 <- beta_v4 %>% 
+beta_v6 <- beta_v5 %>% 
   dplyr::mutate(exp.design = dplyr::case_when(
     ## Design level 3 is the finest level available
     betadisp.design.level == "exp.design.3" ~ exp.design.3,
@@ -259,25 +288,28 @@ beta_v5 <- beta_v4 %>%
     exp.design.1 == exp.design.2 & exp.design.2 == exp.design.3 ~ paste(exp.design.1, sep = "___"),
     T ~ NA), .after = exp.name) %>% 
   # Drop now-superseded experimental design columns
-  dplyr::select(-exp.design.1, -exp.design.2, -exp.design.3) %>% 
+  dplyr::select(-dplyr::starts_with(c("exp.design.1", "exp.design.2", "exp.design.3"))) %>% 
   # Drop non-unique rows
   dplyr::distinct()
 
 # Make sure all datasets have a value in the new "exp.design" column
-beta_v5 %>% 
+beta_v6 %>% 
   dplyr::filter(is.na(exp.design) == T) %>% 
   dplyr::select(source, betadisp.design.level) %>% 
   dplyr::distinct()
 
+# Check for gained/lost columns
+supportR::diff_check(old = names(beta_v5), new = names(beta_v6))
+
 # Re-check structure
-dplyr::glimpse(beta_v5)
+dplyr::glimpse(beta_v6)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-beta_v99 <- beta_v5
+beta_v99 <- beta_v6
 
 # Identify tidy file name / path
 beta_name <- "04_caged_beta-disp.csv"
