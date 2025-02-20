@@ -44,12 +44,16 @@ beta_v2 <- beta_v1 %>%
                    .groups = "keep") %>% 
   dplyr::ungroup()
 
+# How many rows were summarized across?
+message(nrow(beta_v1) - nrow(beta_v2), " rows lost by summarizing within 'exp.design.1'")
+## May need to double check source of this if this number is non-zero!
+## Note though that streamlining treatment / taxa information will likely make this number non-zero
+
+# Identify any datasets dropped entirely (shouldn't be any)
+setdiff(x = unique(beta_v1$source), y = unique(beta_v2$source))
+
 # Re-check structure
 dplyr::glimpse(beta_v2)
-
-# How many reps were summarized across?
-message(nrow(beta_v1) - nrow(beta_v2), " rows lost by summarizing within 'exp.design.1'")
-## Need to double check source of this if this number is non-zero!
 
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
