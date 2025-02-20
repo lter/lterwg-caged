@@ -76,12 +76,12 @@ for(focal_src in unique(beta_v2$source)){
     dplyr::filter(source == focal_src)
   
   # Loop across treatments
-  for(focal_trt in unique(src_sub$original.treatment)){
+  for(focal_trt in unique(src_sub$cage.treatment)){
     # focal_trt <- "Exclosure"
     
     # Subset again
     trt_sub <- src_sub %>% 
-      dplyr::filter(original.treatment == focal_trt)
+      dplyr::filter(cage.treatment == focal_trt)
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
@@ -100,7 +100,7 @@ for(focal_src in unique(beta_v2$source)){
         
         # Calculate beta dispersion
         des1_sub_out <- calc_betadisp(df = des1_sub, floor = min_reps,
-                                      taxa_col = "original.taxa", abun_col = "abundance",
+                                      taxa_col = "taxa", abun_col = "abundance",
                                       dist_method = "bray", result_prefix = "exp.design.1")
         
         # Add to list
@@ -118,7 +118,7 @@ for(focal_src in unique(beta_v2$source)){
         
         # Calculate beta dispersion
         des2_sub_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
-                                       taxa_col = "original.taxa", abun_col = "abundance",
+                                       taxa_col = "taxa", abun_col = "abundance",
                                        dist_method = "bray", result_prefix = "exp.design.2")
         
         # Drop finer experimental design level(s)
@@ -156,7 +156,7 @@ for(focal_src in unique(beta_v2$source)){
         
         # Calculate beta dispersion
         des3_sub_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
-                                       taxa_col = "original.taxa", abun_col = "abundance",
+                                       taxa_col = "taxa", abun_col = "abundance",
                                        dist_method = "bray", result_prefix = "exp.design.3")
         
         # Drop finer experimental design level(s)
@@ -184,7 +184,7 @@ beta_v3 <- beta_des1 %>%
                           "experiment.name", "sampling.years", "excluded.group", 
                           "measured.group", "region", "lter.site", "ecosystem", 
                           "consumer.taxa", "resource.taxa", 
-                          "original.treatment", "exclosure.age", "year", 
+                          "cage.treatment", "exclosure.age", "year", 
                           "exp.name", "exp.design.3", "exp.design.2",
                           "distance.from.surface", "distance.from.source")) %>% 
   dplyr::left_join(y = beta_des3,
@@ -192,7 +192,7 @@ beta_v3 <- beta_des1 %>%
                           "experiment.name", "sampling.years", "excluded.group", 
                           "measured.group", "region", "lter.site", "ecosystem", 
                           "consumer.taxa", "resource.taxa", 
-                          "original.treatment", "exclosure.age", "year", 
+                          "cage.treatment", "exclosure.age", "year", 
                           "exp.name", "exp.design.3",
                           "distance.from.surface", "distance.from.source")) %>% 
 # Drop non-unique rows that may result from this joining process
