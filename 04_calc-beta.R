@@ -47,7 +47,8 @@ beta_v2 <- beta_v1 %>%
 # How many rows were summarized across?
 message(nrow(beta_v1) - nrow(beta_v2), " rows lost by summarizing within 'exp.design.1'")
 ## May need to double check source of this if this number is non-zero!
-## Note though that streamlining treatment / taxa information will likely make this number non-zero
+## Note though that streamlining treatment / taxa information will likely make this number non-zero 
+### (because "species X" and "species x" would have been different rows but synonymizing them fixes that)
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(beta_v1$source), y = unique(beta_v2$source))
@@ -177,6 +178,8 @@ beta_des1 <- purrr::list_rbind(x = beta_des1_list)
 beta_des2 <- purrr::list_rbind(x = beta_des2_list)
 beta_des3 <- purrr::list_rbind(x = beta_des3_list)
 
+intersect(names(beta_des1), names(beta_des2))
+
 # Combine them!
 beta_v3 <- beta_des1 %>% 
   dplyr::left_join(y = beta_des2,
@@ -185,7 +188,7 @@ beta_v3 <- beta_des1 %>%
                           "measured.group", "region", "lter.site", "ecosystem", 
                           "consumer.taxa", "resource.taxa", 
                           "cage.treatment", "exclosure.age", "year", 
-                          "exp.name", "exp.design.3", "exp.design.2",
+                          "exp.name", "exp.design.4", "exp.design.3", "exp.design.2",
                           "distance.from.surface", "distance.from.source")) %>% 
   dplyr::left_join(y = beta_des3,
                    by = c("source", "organization", "site", 
@@ -193,7 +196,7 @@ beta_v3 <- beta_des1 %>%
                           "measured.group", "region", "lter.site", "ecosystem", 
                           "consumer.taxa", "resource.taxa", 
                           "cage.treatment", "exclosure.age", "year", 
-                          "exp.name", "exp.design.3",
+                          "exp.name", "exp.design.4", "exp.design.3",
                           "distance.from.surface", "distance.from.source")) %>% 
 # Drop non-unique rows that may result from this joining process
 dplyr::distinct()
