@@ -208,7 +208,9 @@ tidy_v5 <- tidy_v4 %>%
 # Re-check years
 tidy_v5 %>% 
   dplyr::group_by(source, sampling.years) %>% 
-  dplyr::summarize(years = paste(unique(year), collapse = ", "))
+  dplyr::summarize(years = paste(sort(unique(year)), collapse = ", "),
+                   .groups = "keep") %>% 
+  as.data.frame()
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
@@ -286,6 +288,12 @@ tidy_v7 <- tidy_v6 %>%
   # Re-arrange slightly
   dplyr::relocate(region:resource.taxa, 
                   .after = measured.group)
+
+# What sources are missing metadata information?
+tidy_v7 %>% 
+  dplyr::filter(is.na(region) | is.na(ecosystem)) %>% 
+  dplyr::select(source, region, lter.site, ecosystem, consumer.taxa, resource.taxa) %>% 
+  dplyr::distinct()
 
 # Check structure
 dplyr::glimpse(tidy_v7)
