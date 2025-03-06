@@ -191,26 +191,40 @@ sort(unique(tidy_v4$taxa))
 
 # Check current years
 tidy_v4 %>% 
+  dplyr::filter(is.na(year) | nchar(year) != 4) %>% 
   dplyr::group_by(source, sampling.years) %>% 
-  dplyr::summarize(years = paste(unique(year), collapse = ", "))
+  dplyr::summarize(years = paste(unique(year), collapse = ", "),
+                   .groups = "keep")
 
 # Fill in missing years as appropriate
 tidy_v5 <- tidy_v4 %>% 
   dplyr::mutate(year = dplyr::case_when(
     !is.na(year) ~ as.character(year),
-    source %in% c("hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv") ~ paste0(sampling.point, "_"),
-    T ~ sampling.years)) %>% 
+    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ sampling.point,
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
+    source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ sampling.point,
+    source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
+    nchar(sampling.years) == 4 ~ sampling.years,
+    T ~ NA)) %>% 
   # Do any needed post-processing
-  dplyr::mutate(year = dplyr::case_when(
-    stringr::str_detect(string = year, pattern = "\\/") ~ paste0("20", gsub(pattern = "\\/|_", replacement = "", x = stringr::str_extract(string = year, pattern = "\\/[:digit:]{2}_"))),
-    T ~ year))
+  ## Turn full dates into years
+  dplyr::mutate(
+    year = ifelse(stringr::str_detect(string = year, pattern = "\\/") ,
+                  yes = paste0("20", gsub(pattern = "\\/|_", 
+                                          replacement = "", 
+                                          x = stringr::str_extract(string = year, 
+                                                                   pattern = "\\/[:digit:]{2}_"))),
+                  no = year)) %>% 
+  ## Drop season names
+  dplyr::mutate(year = gsub(pattern = "Fall |Spring |Summer |Winter ", 
+                            replacement = "", x = year))
 
 # Re-check years
 tidy_v5 %>% 
+  dplyr::filter(is.na(year) | nchar(year) != 4) %>% 
   dplyr::group_by(source, sampling.years) %>% 
-  dplyr::summarize(years = paste(sort(unique(year)), collapse = ", "),
-                   .groups = "keep") %>% 
-  as.data.frame()
+  dplyr::summarize(years = paste(unique(year), collapse = ", "),
+                   .groups = "keep")
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
