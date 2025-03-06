@@ -48,7 +48,7 @@ purrr::walk2(.x = files_drive$id, .y = files_drive$name,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 1 ----
+# Project 1 (Royo PA) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status:
@@ -84,7 +84,7 @@ googledrive::drive_upload(media = proj1_name, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 2 ----
+# Project 2 (2006 LTER Heath) ----
 ## ------------------------------------------- ##
 
 ## CONFUSED: need to contact these authors
@@ -112,7 +112,7 @@ dplyr::glimpse(proj2_raw)
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 3 ----
+# Project 3 (Villar Brazil) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status:
@@ -181,7 +181,7 @@ for(focalsite3 in unique(proj3$site)){
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 4 ----
+# Project 4 (LTER GCE) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -215,7 +215,7 @@ googledrive::drive_upload(media = proj4_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 5 ----
+# Project 5 (LTER ARC Tussock) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -271,7 +271,7 @@ googledrive::drive_upload(media = proj5_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 6 ----
+# Project 6 (Freestone) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -280,8 +280,8 @@ rm(list = ls()); gc()
 # Identify the input files + what they should be called when they are output
 proj6_rawfiles <- c("Freestone_et_al_2019_data_newjersey.csv",
                     "Freestone_et_al_2019_data_panama.csv")
-proj6_tidyfiles <- c("freestone_newjersey_year_predators_seagrass.csv",
-                     "freestone_panama_year_predators_seagrass.csv")
+proj6_tidyfiles <- c("freestone_newjersey_experimentname_year_predators_seagrass.csv",
+                     "freestone_panama_experimentname_year_predators_seagrass.csv")
 
 # Loop across the two files (because they share structure/problems)
 for(k in seq_along(proj6_rawfiles)){
@@ -336,7 +336,7 @@ for(k in seq_along(proj6_rawfiles)){
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 7 ----
+# Project 7 (Ashton Predators) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -380,7 +380,7 @@ googledrive::drive_upload(media = proj7_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 8 ----
+# Project 8 (LTER Harvard) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -418,7 +418,7 @@ googledrive::drive_upload(media = proj8_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 9 ----
+# Project 9 (Burkepile FL) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -459,7 +459,7 @@ googledrive::drive_upload(media = proj9_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 10 ----
+# Project 10 (GEX Boer) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -596,7 +596,7 @@ googledrive::drive_upload(media = proj10_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 11 ----
+# Project 11 (LTER ARC Acid Tussock) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
@@ -638,7 +638,7 @@ googledrive::drive_upload(media = proj11_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 12 ----
+# Project 12 (GEX Bakker) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
