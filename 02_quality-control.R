@@ -151,7 +151,8 @@ dplyr::glimpse(tidy_v2)
 # Check experimental design columns
 tidy_v2 %>% 
   dplyr::select(organization, dplyr::starts_with("exp.design.")) %>% 
-  dplyr::distinct()
+  dplyr::distinct() %>% 
+  dplyr::glimpse()
 
 # Do needed standardization
 tidy_v3 <- tidy_v2 %>% 
@@ -161,13 +162,16 @@ tidy_v3 <- tidy_v2 %>%
     exp.design.2 = ifelse(nchar(exp.design.2) == 0 | is.na(exp.design.2),
                           yes = experiment.name, no = exp.design.2),
     exp.design.3 = ifelse(nchar(exp.design.3) == 0 | is.na(exp.design.3),
-                          yes = experiment.name, no = exp.design.3)
-    )
+                          yes = experiment.name, no = exp.design.3),
+    exp.design.4 = ifelse(nchar(exp.design.4) == 0 | is.na(exp.design.4),
+                          yes = experiment.name, no = exp.design.4)
+  )
 
 # Re-check
 tidy_v3 %>% 
   dplyr::select(organization, dplyr::starts_with("exp.design.")) %>% 
-  dplyr::distinct()
+  dplyr::distinct() %>% 
+  dplyr::glimpse()
 
 ## ------------------------------------------- ##
 # Standardize Taxon Names ----
@@ -191,7 +195,7 @@ sort(unique(tidy_v4$taxa))
 
 # Check current years
 tidy_v4 %>% 
-  dplyr::filter(is.na(year) | nchar(year) != 4) %>% 
+  dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    .groups = "keep")
@@ -200,28 +204,20 @@ tidy_v4 %>%
 tidy_v5 <- tidy_v4 %>% 
   dplyr::mutate(year = dplyr::case_when(
     !is.na(year) ~ as.character(year),
-    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ sampling.point,
+    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
     source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
     source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ sampling.point,
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ NA)) %>% 
   # Do any needed post-processing
-  ## Turn full dates into years
-  dplyr::mutate(
-    year = ifelse(stringr::str_detect(string = year, pattern = "\\/") ,
-                  yes = paste0("20", gsub(pattern = "\\/|_", 
-                                          replacement = "", 
-                                          x = stringr::str_extract(string = year, 
-                                                                   pattern = "\\/[:digit:]{2}_"))),
-                  no = year)) %>% 
   ## Drop season names
   dplyr::mutate(year = gsub(pattern = "Fall |Spring |Summer |Winter ", 
                             replacement = "", x = year))
 
 # Re-check years
 tidy_v5 %>% 
-  dplyr::filter(is.na(year) | nchar(year) != 4) %>% 
+  dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    .groups = "keep")
