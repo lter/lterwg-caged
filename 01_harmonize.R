@@ -83,11 +83,54 @@ combo_v1 <- ltertools::harmonize(key = key,
 dplyr::glimpse(combo_v1)
 
 ## ------------------------------------------- ##
+# "Composite" Columns ----
+## ------------------------------------------- ##
+# Some datasets entered multiple pieces of information in the same column
+# These are identified as "composite_..." and are handled here
+
+# Which datasets have composite columns?
+composite_sources <- combo_v1 %>% 
+  dplyr::filter(!is.na(composite_exp.design.1_orig.treat_site_idpair_exclosure_quadrat_idquadrat_year)) %>% 
+  dplyr::pull(source) %>% unique(); composite_sources
+
+# Check values in known composite columns
+sort(unique(combo_v1$composite_exp.design.1_orig.treat_site_idpair_exclosure_quadrat_idquadrat_year))
+
+# Handle these columns
+combo_v2 <- combo_v1 %>% 
+  # Split composite column(s) as appropriate
+  tidyr::separate_wider_delim(cols = composite_exp.design.1_orig.treat_site_idpair_exclosure_quadrat_idquadrat_year,
+                              names = c("exp.design.3_temporary",
+                                        "exp.design.2_temporary", 
+                                        "orig.treat_temporary", 
+                                        "exp.design.1_temporary", 
+                                        "year_temporary"), delim = " ") %>% 
+  # Coalesce with "real" versions of columns
+  dplyr::mutate(exp.design.1 = dplyr::coalesce(exp.design.1, exp.design.1_temporary)) %>% 
+  dplyr::mutate(exp.design.2 = dplyr::coalesce(exp.design.2, exp.design.2_temporary)) %>% 
+  dplyr::mutate(exp.design.3 = dplyr::coalesce(exp.design.3, exp.design.3_temporary)) %>% 
+  dplyr::mutate(orig.treat = dplyr::coalesce(orig.treat, orig.treat_temporary)) %>% 
+  dplyr::mutate(year = dplyr::coalesce(year, year_temporary)) %>% 
+  # Drop composite & temporary columns
+  dplyr::select(-dplyr::starts_with("composite_") , -dplyr::ends_with("_temporary"))
+
+# Any surprising gained / lost columns?
+supportR::diff_check(old = names(combo_v1), new = names(combo_v2))
+
+# Check that worked
+combo_v2 %>% 
+  dplyr::filter(source %in% composite_sources) %>% 
+  dplyr::select(dplyr::where(fn = ~ !all(is.na(.) | nchar(.) == 0))) %>% 
+  dplyr::select(dplyr::starts_with("exp.design."), orig.treat, year) %>% 
+  dplyr::distinct() %>% 
+  dplyr::glimpse()
+
+## ------------------------------------------- ##
 # Treatments ----
 ## ------------------------------------------- ##
 
 # Combine/streamline treatment information
-combo_v2 <- combo_v1 %>% 
+combo_v3 <- combo_v2 %>% 
   # Combine into a single treatment column
   dplyr::mutate(
     original.treatment = dplyr::case_when(
@@ -101,29 +144,43 @@ combo_v2 <- combo_v1 %>%
       source == "lter-bonanzacreek_alaska_bnz-lter_2012-2015_vertebrate_plants.csv" ~ paste(orig.treat_cage, orig.treat_insecticide, sep = "_"),
       ## Combine prairie dog & cattle cages
       source == "porensky_wyoming_nex_2015-2024_prairiedogs_vegetation.csv" ~ paste(orig.treat_cage.prairie.dog, orig.treat_cage.cattle, sep = "_"),
-      ## Otherwise, put in warning text
+      ## Combine cages & nutrients
+      source == "amundrud_britishcolumbia_eelgrassexclosure_2011_predators_mesograzers.csv" ~ paste(orig.treat_cage, orig.treat_nut.trt, sep = "_"),
+      ## Combine cage and nutrients (combo column exists already but this is preferable)
+      source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
+      # ## NO CLEAR TREATMENT COLUMN IN DATA
+      # source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ paste(sep = "_"),
+      ## Combine cage and artificial
+      source == "freestone_newjersey_year_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
+      ## Combine cage and artificial
+      source == "freestone_panama_year_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
+      ## Combine cage and N addition
+      source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" ~ paste(orig.treat_cage, orig.treat_nitrogen.addition, sep = "_"),
+      ## Combine cage and distance
+      source == "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv" ~ paste(orig.treat_cage, orig.treat_dist, sep = "_"),
+      ## If not handled above, fill with warning text
       T ~ "NO TREATMENT IDENTIFIED"),
     .before = orig.treat) %>% 
   # Drop now superseded precursor columns
   dplyr::select(-dplyr::contains("orig.treat"))
 
 # Check resulting treatment / source combos
-combo_v2 %>% 
+combo_v3 %>% 
   dplyr::select(source, original.treatment) %>% 
   dplyr::distinct() %>% 
   as.data.frame()
 
 # Check for any 'bad' treatments
-combo_v2 %>% 
+combo_v3 %>% 
   dplyr::select(source, original.treatment) %>% 
   dplyr::distinct() %>% 
   dplyr::filter(original.treatment == "NO TREATMENT IDENTIFIED")
 
 # Check for lost columns
-setdiff(x = names(combo_v1), y = names(combo_v2))
+setdiff(x = names(combo_v2), y = names(combo_v3))
 
 # Check structure
-dplyr::glimpse(combo_v2)
+dplyr::glimpse(combo_v3)
 
 ## ------------------------------------------- ##
 # Pivot Wide Spatial Data ----
@@ -137,15 +194,15 @@ spat_wide_files <- key %>%
   dplyr::pull()
 
 # Separate data
-spat_wides <- combo_v2 %>% 
+spat_wides <- combo_v3 %>% 
   dplyr::filter(source %in% spat_wide_files) %>% 
   dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
-spat_longs <- combo_v2 %>% 
+spat_longs <- combo_v3 %>% 
   dplyr::filter(source %in% spat_wide_files == F) %>% 
   dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
 
 # Check none are lost
-nrow(combo_v2) == nrow(spat_wides) + nrow(spat_longs)
+nrow(combo_v3) == nrow(spat_wides) + nrow(spat_longs)
 
 # Rotate wide spatial into long
 spat_wides_pivot <- spat_wides %>% 
@@ -161,42 +218,42 @@ spat_wides_pivot <- spat_wides %>%
 dplyr::glimpse(spat_wides_pivot)
 
 # Recombine data
-combo_v3 <- dplyr::bind_rows(spat_longs, spat_wides_pivot)
+combo_v4 <- dplyr::bind_rows(spat_longs, spat_wides_pivot)
 
 # Identify columns that are dropped
-supportR::diff_check(old = names(combo_v2), new = names(combo_v3))
+supportR::diff_check(old = names(combo_v3), new = names(combo_v4))
 
 # Check structure
-dplyr::glimpse(combo_v3)
+dplyr::glimpse(combo_v4)
 
 ## ------------------------------------------- ##
 # Zero Fill Long Communities ----
 ## ------------------------------------------- ##
 
 # Need to separate long/wide data to handle 0s/missing data
-combo_v4 <- combo_v3 %>% 
+combo_v5 <- combo_v4 %>% 
   # Generate 'flag' for long versus wide data
   dplyr::group_by(source) %>% 
   dplyr::mutate(data_are_long = !is.na(orig.taxa) ) %>% 
   dplyr::ungroup()
 
 # Also check for non-numbers in the 'abundance' column for long data
-supportR::num_check(data = combo_v4, col = "abundance")
+supportR::num_check(data = combo_v5, col = "abundance")
 
 # Separate long from wide data
-tax_longs <- combo_v4 %>% 
+tax_longs <- combo_v5 %>% 
   dplyr::filter(data_are_long == TRUE) %>% 
   dplyr::select(-data_are_long) %>% 
   # Make abundance numeric in case we need to summarize across duplicates
   dplyr::mutate(abundance = as.numeric(abundance))
 
 # Separate wide from long data
-tax_wides <- combo_v4 %>% 
+tax_wides <- combo_v5 %>% 
   dplyr::filter(data_are_long == FALSE) %>% 
   dplyr::select(-data_are_long)
 
 # Check that's the right number of rows
-nrow(combo_v4) == nrow(tax_longs) + nrow(tax_wides)
+nrow(combo_v5) == nrow(tax_longs) + nrow(tax_wides)
 
 # Make a list to store outputs
 zerofill_list <- list()
@@ -313,25 +370,26 @@ dplyr::glimpse(tax_wides_v2)
 dplyr::glimpse(tax_longs_v2)
 
 # Combine the data and do needed wrangling
-combo_v5 <- dplyr::bind_rows(tax_wides_v2, tax_longs_v2) %>% 
+combo_v6 <- dplyr::bind_rows(tax_wides_v2, tax_longs_v2) %>% 
   # Clean up taxa names
   dplyr::mutate(original.taxa = gsub(pattern = "orig\\.taxa_", replacement = "",
                                      x = original.taxa))
 
 # Recheck structure
-dplyr::glimpse(combo_v5)
+dplyr::glimpse(combo_v6)
 
 ## ------------------------------------------- ##
 # Column Re-Ordering ----
 ## ------------------------------------------- ##
 
 # Reorder columns more logically
-combo_v6 <- combo_v5 %>% 
+combo_v7 <- combo_v6 %>% 
   # Treatment information first
   dplyr::relocate(original.treatment, exclosure.age, .after = source) %>% 
   # Experimental design nestedness (lower numbers are more granular)
   dplyr::relocate(exp.name, .after = year) %>% 
-  dplyr::relocate(exp.design.3, exp.design.2, exp.design.1, .after = exp.name) %>% 
+  dplyr::relocate(exp.design.4, exp.design.3, 
+                  exp.design.2, exp.design.1, .after = exp.name) %>% 
   dplyr::relocate(dplyr::starts_with("distance.from."), .after = exp.design.1) %>% 
   # Order temporal information
   dplyr::relocate(sampling.point, .after = year) %>% 
@@ -339,17 +397,17 @@ combo_v6 <- combo_v5 %>%
   dplyr::relocate(original.taxa, .after = dplyr::starts_with("distance.from."))
 
 # Check structure
-dplyr::glimpse(combo_v6)
+dplyr::glimpse(combo_v7)
 
-# Check that no columns are lost / gained
-supportR::diff_check(old = names(combo_v5), new = names(combo_v6))
+# Check that **no columns are lost / gained**
+supportR::diff_check(old = names(combo_v6), new = names(combo_v7))
 
 ## ------------------------------------------- ##
 # File Name Information ----
 ## ------------------------------------------- ##
 
 # Break useful information out of file name ("source" column)
-combo_v7 <- combo_v6 %>% 
+combo_v8 <- combo_v7 %>% 
   # Separate by underscore
   tidyr::separate_wider_delim(cols = source, delim = "_",
                               names = c("organization", "site", 
@@ -363,14 +421,17 @@ combo_v7 <- combo_v6 %>%
   dplyr::relocate(source, .before = dplyr::everything())
 
 # Check structure
-dplyr::glimpse(combo_v7)
+dplyr::glimpse(combo_v8)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
+# Identify any instances of non-numeric abundance
+supportR::num_check(data = combo_v8, col = "abundance")
+
 # Final pre-export tweaks
-combo_v99 <- combo_v7 %>% 
+combo_v99 <- combo_v8 %>% 
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Replace "NA" with zero where appropriate
@@ -383,7 +444,9 @@ combo_v99 <- combo_v7 %>%
                   nchar(abundance) != 0 &
                   abundance != "NaN") %>% 
   # Drop duplicate rows
-  dplyr::distinct()
+  dplyr::distinct() %>% 
+  # Make abundance truly a number
+  dplyr::mutate(abundance = as.numeric(abundance))
 
 # Check structure
 dplyr::glimpse(combo_v99)
