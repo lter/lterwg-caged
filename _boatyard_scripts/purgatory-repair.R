@@ -222,7 +222,8 @@ rm(list = ls()); gc()
 ## Table is mix of wide and long format.
 ## Need to parse out columns with Block and Quad info in the column name
 ## Species column is a mix of species and Other functional groups
-## Biomass type column: drop "below"
+## Biomass type column: drop "below" and "old"
+## Other tissue types must be summed across
 ## Can drop columns AE through AX, these are all converted measurements to gram per meter squared
 ## Count column is just the number of quadrats for all blocks
 ## Average column is the average of all species and tissue type for all quadrats and across all blocks. So our abundance measurement should come from B#Q# columns???
@@ -241,7 +242,7 @@ proj5 <- proj5_raw %>%
                 -dplyr::contains("Comments"),
                 -dplyr::ends_with("gm2")) %>% 
   # Remove unwanted biomass type(s)
-  dplyr::filter(Biomass.type != "below") %>% 
+  dplyr::filter(!Biomass.type %in% c("below", "old above")) %>% 
   # Pivot spatial information longer
   tidyr::pivot_longer(cols = dplyr::contains(paste0("Q", 1:5)),
                       names_to = "block.quad",
@@ -251,7 +252,14 @@ proj5 <- proj5_raw %>%
   tidyr::separate_wider_delim(cols = block.quad, delim = "_",
                               names = c("Block", "Quadrat")) %>% 
   # Drop NA abundance values (seems like they were unsampled from structure of original data)
-  dplyr::filter(abundance != "na")
+  dplyr::filter(abundance != "na") %>% 
+  # Make abundance is a number
+  dplyr::mutate(abundance = as.numeric(abundance)) %>% 
+  # Summarize abundance within remaining grouping vars
+  dplyr::group_by(Date, Site, Block, Quadrat, Treatment, Growth.Form, Species) %>% 
+  dplyr::summarize(abundance = sum(abundance, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
 
 # Re-check structure
 dplyr::glimpse(proj5)
@@ -596,35 +604,26 @@ googledrive::drive_upload(media = proj10_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 11 (LTER ARC Acid Tussock) ----
+# Project 11 (TBD) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
-## Includes "old" biomass (needs to be removed)
-## Other tissue types must be summed across
+## 
 
 # Read in data
-proj11_raw <- read.csv(file.path("data", "purgatory", "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv"))
+proj11_raw <- read.csv(file.path("data", "purgatory", "BAD_FILE.csv"))
 
 # Check structure
 dplyr::glimpse(proj11_raw)
 
 # Do needed repairs
-proj11 <- proj11_raw %>% 
-  dplyr::filter(Biomass.type != "old above") %>% 
-  dplyr::group_by(Date, Site, Block, Quadrat, Treatment, Growth.Form, Species) %>% 
-  dplyr::summarize(abundance = sum(abundance, na.rm = T),
-                   .groups = "keep") %>% 
-  dplyr::ungroup()
+proj11 <- proj11_raw
 
 # Re-check structure
 dplyr::glimpse(proj11)
 
-# Check gained/lost columns
-supportR::diff_check(old = names(proj11_raw), new = names(proj11))
-
 # Create good/new file name
-proj11_name <- "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv"
+proj11_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
 proj11_path <- file.path("data", "drydock", proj11_name)
 
 # Export locally
@@ -632,7 +631,7 @@ write.csv(x = proj11, file = proj11_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj11_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/11/folders/1EOSlNF3zz-ktBQwoIt1a311dv11azJ1g5M"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
