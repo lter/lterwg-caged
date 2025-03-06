@@ -75,27 +75,80 @@ dplyr::glimpse(sub_v3)
 dplyr::glimpse(sub_v3)
 
 # Do needed processing
-sub_v4 <- sub_v3 %>% 
+sub_v3b <- sub_v3 %>% 
   # Identify cases with more than one sampling point within dataset/year
   dplyr::group_by(source, year) %>% 
-  dplyr::mutate(time.ct = length(unique(sampling.point))) %>% 
-  dplyr::ungroup() %>% 
-  # Filter to only either the _last_ sampling point or any dataset without sub-annual sampling
+  dplyr::mutate(time.ct = length(unique(sampling.point)),
+                times = paste(sort(unique(sampling.point)), collapse = "; ")) %>% 
+  dplyr::ungroup()
+
+# Identify any sources with more than one time point
+multi.times <- sub_v3b %>% 
+  dplyr::filter(time.ct != 1) %>% 
+  dplyr::select(source, year, time.ct, times) %>% 
+  dplyr::distinct()
+
+# Check that out
+as.data.frame(multi.times)
+## View(multi.times)
+
+# Filter to only either the _last_ sampling point or any dataset without sub-annual sampling
+sub_v4 <- sub_v3b %>% 
   dplyr::filter(
     time.ct == 1 |
-      (source == "gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv" & 
-         sampling.point == "11") | 
-      (source == "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv" & 
-         sampling.point == "12") | 
+      # (source == "" & 
+      #    sampling.point == "") |
+      (source == "diaz_longyearbyen_sedimentexclusionexp_2017_epibenthicpredators_benthic.csv" &
+         sampling.point == "2017-08-23T00:00") |
+      (source == "diaz_thiisbukta_sedimentexclusionexp_2017_epibenthicpredators_benthic.csv" &
+         sampling.point == "2017-08-08T00:00") |
       (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
-         sampling.point == "7/5/13") | 
+         year == "2013" & sampling.point == "7/5/13") | 
+      (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
+         year == "2014" & sampling.point == "7/1/14") | 
       (source == "pelinson_brazil_predatorisolationcomm_2017_tilapia_insects.csv" & 
-         sampling.point == "3")
+         sampling.point == "3") |
+      (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+        year == "2009" & sampling.point == "Fall 2009") |
+      (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+         year == "2010" & sampling.point == "Fall 2010") |
+      (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+         year == "2011" & sampling.point == "Fall 2011") |
+      (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+         year == "2012" & sampling.point == "Winter 2012") |
+      (source == "gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv" & 
+         sampling.point == "12") | 
+      (source == "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv" & 
+         sampling.point == "12") |   
+      (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
+         year == "1984" & sampling.point == "840724") |
+      (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
+         year == "1985" & sampling.point == "850829") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1980" & sampling.point == "6/15/80") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1981" & sampling.point == "6/30/81") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1982" & sampling.point == "6/27/82") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1983" & sampling.point == "7/19/83") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1984" & sampling.point == "6/22/84") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1986" & sampling.point == "6/18/86") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1988" & sampling.point == "6/28/88") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1992" & sampling.point == "6/5/92") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "1996" & sampling.point == "6/26/96") |
+      (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
+         year == "2007" & sampling.point == "6/9/07")  
   ) %>% 
   # Drop "sampling.point" column plus any temporary columns
-  dplyr::select(-sampling.point, -time.ct)
+  dplyr::select(-sampling.point, -time.ct, -times)
 
-# Check number of lost rows
+# Check number of lost rows (hopefully few rows but understandable if some/many)
 message(nrow(sub_v3) - nrow(sub_v4), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
