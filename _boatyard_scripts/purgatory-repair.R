@@ -288,8 +288,8 @@ rm(list = ls()); gc()
 # Identify the input files + what they should be called when they are output
 proj6_rawfiles <- c("Freestone_et_al_2019_data_newjersey.csv",
                     "Freestone_et_al_2019_data_panama.csv")
-proj6_tidyfiles <- c("freestone_newjersey_experimentname_year_predators_seagrass.csv",
-                     "freestone_panama_experimentname_year_predators_seagrass.csv")
+proj6_tidyfiles <- c("freestone_newjersey_freestone-new-jersey_2019_predators_seagrass.csv",
+                     "freestone_panama_freestone-panama_2019_predators_seagrass.csv")
 
 # Loop across the two files (because they share structure/problems)
 for(k in seq_along(proj6_rawfiles)){
