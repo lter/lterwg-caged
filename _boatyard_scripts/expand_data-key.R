@@ -88,7 +88,7 @@ dplyr::glimpse(key_expansion)
 
 # Export locally
 write.csv(x = key_expansion, na = '', row.names = F,
-          file = file.path("data", paste(Sys.Date(), "_new-rows-for-key_DELETE-AFTER-USE.csv")))
+          file = file.path("data", paste0(Sys.Date(), "_new-rows-for-key_DELETE-AFTER-USE.csv")))
 
 # NOTE TO PERSON RUNNING CODE
 ## Here's what you should do next:
