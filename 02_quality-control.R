@@ -259,82 +259,11 @@ tidy_v6 <- tidy_v5 %>%
 dplyr::glimpse(tidy_v6)
 
 ## ------------------------------------------- ##
-# Download Group-Defined Metadata ----
-## ------------------------------------------- ##
-
-# Find metadata
-meta_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/0AFR2XIdw_sKbUk9PVA")) %>% 
-  dplyr::filter(name == "Data Sources- detailed")
-
-# Check it
-meta_drive
-
-# Download it locally
-googledrive::drive_download(file = meta_drive$id, overwrite = T, type = "csv",
-                            path = file.path("data", "caged_metadata"))
-
-## ------------------------------------------- ##
-# Wrangle Metadata ----
-## ------------------------------------------- ##
-
-# Read in metadata
-meta_v1 <- read.csv(file = file.path("data", "caged_metadata.csv"))
-
-# Check structure
-dplyr::glimpse(meta_v1)
-
-# Do needed wrangling
-meta_v2 <- meta_v1 %>% 
-  # Rename file name column
-  dplyr::rename(source = File.name) %>% 
-  # Standardize entries of desired column(s) slightly
-  dplyr::mutate(region = tolower(Region),
-                lter.site = tolower(LTER),
-                ecosystem = tolower(Ecosystem),
-                consumer.taxa = tolower(Consumer.Taxa),
-                resource.taxa = tolower(Resource.Taxa)) %>% 
-  # Pare down to desired column(s)
-  dplyr::select(source, region, lter.site, ecosystem, consumer.taxa, resource.taxa) %>% 
-  # Remove rows without a file name
-  dplyr::filter(is.na(source) != T & nchar(source) != 0) %>% 
-  # Drop non-unique rows
-  dplyr::distinct()
-
-# Check structure
-dplyr::glimpse(meta_v2)
-
-# Make sure there's only one row per dataset
-meta_v2 %>% 
-  dplyr::group_by(source) %>% 
-  dplyr::mutate(row.ct = dplyr::n()) %>% 
-  dplyr::filter(row.ct != 1)
-
-## ------------------------------------------- ##
-# Attach Metadata ----
-## ------------------------------------------- ##
-
-# Attach metadata to QC'd data
-tidy_v7 <- tidy_v6 %>% 
-  dplyr::left_join(y = meta_v2, by = c("source")) %>% 
-  # Re-arrange slightly
-  dplyr::relocate(region:resource.taxa, 
-                  .after = measured.group)
-
-# What sources are missing metadata information?
-tidy_v7 %>% 
-  dplyr::filter(is.na(region) | is.na(ecosystem)) %>% 
-  dplyr::select(source, region, lter.site, ecosystem, consumer.taxa, resource.taxa) %>% 
-  dplyr::distinct()
-
-# Check structure
-dplyr::glimpse(tidy_v7)
-
-## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-tidy_v99 <- tidy_v7
+tidy_v99 <- tidy_v6
 
 # Check structure
 dplyr::glimpse(tidy_v99)
