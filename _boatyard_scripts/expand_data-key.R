@@ -76,29 +76,19 @@ harmony_df <- read.csv(file = file.path("data", "01_caged_harmonized.csv"))
 dplyr::glimpse(harmony_df)
 
 ## ------------------------------------------- ##
-# Create Partial Data Key for New Files ----
+# Facilitate Key Expansion ----
 ## ------------------------------------------- ##
 
-# Create data key for all raw data
-key_full <- ltertools::begin_key(raw_folder = file.path("data", "raw"),
-                                 data_format = "csv", guess_tidy = F)
-
-
-# Check structure
-dplyr::glimpse(key_full)
-
-# Pare down to just data that are not (yet) harmonized
-key_expansion <- key_full %>% 
-  dplyr::filter(!source %in% harmony_df$source) %>% 
-  dplyr::filter(!source %in% key_df$source) %>% 
-  dplyr::select(-tidy_name)
+# Identify new rows for the key
+key_expansion <- ltertools::expand_key(key = key_df, raw_folder = file.path("data", "raw"),
+                                       harmonized_df = harmony_df, data_format = "csv")
 
 # Re-check structure
 dplyr::glimpse(key_expansion)
 
 # Export locally
 write.csv(x = key_expansion, na = '', row.names = F,
-          file = file.path("data", paste(Sys.Date(), "new-rows-for-key_DELETE-AFTER-USE.csv")))
+          file = file.path("data", paste(Sys.Date(), "_new-rows-for-key_DELETE-AFTER-USE.csv")))
 
 # NOTE TO PERSON RUNNING CODE
 ## Here's what you should do next:
