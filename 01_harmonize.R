@@ -151,11 +151,14 @@ combo_v3 <- combo_v2 %>%
       # ## NO CLEAR TREATMENT COLUMN IN DATA
       # source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ paste(sep = "_"),
       ## Combine cage and artificial
-      source == "freestone_newjersey_year_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
+      source == "freestone_newjersey_freestone-new-jersey_2019_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
       ## Combine cage and artificial
-      source == "freestone_panama_year_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
+      source == "freestone_panama_freestone-panama_2019_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
       ## Combine cage and N addition
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" ~ paste(orig.treat_cage, orig.treat_nitrogen.addition, sep = "_"),
+      ## Combine cage and N addition
+      source == "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" ~ 
+        paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
       ## Combine cage and distance
       source == "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv" ~ paste(orig.treat_cage, orig.treat_dist, sep = "_"),
       ## If not handled above, fill with warning text
@@ -411,7 +414,7 @@ combo_v8 <- combo_v7 %>%
   # Separate by underscore
   tidyr::separate_wider_delim(cols = source, delim = "_",
                               names = c("organization", "site", 
-                                        "experiment.name", "sampling.years", 
+                                        "project.name", "sampling.years", 
                                         "excluded.group", "measured.group"),
                               cols_remove = F) %>%
   # Remove file name from final bit of file
@@ -424,14 +427,14 @@ combo_v8 <- combo_v7 %>%
 dplyr::glimpse(combo_v8)
 
 ## ------------------------------------------- ##
-# Export ----
+# Check for Non-Numeric Abundance ----
 ## ------------------------------------------- ##
 
 # Identify any instances of non-numeric abundance
 supportR::num_check(data = combo_v8, col = "abundance")
 
-# Final pre-export tweaks
-combo_v99 <- combo_v8 %>% 
+# Do needed processing
+combo_v9 <- combo_v8 %>% 
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Replace "NA" with zero where appropriate
@@ -447,6 +450,16 @@ combo_v99 <- combo_v8 %>%
   dplyr::distinct() %>% 
   # Make abundance truly a number
   dplyr::mutate(abundance = as.numeric(abundance))
+
+# Check structure
+dplyr::glimpse(combo_v9)
+
+## ------------------------------------------- ##
+# Export ----
+## ------------------------------------------- ##
+
+# Final pre-export tweaks
+combo_v99 <- combo_v9
 
 # Check structure
 dplyr::glimpse(combo_v99)
