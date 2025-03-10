@@ -59,6 +59,16 @@ tidy_v2 <- tidy_v1 %>%
     organization == "diaz" & 
       original.treatment %in% c("Start", "End/Control") ~ "uncaged",
     organization == "diaz" & original.treatment %in% c("Artefact") ~ NA,
+    ## E
+    organization == "emry" & original.treatment == "exclusion" ~ "caged",
+    organization == "emry" & original.treatment == "control" ~ "uncaged",
+    ## F
+    organization == "freestone" & stringr::str_detect(string = original.treatment,
+                                                      pattern = "Full ") ~ "caged",
+    organization == "freestone" & stringr::str_detect(string = original.treatment,
+                                                      pattern = "Partial ") ~ "caged",    
+    organization == "freestone" & stringr::str_detect(string = original.treatment,
+                                                      pattern = "Open_") ~ "uncaged",
     ## G
     organization == "gex" & original.treatment == "G" ~ "uncaged",
     organization == "gex" & original.treatment == "U" ~ "caged",
@@ -77,13 +87,16 @@ tidy_v2 <- tidy_v1 %>%
       original.treatment %in% c("LFNP", "N", "NFNP", 
                                 "NP", "P", "SFNP", "Nitrogen",
                                 "Nitrogen Phosphorus", "Phosphorus",
-                                "Small Fenced No Fertilizer") ~ "caged",
+                                "Small Fenced No Fertilizer",
+                                "Control Small Fenced",
+                                "NP Small Fenced") ~ "caged",
     organization == "lter-arc" & 
       original.treatment %in% c("LFCT", "LFCT17",  "CT", 
                                 "MFCT17", "NFCT", "SFCT", 
                                 "SFCT17", "Control", "Control Unfenced",
                                 "Greenhouse Control", 
-                                "Nitrogen Phosphorus Unfenced") ~ "uncaged",
+                                "Nitrogen Phosphorus Unfenced",
+                                "NP Unfenced") ~ "uncaged",
     ### LTER BNZ
     organization == "lter-bonanzacreek" & 
       original.treatment == "Fenced_Sprayed" ~ "caged",
@@ -103,6 +116,9 @@ tidy_v2 <- tidy_v1 %>%
       original.treatment %in% c("Exclusion", "Partial") ~ "caged",
     organization == "lter-gce" & 
       original.treatment %in% c("Open") ~ "uncaged",
+    ## LTER HFR (Harvard)
+    organization == "lter-harvard" & original.treatment %in% c("Full", "Partial") ~ "caged",
+    organization == "lter-harvard" & original.treatment %in% c("Control") ~ "uncaged",
     ### LTER MCR
     organization == "lter-mcr" & 
       stringr::str_detect(string = original.treatment, pattern = "Open_") ~ "uncaged",
@@ -160,16 +176,19 @@ tidy_v3 <- tidy_v2 %>%
   ## (All have 'exp.design.1' but not necessarily all have higher levels)
   dplyr::mutate(
     exp.design.2 = ifelse(nchar(exp.design.2) == 0 | is.na(exp.design.2),
-                          yes = experiment.name, no = exp.design.2),
+                          yes = project.name, no = exp.design.2),
     exp.design.3 = ifelse(nchar(exp.design.3) == 0 | is.na(exp.design.3),
-                          yes = experiment.name, no = exp.design.3),
+                          yes = project.name, no = exp.design.3),
     exp.design.4 = ifelse(nchar(exp.design.4) == 0 | is.na(exp.design.4),
-                          yes = experiment.name, no = exp.design.4)
+                          yes = project.name, no = exp.design.4),
+    ## If 'exp.name' is missing, fill with full dataset filename
+    exp.name = ifelse(nchar(exp.name) == 0 | is.na(exp.name),
+                      yes = source, no = exp.name)
   )
 
 # Re-check
 tidy_v3 %>% 
-  dplyr::select(organization, dplyr::starts_with("exp.design.")) %>% 
+  dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
   dplyr::distinct() %>% 
   dplyr::glimpse()
 
@@ -184,7 +203,9 @@ sort(unique(tidy_v3$original.taxa))
 tidy_v4 <- tidy_v3 %>% 
   dplyr::mutate(taxa = dplyr::case_when(
     
-    T ~ original.taxa), .after = original.taxa)
+    T ~ original.taxa), .after = original.taxa) %>% 
+  # Drop original taxa name
+  dplyr::select(-original.taxa)
 
 # Re-check taxa names
 sort(unique(tidy_v4$taxa))
