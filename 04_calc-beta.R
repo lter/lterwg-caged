@@ -483,48 +483,4 @@ purrr::walk(.x = dir(path = file.path("data"), pattern = "04_caged_beta-disp"),
             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
-## ------------------------------------------- ##
-# Exploratory Graphs ----
-## ------------------------------------------- ##
-
-# Clear environment & collect garbage
-rm(list = ls()); gc()
-
-# Read beta dispersion data back in
-beta_v99 <- read.csv(file.path("data", "04_caged_beta-disp.csv"))
-
-# Check structure
-dplyr::glimpse(beta_v99)
-
-# Do some pre-visualization wrangling
-beta_viz <- beta_v99 %>% 
-  dplyr::mutate(
-    betadisp.n.bin = dplyr::case_when(
-      betadisp.sample.size == 1 ~ "N = 1",
-      betadisp.sample.size > 1 & betadisp.sample.size <= 5 ~ "N = 2-5",
-      betadisp.sample.size > 5 & betadisp.sample.size <= 15 ~ "N = 6-15",
-      betadisp.sample.size > 15 & betadisp.sample.size <= 30 ~ "N = 16-30",
-      betadisp.sample.size > 30 ~ "N > 30",
-      T ~ NA)) %>% 
-  dplyr::mutate(betadisp.n.bin = factor(x = betadisp.n.bin, 
-                                        levels = c("N = 1", "N = 2-5", 
-                                                   "N = 6-15", "N = 16-30", 
-                                                   "N > 30")))
-# Re-check structure
-dplyr::glimpse(beta_viz)
-
-# Exploratory graph
-ggplot(beta_viz, aes(x = cage.treatment, y = betadisp)) +
-  geom_jitter(aes(fill = cage.treatment), width = 0.15,
-              alpha = 0.3, size = 1, pch = 21) +
-  facet_wrap(. ~ source) +
-  labs(x = "Cage Treatment", y = "Beta Dispersion") +
-  theme(legend.position = "none",
-        legend.title = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-# Export locally
-ggsave(filename = file.path("graphs", "04_betadisp-violins.png"),
-       width = 12, height = 12, units = "in")
-
 # End ----
