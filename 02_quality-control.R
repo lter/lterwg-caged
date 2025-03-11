@@ -163,12 +163,12 @@ tidy_v2 %>%
 dplyr::glimpse(tidy_v2)
 
 ## ------------------------------------------- ##
-# Standardize Experimental Design Facets ----
+# Handle Missing Experimental Design Facets ----
 ## ------------------------------------------- ##
 
 # Check experimental design columns
 tidy_v2 %>% 
-  dplyr::select(organization, dplyr::starts_with("exp.design.")) %>% 
+  dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
   dplyr::distinct() %>% 
   dplyr::glimpse()
 
@@ -195,36 +195,78 @@ tidy_v3 %>%
   dplyr::glimpse()
 
 ## ------------------------------------------- ##
+# Clarify Experimental Design Facets ----
+## ------------------------------------------- ##
+
+# Check experimental design columns
+tidy_v3 %>% 
+  dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
+  dplyr::distinct() %>% 
+  dplyr::glimpse()
+
+# Ccheck unique 'exp.design.1' values (across datasets)
+sort(unique(tidy_v3$exp.design.1))
+
+# Do needed processing
+tidy_v4 <- tidy_v3 %>% 
+  # Combine design 3 and 4 if not the same
+  dplyr::mutate(exp.design.3 = ifelse(exp.design.4 == exp.design.3,
+                                      yes = exp.design.3, 
+                                      no = paste(exp.design.4, exp.design.3, sep = "__"))) %>% 
+  # Combine 2 and 3 if not the same
+  dplyr::mutate(exp.design.2 = ifelse(exp.design.3 == exp.design.2,
+                                      yes = exp.design.2, 
+                                      no = paste(exp.design.3, exp.design.2, sep = "__"))) %>% 
+  # Combine 1 and 2 if not the same
+  dplyr::mutate(exp.design.1 = ifelse(exp.design.2 == exp.design.1,
+                                      yes = exp.design.1, 
+                                      no = paste(exp.design.2, exp.design.1, sep = "__")))
+
+# Re-check unique 'exp.design.1' values
+sort(unique(tidy_v4$exp.design.1))
+
+# How many new ones gained?
+length(unique(tidy_v4$exp.design.1)) - length(unique(tidy_v3$exp.design.1))
+
+# Check experimental design columns
+tidy_v4 %>% 
+  dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
+  dplyr::distinct() %>% 
+  dplyr::glimpse()
+
+## ------------------------------------------- ##
 # Standardize Taxon Names ----
 ## ------------------------------------------- ##
 
 # Check current taxa names
-sort(unique(tidy_v3$original.taxa))
+sort(unique(tidy_v4$original.taxa))
 
 # Do desired wrangling
-tidy_v4 <- tidy_v3 %>% 
+tidy_v5 <- tidy_v4 %>% 
   dplyr::mutate(taxa = dplyr::case_when(
+    
+    # No wrangling done here (yet)
     
     T ~ original.taxa), .after = original.taxa) %>% 
   # Drop original taxa name
   dplyr::select(-original.taxa)
 
 # Re-check taxa names
-sort(unique(tidy_v4$taxa))
+sort(unique(tidy_v5$taxa))
 
 ## ------------------------------------------- ##
 # Standardize Study Years ----
 ## ------------------------------------------- ##
 
 # Check current years
-tidy_v4 %>% 
+tidy_v5 %>% 
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    .groups = "keep")
 
 # Fill in missing years as appropriate
-tidy_v5 <- tidy_v4 %>% 
+tidy_v6 <- tidy_v5 %>% 
   dplyr::mutate(year = dplyr::case_when(
     !is.na(year) ~ as.character(year),
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
@@ -243,7 +285,7 @@ tidy_v5 <- tidy_v4 %>%
                             replacement = "", x = year))
 
 # Re-check years
-tidy_v5 %>% 
+tidy_v6 %>% 
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
@@ -254,22 +296,22 @@ tidy_v5 %>%
 ## ------------------------------------------- ##
 
 # Re-check structure
-dplyr::glimpse(tidy_v5)
+dplyr::glimpse(tidy_v6)
 
 # Do desired standardization
-tidy_v6 <- tidy_v5 %>% 
+tidy_v7 <- tidy_v6 %>% 
   # Standardize casing for distance from surface
   dplyr::mutate(distance.from.surface = tolower(distance.from.surface))
 
 # Re-check structure
-dplyr::glimpse(tidy_v6)
+dplyr::glimpse(tidy_v7)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-tidy_v99 <- tidy_v6
+tidy_v99 <- tidy_v7
 
 # Check structure
 dplyr::glimpse(tidy_v99)
