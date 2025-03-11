@@ -110,7 +110,9 @@ tidy_v2 <- tidy_v1 %>%
     organization == "lter-cdr" & 
       stringr::str_sub(string = original.treatment, 1, 2) %in% c("1_", "3_", "5_", "7_") ~ "caged",
     organization == "lter-cdr" & 
-      stringr::str_sub(string = original.treatment, 1, 2) %in% c("2_", "4_", "6_", "8_") ~ "uncaged",
+      stringr::str_detect(string = original.treatment, pattern = "_", negate = T) ~ "caged",
+    organization == "lter-cdr" & 
+      stringr::str_sub(string = original.treatment, 1, 2) %in% c("0_", "2_", "4_", "6_", "8_") ~ "uncaged",
     ### LTER GCE
     organization == "lter-gce" & 
       original.treatment %in% c("Exclusion", "Partial") ~ "caged",
@@ -229,6 +231,10 @@ tidy_v5 <- tidy_v4 %>%
     source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
     source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ sampling.point,
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
+    ## Put in placeholder years for datasets without year info
+    source == "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv" ~ "1999",
+    source == "lter-harvard_newengland_plantcover_2008-2019_moose_plants.csv" ~ "2019",
+    ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ NA)) %>% 
   # Do any needed post-processing
