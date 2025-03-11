@@ -180,7 +180,7 @@ combo_v3 %>%
   dplyr::filter(original.treatment == "NO TREATMENT IDENTIFIED")
 
 # Check for lost columns
-setdiff(x = names(combo_v2), y = names(combo_v3))
+supportR::diff_check(old = names(combo_v2), new = names(combo_v3))
 
 # Check structure
 dplyr::glimpse(combo_v3)
