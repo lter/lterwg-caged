@@ -16,10 +16,11 @@ Briefly describe the purpose of each script (or folder of scripts) here as you c
 - `02_quality-control.R` -- Performs more involved quality control (QC) and metric calculation
 - `03_filter.R` -- Filters out rows/columns that made sense to harmonize & tidy but are likely not useful for (the current) analysis
 - `04_calc-beta.R` -- Calculate beta dispersion at various spatial/temporal scales
+- `05_graph.R` -- Create exploratory (i.e., not publication quality) graphs
 
 ## Supplementary Resources
 
 LTER Scientific Computing Team [website](https://lter.github.io/scicomp/) & NCEAS' [Resources for Working Groups](https://www.nceas.ucsb.edu/working-group-resources)
 
-[Google Drive](https://drive.google.com/drive/u/1/folders/0AFR2XIdw_sKbUk9PVA) 
+[Google Drive](https://drive.google.com/drive/u/0/folders/0AFR2XIdw_sKbUk9PVA) 
 
