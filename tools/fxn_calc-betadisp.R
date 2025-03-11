@@ -61,7 +61,7 @@ calc_betadisp <- function(df = NULL, floor = 4,
                               sqrt.dist = F, add = F)
     
     # Identify median & community-specific distances
-    beta_median <- beta_val$group.distances
+    beta_median <- as.numeric(beta_val$group.distances)
     beta_dists <- beta_val$distances
     
     # Otherwise, give back null values
