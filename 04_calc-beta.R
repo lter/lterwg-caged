@@ -67,7 +67,7 @@ beta_des3_list <- list()
 
 # Loop across original data source
 for(focal_src in unique(beta_v2$source)){
-  # focal_src <- "cain_australia_herbexclusion_2021_macropod_plants.csv"
+  # focal_src <- "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
@@ -78,7 +78,7 @@ for(focal_src in unique(beta_v2$source)){
   
   # Loop across treatments
   for(focal_trt in unique(src_sub$cage.treatment)){
-    # focal_trt <- "Exclosure"
+    # focal_trt <- "caged"
     
     # Subset again
     trt_sub <- src_sub %>% 
@@ -86,6 +86,7 @@ for(focal_src in unique(beta_v2$source)){
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
+      # focal_yr <- "2017-2019"
       
       # Subset again
       yr_sub <- trt_sub %>% 
@@ -93,7 +94,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across most granular level of experimental design
       for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "A2"
+        # focal_des1 <- "1"
         
         # Subset yet again
         des1_sub <- yr_sub %>% 
@@ -178,26 +179,21 @@ beta_des1 <- purrr::list_rbind(x = beta_des1_list)
 beta_des2 <- purrr::list_rbind(x = beta_des2_list)
 beta_des3 <- purrr::list_rbind(x = beta_des3_list)
 
+# What names are shared?
 intersect(names(beta_des1), names(beta_des2))
 
 # Combine them!
 beta_v3 <- beta_des1 %>% 
   dplyr::left_join(y = beta_des2,
                    by = c("source", "organization", "site", 
-                          "experiment.name", "sampling.years", "excluded.group", 
-                          "measured.group", "region", "lter.site", "ecosystem", 
-                          "consumer.taxa", "resource.taxa", 
-                          "cage.treatment", "exclosure.age", "year", 
-                          "exp.name", "exp.design.4", "exp.design.3", "exp.design.2",
-                          "distance.from.surface", "distance.from.source")) %>% 
+                          "project.name", "sampling.years", "excluded.group", 
+                          "measured.group", "cage.treatment", "year", 
+                          "exp.name", "exp.design.4", "exp.design.3", "exp.design.2")) %>% 
   dplyr::left_join(y = beta_des3,
                    by = c("source", "organization", "site", 
-                          "experiment.name", "sampling.years", "excluded.group", 
-                          "measured.group", "region", "lter.site", "ecosystem", 
-                          "consumer.taxa", "resource.taxa", 
-                          "cage.treatment", "exclosure.age", "year", 
-                          "exp.name", "exp.design.4", "exp.design.3",
-                          "distance.from.surface", "distance.from.source")) %>% 
+                          "project.name", "sampling.years", "excluded.group", 
+                          "measured.group", "cage.treatment", "year", 
+                          "exp.name", "exp.design.4", "exp.design.3")) %>% 
 # Drop non-unique rows that may result from this joining process
 dplyr::distinct()
 
