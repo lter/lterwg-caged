@@ -60,18 +60,25 @@ calc_betadisp <- function(df = NULL, floor = 4,
                               type = "median", bias.adjust = F, 
                               sqrt.dist = F, add = F)
     
+    # Identify median & community-specific distances
+    beta_median <- beta_val$group.distances
+    beta_dists <- beta_val$distances
     
     # Otherwise, give back null values
   } else {
     dist_val <- NULL
     beta_val <- NULL
+    beta_median <- NA
+    beta_dists <- NA
   }
   
-  # Add replicate number & beta dispersion value to output
+  # Add critical information to output
+  ## Number of replicates
   beta_out[[paste0(result_prefix, ".n")]] <- reps
-  beta_out[[paste0(result_prefix, ".betadisp")]] <- ifelse(length(dist_val) > 0,
-                                                           yes = beta_val$distances,
-                                                           no = NA_real_)
+  ## Median beta dispersion
+  beta_out[[paste0(result_prefix, ".betadisp.median")]] <- beta_median
+  ## Per-community beta dispersion distance from median
+  beta_out[[paste0(result_prefix, ".betadisp.site.dist")]] <- beta_dists
   
   # Return that object
   return(beta_out)
