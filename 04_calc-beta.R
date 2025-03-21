@@ -79,12 +79,12 @@ for(focal_src in unique(beta_v2$source)){
     dplyr::filter(source == focal_src)
   
   # Loop across treatments
-  for(focal_trt in unique(src_sub$cage.treatment)){
+  for(focal_trt in unique(src_sub$cage.treatment_std)){
     # focal_trt <- "caged"
     
     # Subset again
     trt_sub <- src_sub %>% 
-      dplyr::filter(cage.treatment == focal_trt)
+      dplyr::filter(cage.treatment_std == focal_trt)
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
