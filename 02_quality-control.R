@@ -23,140 +23,53 @@ tidy_v1 <- read.csv(file.path("data", "01_caged_harmonized.csv"))
 dplyr::glimpse(tidy_v1)
 
 ## ------------------------------------------- ##
-# Standardize Treatments ----
+# Standardize Cage Treatment Values ----
 ## ------------------------------------------- ##
 
 # Check current treatments
 tidy_v1 %>% 
-  dplyr::select(organization, original.treatment) %>% 
+  dplyr::select(organization, treat.cage) %>% 
   dplyr::distinct()
 
 # Perform needed standardization
 tidy_v2 <- tidy_v1 %>% 
-  dplyr::mutate(cage.treatment = dplyr::case_when(
-    ## A
-    organization == "amundrud" & 
-      original.treatment %in% c("full_0", "full_1",
-                                "partial_0", "partial_1") ~ "caged",
-    organization == "amundrud" & 
-      original.treatment %in% c("none_0", "none_1") ~ "uncaged",
-    organization == "ashton" & 
-      original.treatment %in% c("2.full.cage", "3.part.cage", "4.cage.expo") ~ "caged",
-    organization == "ashton" & 
-      original.treatment %in% c("1.open.ctrl") ~ "uncaged",
-    ## B
-    organization == "burkepile" & original.treatment %in% c("Exclosure", "Exclosure_Ambient", "Exclosure_Nutrient Pollution") ~ "caged",
-    organization == "burkepile" & original.treatment %in% c("Open", "Exclosure control_Ambient", "Exclosure control_Nutrient Pollution") ~ "uncaged",
-    ## C
-    organization == "cain" & original.treatment == "Open" ~ "uncaged",
-    organization == "cain" & original.treatment == "Exclosure" ~ "caged",
-    organization == "cper" & original.treatment == "AH" ~ "uncaged",
-    organization == "cper" & original.treatment == "CE" ~ "caged",
-    organization == "cper" & original.treatment == "CRE" ~ "uncaged",
-    organization == "cper" & original.treatment == "RE" ~ "caged",
-    ## D 
-    organization == "diaz" & original.treatment %in% c("Exclusion") ~ "caged",
-    organization == "diaz" & 
-      original.treatment %in% c("Start", "End/Control") ~ "uncaged",
-    organization == "diaz" & original.treatment %in% c("Artefact") ~ NA,
-    ## E
-    organization == "emry" & original.treatment == "exclusion" ~ "caged",
-    organization == "emry" & original.treatment == "control" ~ "uncaged",
-    ## F
-    organization == "freestone" & stringr::str_detect(string = original.treatment,
-                                                      pattern = "Full ") ~ "caged",
-    organization == "freestone" & stringr::str_detect(string = original.treatment,
-                                                      pattern = "Partial ") ~ "caged",    
-    organization == "freestone" & stringr::str_detect(string = original.treatment,
-                                                      pattern = "Open_") ~ "uncaged",
-    ## G
-    organization == "gex" & original.treatment == "G" ~ "uncaged",
-    organization == "gex" & original.treatment == "U" ~ "caged",
-    organization == "gilson" & original.treatment == "C" ~ "uncaged",
-    organization == "gilson" & original.treatment == "F" ~ "caged",
-    organization == "gilson" & original.treatment == "H" ~ "caged",
-    ## H
-    organization == "hensel" & original.treatment == "Control" ~ "uncaged",
-    organization == "hensel" & original.treatment == "Exclusion" ~ "caged",
-    ## L
-    ### LTER AND
-    organization == "lter-andrewsforest" & original.treatment == "IN" ~ "uncaged",
-    organization == "lter-andrewsforest" & original.treatment == "OUT" ~ "caged",
-    ### LTER ARC
-    organization == "lter-arc" & 
-      original.treatment %in% c("LFNP", "N", "NFNP", 
-                                "NP", "P", "SFNP", "Nitrogen",
-                                "Nitrogen Phosphorus", "Phosphorus",
-                                "Small Fenced No Fertilizer",
-                                "Control Small Fenced",
-                                "NP Small Fenced") ~ "caged",
-    organization == "lter-arc" & 
-      original.treatment %in% c("LFCT", "LFCT17",  "CT", 
-                                "MFCT17", "NFCT", "SFCT", 
-                                "SFCT17", "Control", "Control Unfenced",
-                                "Greenhouse Control", 
-                                "Nitrogen Phosphorus Unfenced",
-                                "NP Unfenced") ~ "uncaged",
-    ### LTER BNZ
-    organization == "lter-bonanzacreek" & 
-      original.treatment == "Fenced_Sprayed" ~ "caged",
-    organization == "lter-bonanzacreek" & 
-      original.treatment == "Fenced_Unsprayed" ~ "caged",
-    organization == "lter-bonanzacreek" & 
-      original.treatment == "Unfenced_Sprayed" ~ "uncaged",
-    organization == "lter-bonanzacreek" & 
-      original.treatment == "Unfenced_Unsprayed" ~ "uncaged",
-    ### CDR
-    organization == "lter-cdr" & 
-      stringr::str_sub(string = original.treatment, 1, 2) %in% c("1_", "3_", "5_", "7_") ~ "caged",
-    organization == "lter-cdr" & 
-      stringr::str_detect(string = original.treatment, pattern = "_", negate = T) ~ "caged",
-    organization == "lter-cdr" & 
-      stringr::str_sub(string = original.treatment, 1, 2) %in% c("0_", "2_", "4_", "6_", "8_") ~ "uncaged",
-    ### LTER GCE
-    organization == "lter-gce" & 
-      original.treatment %in% c("Exclusion", "Partial") ~ "caged",
-    organization == "lter-gce" & 
-      original.treatment %in% c("Open") ~ "uncaged",
-    ## LTER HFR (Harvard)
-    organization == "lter-harvard" & original.treatment %in% c("Full", "Partial") ~ "caged",
-    organization == "lter-harvard" & original.treatment %in% c("Control") ~ "uncaged",
-    ### LTER MCR
-    organization == "lter-mcr" & 
-      stringr::str_detect(string = original.treatment, pattern = "Open_") ~ "uncaged",
-    organization == "lter-mcr" & 
-      stringr::str_detect(string = original.treatment, pattern = "1X1_") ~ "caged",
-    organization == "lter-mcr" & 
-      stringr::str_detect(string = original.treatment, pattern = "2X2_") ~ "caged",
-    organization == "lter-mcr" & 
-    stringr::str_detect(string = original.treatment, pattern = "3X3_") ~ "caged",
-    ## M
-    organization == "mcdevittirwin" & original.treatment == "Caged" ~ "caged",
-    organization == "mcdevittirwin" & original.treatment == "Uncaged" ~ "uncaged",
-    organization == "mcdevittirwin" & original.treatment == "Partial" ~ "uncaged",
-    ## P
-    organization == "pelinson" & original.treatment == "present" ~ "caged",
-    organization == "pelinson" & original.treatment == "absent" ~ "uncaged",
-    organization == "porensky" & original.treatment == "n_out" ~ "uncaged",
-    organization == "porensky" & original.treatment == "y_out" ~ "caged",
-    organization == "porensky" & original.treatment == "y_livestock ex" ~ "caged",
-    organization == "porensky" & original.treatment == "n_livestock ex" ~ "caged",
-    organization == "porensky" & original.treatment == "y_ungulate ex" ~ "caged",
-    organization == "porensky" & original.treatment == "n_ungulate ex" ~ "caged",
-    ## R
-    organization == "royo" & stringr::str_detect(string = original.treatment, pattern = "_NoDeer_") ~ "caged",
-    organization == "royo" & stringr::str_detect(string = original.treatment, pattern = "_Deer_") ~ "uncaged",
-    organization == "royo" & stringr::str_detect(string = original.treatment, pattern = "1_") ~ "caged",
-    organization == "royo" & stringr::str_detect(string = original.treatment, pattern = "0_") ~ "uncaged",
-    # organization == "" & original.treatment %in% c() ~ "",
-    original.treatment == "NO TREATMENT IDENTIFIED" ~ NA,
-    T ~ original.treatment), .after = original.treatment)
+  # Make treatment lowercase
+  dplyr::mutate(cage.tmp = tolower(treat.cage)) %>% 
+  # Actually do standardization
+  dplyr::mutate(
+    cage.treatment_std = dplyr::case_when(
+      ## Confident changes
+      ### Cage Present
+      cage.tmp %in% c("full", "exclosure", "start", "exclusion", 
+                        "fenced", "caged", "2.full.cage",
+                        "full nitex", "full quarter",
+                        "control small fenced", "np small fenced",
+                        "small fenced no fertilizer", "full exclosure",
+                        "nodeer", "total_excl", "closed") ~ "caged",
+      ### Partial cage
+      cage.tmp %in% c("partial", "3.part.cage", 
+                        "partial nitex", "partial quarter",
+                        "partial exclosure", "livest_excl") ~ "partial",
+      ### No cage
+      cage.tmp %in% c("none", "open", "end/control", "control", 
+                        "unfenced", "uncaged", "1.open.ctrl",
+                        "control unfenced", "np unfenced",
+                        "deer", "grazed") ~ "uncaged",
+      ## If treatment isn't known, leave it that way
+      tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
+      ## If not covered by prior conditions, just flag it as uncertain
+      T ~ "uncertain"), .before = treat.cage) %>% 
+  # Drop temporary lowercase cage column
+  dplyr::rename(cage.treatment_orig = treat.cage) %>% 
+  dplyr::select(-cage.tmp)
 
-# Check for any un-standardized treatments
+# Any gained / lost columns?
+supportR::diff_check(old = names(tidy_v1), new = names(tidy_v2))
+
+# Look at all uncertain treatments
 tidy_v2 %>% 
-  dplyr::filter(!cage.treatment %in% c("caged", "uncaged") &
-                  !is.na(cage.treatment)) %>% 
-  dplyr::select(organization, cage.treatment) %>% 
+  dplyr::filter(cage.treatment_std == "uncertain") %>% 
+  dplyr::select(organization, cage.treatment_orig) %>% 
   dplyr::distinct()
 
 # Re-check structure
