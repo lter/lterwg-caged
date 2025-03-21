@@ -64,6 +64,9 @@ key_drive
 googledrive::drive_download(file = key_drive$id, overwrite = T, type = "csv",
                             path = file.path("data", key_drive$name))
 
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
 ## ------------------------------------------- ##
 # Harmonize! ----
 ## ------------------------------------------- ##
@@ -129,58 +132,51 @@ combo_v2 %>%
 # Treatments ----
 ## ------------------------------------------- ##
 
+# What kinds of treatments are used (in at least one dataset)?
+combo_v2 %>% 
+  dplyr::select(dplyr::contains("orig.treat")) %>% 
+  dplyr::glimpse()
+
 # Combine/streamline treatment information
 combo_v3 <- combo_v2 %>% 
-  # Combine into a single treatment column
+  # Rename treatments more clearly
+  dplyr::rename(
+    treat.artificial = orig.treat_artificial,
+    treat.exposure = orig.treat_exposure,
+    treat.insecticide = orig.treat_insecticide,
+    treat.canopy = orig.treat_canopy,
+    treat.distance = orig.treat_dist,
+    treat.disturbance = orig.treat_disturbance,
+    treat.fire = orig.treat_fire,
+    treat.gap = orig.treat_gap,
+    treat.nitrogen.addition = orig.treat_nitrogen.addition
+  ) %>% 
+  # Combine synonymous-sounding treatments
   dplyr::mutate(
-    original.treatment = dplyr::case_when(
-      ## Use central treatment (if exists)
-      nchar(orig.treat) != 0 ~ orig.treat,
-      ## Combine fire/fence/gap for relevant study
-      source == "royo_westvirginia_fernow_2000-2013_deer_plants.csv" ~ paste(orig.treat_fire, orig.treat_fence, orig.treat_gap, sep = "_"),
-      ## Combine cage/disturbance/nutrients for relevant study
-      source == "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_disturbance, orig.treat_nutrients, sep = "_"),
-      ## Combine cage/insecticide
-      source == "lter-bonanzacreek_alaska_bnz-lter_2012-2015_vertebrate_plants.csv" ~ paste(orig.treat_cage, orig.treat_insecticide, sep = "_"),
-      ## Combine prairie dog & cattle cages
-      source == "porensky_wyoming_nex_2015-2024_prairiedogs_vegetation.csv" ~ paste(orig.treat_cage.prairie.dog, orig.treat_cage.cattle, sep = "_"),
-      ## Combine cages & nutrients
-      source == "amundrud_britishcolumbia_eelgrassexclosure_2011_predators_mesograzers.csv" ~ paste(orig.treat_cage, orig.treat_nut.trt, sep = "_"),
-      ## Combine cage and nutrients (combo column exists already but this is preferable)
-      source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
-      # ## NO CLEAR TREATMENT COLUMN IN DATA
-      # source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ paste(sep = "_"),
-      ## Combine cage and artificial
-      source == "freestone_newjersey_freestone-new-jersey_2019_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
-      ## Combine cage and artificial
-      source == "freestone_panama_freestone-panama_2019_predators_seagrass.csv" ~ paste(orig.treat_cage, orig.treat_artificial, sep = "_"),
-      ## Combine cage and N addition
-      source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" ~ paste(orig.treat_cage, orig.treat_nitrogen.addition, sep = "_"),
-      ## Combine cage and N addition
-      source == "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" ~ 
-        paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
-      ## Combine cage and distance
-      source == "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv" ~ paste(orig.treat_cage, orig.treat_dist, sep = "_"),
-      ## Cobine cage and canopy
-      source == "lter-harvard_simestract_hemlockremoval_2012-2013_ungulates_shrubherb.csv" ~ 
-        paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
-      ## If not handled above, fill with warning text
-      T ~ "NO TREATMENT IDENTIFIED"),
-    .before = orig.treat) %>% 
+    treat.nutrients = dplyr::coalesce(orig.treat_nut.trt, orig.treat_nutrients, 
+                                      orig.treat_nitrogen.treatment)
+  ) %>% 
+  # Coalesce cage/cage-related treatments separately
+  dplyr::mutate(treat.cage = dplyr::case_when(
+    !is.na(orig.treat_cage) ~ orig.treat_cage,
+    !is.na(orig.treat_fence) ~ orig.treat_fence,
+    !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
+      paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
+    !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
+    !is.na(orig.treat_cage.cattle) ~ orig.treat_cage.cattle,
+    ## If all else fails, just use whatever the singualr original treatment column is
+    !is.na(orig.treat) ~ orig.treat,
+    T ~ "NO CAGE TREATMENT IDENTIFIED")) %>% 
+  # Move treatment columns to the left
+  dplyr::relocate(dplyr::starts_with("treat."), .after = source) %>% 
   # Drop now superseded precursor columns
   dplyr::select(-dplyr::contains("orig.treat"))
 
-# Check resulting treatment / source combos
-combo_v3 %>% 
-  dplyr::select(source, original.treatment) %>% 
-  dplyr::distinct() %>% 
-  as.data.frame()
-
 # Check for any 'bad' treatments
 combo_v3 %>% 
-  dplyr::select(source, original.treatment) %>% 
+  dplyr::select(source, treat.cage) %>% 
   dplyr::distinct() %>% 
-  dplyr::filter(original.treatment == "NO TREATMENT IDENTIFIED")
+  dplyr::filter(treat.cage == "NO CAGE TREATMENT IDENTIFIED")
 
 # Check for lost columns
 supportR::diff_check(old = names(combo_v2), new = names(combo_v3))
