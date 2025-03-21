@@ -47,8 +47,8 @@ beta_viz <- caged_v1 %>%
 dplyr::glimpse(beta_viz)
 
 # Exploratory graph
-ggplot(beta_viz, aes(x = cage.treatment, y = betadisp.comm.dist)) +
-  geom_jitter(aes(fill = cage.treatment), width = 0.15,
+ggplot(beta_viz, aes(x = cage.treatment_std, y = betadisp.comm.dist)) +
+  geom_jitter(aes(fill = cage.treatment_std), width = 0.15,
               alpha = 0.3, size = 1, pch = 21) +
   facet_wrap(. ~ source) +
   labs(x = "Cage Treatment", y = "Beta Dispersion") +
