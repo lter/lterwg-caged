@@ -32,7 +32,9 @@ dplyr::glimpse(sub_v1)
 # Drop any columns we know we don't want at the outset
 sub_v2 <- sub_v1 %>% 
   # Superseded "original" columns (standardized in QC script)
-  dplyr::select(-original.treatment) %>% 
+  dplyr::select(-dplyr::starts_with("treat.")) %>% 
+  # Drop unstandardized cage treatments too
+  dplyr::select(-cage.treatment_orig) %>% 
   # 'Distance from' column(s)
   dplyr::select(-distance.from.surface, -distance.from.source) %>% 
   # Exclosure age
@@ -133,6 +135,8 @@ sub_v4 <- sub_v3b %>%
       (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
          year == "2014" & sampling.point == "7/1/14") | 
       ## L
+      (source == "lamb_galapagos_consumermobility_2017_fish-urchins_algae.csv" &
+         year == "2017" & sampling.point == "Warm") |
       ## LTER Andrews
       (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
          year == "1980" & sampling.point == "6/15/80") |
@@ -159,9 +163,30 @@ sub_v4 <- sub_v3b %>%
          year == "1984" & sampling.point == "840724") |
       (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
          year == "1985" & sampling.point == "850829") |
+      ## LTER Sevilleta
+      (source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" &
+         year == "2005" & sampling.point == "11/29/05") |
       ## P
       (source == "pelinson_brazil_predatorisolationcomm_2017_tilapia_insects.csv" & 
-         sampling.point == "3")
+         sampling.point == "3") |
+      ## S
+      (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
+         year == "2017" & sampling.point == "11") |
+      (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
+         year == "2018" & sampling.point == "3") |
+      ## V
+      (source == "villar_brazil_car_2009-2016_tapirs_forest.csv" &
+         sampling.point == "T73") |
+      (source == "villar_brazil_cbo_2009-2016_tapirs_forest.csv" &
+         sampling.point == "T87") |
+      (source == "villar_brazil_ita_2009-2016_tapirs_forest.csv" &
+         sampling.point == "T74") |
+      (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         sampling.point == "105") |
+      (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         sampling.point == "105")
+      # (source == "" &
+      #    year == "" & sampling.point == "")
   ) %>% 
   # Drop "sampling.point" column plus any temporary columns
   dplyr::select(-sampling.point, -time.ct, -times)
