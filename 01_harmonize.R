@@ -161,6 +161,9 @@ combo_v3 <- combo_v2 %>%
         paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
       ## Combine cage and distance
       source == "royo_pennsylvania_allegheny_2000-2010_ungulate_forest.csv" ~ paste(orig.treat_cage, orig.treat_dist, sep = "_"),
+      ## Cobine cage and canopy
+      source == "lter-harvard_simestract_hemlockremoval_2012-2013_ungulates_shrubherb.csv" ~ 
+        paste(orig.treat_cage, orig.treat_nutrients, sep = "_"),
       ## If not handled above, fill with warning text
       T ~ "NO TREATMENT IDENTIFIED"),
     .before = orig.treat) %>% 
@@ -247,6 +250,8 @@ supportR::num_check(data = combo_v5, col = "abundance")
 tax_longs <- combo_v5 %>% 
   dplyr::filter(data_are_long == TRUE) %>% 
   dplyr::select(-data_are_long) %>% 
+  # Fix any issues with abundance
+  dplyr::mutate(abundance = gsub(pattern = "^\\.$|na", replacement = "", x = abundance)) %>%
   # Make abundance numeric in case we need to summarize across duplicates
   dplyr::mutate(abundance = as.numeric(abundance))
 
@@ -408,6 +413,11 @@ supportR::diff_check(old = names(combo_v6), new = names(combo_v7))
 ## ------------------------------------------- ##
 # File Name Information ----
 ## ------------------------------------------- ##
+
+# Make sure all file names have correctly-formatted filenames
+combo_v7 %>% 
+  dplyr::select(source) %>% dplyr::distinct() %>% 
+  dplyr::filter(stringr::str_count(string = source, pattern = "_") != 5)
 
 # Break useful information out of file name ("source" column)
 combo_v8 <- combo_v7 %>% 
