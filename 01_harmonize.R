@@ -389,7 +389,7 @@ dplyr::glimpse(combo_v6)
 # Reorder columns more logically
 combo_v7 <- combo_v6 %>% 
   # Treatment information first
-  dplyr::relocate(original.treatment, exclosure.age, .after = source) %>% 
+  dplyr::relocate(treat.cage, dplyr::starts_with("treat."), exclosure.age, .after = source) %>% 
   # Experimental design nestedness (lower numbers are more granular)
   dplyr::relocate(exp.name, .after = year) %>% 
   dplyr::relocate(exp.design.4, exp.design.3, 
