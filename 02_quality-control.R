@@ -181,17 +181,18 @@ tidy_v5 %>%
 # Fill in missing years as appropriate
 tidy_v6 <- tidy_v5 %>% 
   dplyr::mutate(year = dplyr::case_when(
+    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), 
     !is.na(year) ~ as.character(year),
-    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
+    ## sampling point is year
     source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
     source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ sampling.point,
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
-    ## Put in placeholder years for datasets without year info
-    source == "lter-arc_alaska_acidictussock_1996-1999_vertebrates_plants.csv" ~ "1999",
-    source == "lter-harvard_newengland_plantcover_2008-2019_moose_plants.csv" ~ "2019",
+    ## Date in mm/dd/yy format
+    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
+    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
-    T ~ NA)) %>% 
+    T ~ "year")) %>% 
   # Do any needed post-processing
   ## Drop season names
   dplyr::mutate(year = gsub(pattern = "Fall |Spring |Summer |Winter ", 
