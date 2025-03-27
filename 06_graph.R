@@ -8,10 +8,11 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse)
+librarian::shelf(tidyverse, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("graphs"), showWarnings = F)
+dir.create(path = file.path("graphs", "per-dataset-violins"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -46,18 +47,41 @@ beta_viz <- caged_v1 %>%
 # Re-check structure
 dplyr::glimpse(beta_viz)
 
-# Exploratory graph
-ggplot(beta_viz, aes(x = cage.treatment_std, y = betadisp.comm.dist)) +
-  geom_jitter(aes(fill = cage.treatment_std), width = 0.15,
-              alpha = 0.3, size = 1, pch = 21) +
-  facet_wrap(. ~ source) +
-  labs(x = "Cage Treatment", y = "Beta Dispersion") +
-  theme(legend.position = "none",
-        legend.title = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-# Export locally
-ggsave(filename = file.path("graphs", "06_betadisp-violins.png"),
-       width = 12, height = 12, units = "in")
+# Make some exploratory graphs!
+for(focal_src in sort(unique(beta_viz$source))){
+  # focal_src <- "soler_argentina_native-alienplants_2015-2020_herbivores_vegetation.csv"
+  
+  # Progress message
+  message("Making exploratory violins for file: '", focal_src, "'")
+  
+  # Subset data
+  focal_sub <- dplyr::filter(.data = beta_viz, source == focal_src)
+ 
+  # Create graph
+  ggplot(focal_sub, aes(x = cage.treatment_std, y = betadisp.comm.dist)) +
+    geom_boxplot(aes(fill = cage.treatment_std), alpha = 0.4) +
+    geom_jitter(aes(fill = cage.treatment_std), width = 0.15,
+                size = 2.5, pch = 21) +
+    facet_wrap(. ~ source) +
+    labs(x = "Cage Treatment", y = "Beta Dispersion",
+         title = paste0("Graph created on ", Sys.Date())) +
+    theme(legend.position = "none",
+          legend.title = element_blank(),
+          strip.text = element_text(size = 8),
+          axis.text.x = element_text(angle = 35, hjust = 1)) +
+    supportR::theme_lyon()
+  
+  # Create nice file name/path
+  focal_name <- paste0("06_betadisp-violins_", gsub(".csv", "", focal_src), ".png")
+  focal_path <- file.path("graphs", "per-dataset-violins", focal_name)
+  
+  # Save locally
+  ggsave(filename = focal_path, width = 6, height = 4, units = "in")
+ 
+  # Upload to Drive
+  googledrive::drive_upload(media = focal_path, overwrite = T,
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1R5BW-RvIey8nggUsgPEDtkvEv0GDozzZ"))
+   
+}
 
 # End ----
