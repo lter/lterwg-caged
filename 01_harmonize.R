@@ -221,18 +221,20 @@ dplyr::glimpse(combo_v2)
 # Reorder columns more logically
 combo_v3 <- combo_v2 %>% 
   # Treatment information first
-  dplyr::relocate(treat.cage, dplyr::starts_with("treat."), exclosure.age, .after = source) %>% 
+  dplyr::relocate(treat.cage, dplyr::starts_with("treat."), .after = source) %>% 
   # Experimental design nestedness (lower numbers are more granular)
-  dplyr::relocate(exp.name, .after = year) %>% 
+  dplyr::relocate(exp.name, exclosure.age, .after = source) %>% 
   dplyr::relocate(exp.design.4, exp.design.3, 
-                  exp.design.2, exp.design.1, .after = exp.name) %>% 
+                  exp.design.2, exp.design.1, .after = exclosure.age) %>% 
   dplyr::relocate(dplyr::starts_with("distance.from."), .after = exp.design.1) %>% 
   # Order temporal information
   dplyr::relocate(sampling.point, .after = year) %>% 
   # Taxon information after spatial information
-  dplyr::relocate(orig.taxa, .after = dplyr::starts_with("distance.from.")) %>% 
+  dplyr::relocate(orig.taxa, .after = dplyr::everything()) %>% 
   # Rename taxon information to avoid abbreviation
-  dplyr::rename(original.taxa = orig.taxa)
+  dplyr::rename(original.taxa = orig.taxa) %>% 
+  # Put abundance last
+  dplyr::relocate(abundance, .after = dplyr::everything())
 
 # Check structure
 dplyr::glimpse(combo_v3)
