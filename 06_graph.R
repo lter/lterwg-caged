@@ -8,11 +8,14 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, supportR)
+librarian::shelf(tidyverse, googledrive, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("graphs"), showWarnings = F)
 dir.create(path = file.path("graphs", "per-dataset-violins"), showWarnings = F)
+
+# Authorize GoogleDrive
+googledrive::googledrive_auth()
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
