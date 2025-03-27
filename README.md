@@ -15,8 +15,9 @@ Briefly describe the purpose of each script (or folder of scripts) here as you c
     - Performs some minor wrangling necessary for coalescing synonymous columns / etc.
 - `02_quality-control.R` -- Performs more involved quality control (QC) and metric calculation
 - `03_filter.R` -- Filters out rows/columns that made sense to harmonize & tidy but are likely not useful for (the current) analysis
-- `04_calc-beta.R` -- Calculate beta dispersion at various spatial/temporal scales
-- `05_graph.R` -- Create exploratory (i.e., not publication quality) graphs
+- `04_zero-fill.R` -- Zero fills community data (necessary due to betadispersion calculation requirements)
+- `05_calc-beta.R` -- Calculate beta dispersion at various spatial/temporal scales
+- `06_graph.R` -- Create exploratory (i.e., not publication quality) graphs
 
 ## Supplementary Resources
 
