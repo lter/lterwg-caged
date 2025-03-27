@@ -93,6 +93,7 @@ for(focal_src in sort(unique(key$source))){
   # focal_src <- "beguin_quebec_largeherbivores_1995-2011_whitetaileddeer_understoryplants.csv" # composite
   # focal_src <- "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" # wide tax
   # focal_src <- "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" # wide spatial
+  # focal_src <- "villar_brazil_cbo_2009-2016_tapirs_forest.csv" # long tax
   
   # Progress message
   message("Standarizing file: '", focal_src, "'")
@@ -279,19 +280,20 @@ supportR::num_check(data = combo_v4, col = "abundance")
 combo_v5 <- combo_v4 %>% 
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
-  # Replace "NA" with zero where appropriate
-  dplyr::mutate(abundance = dplyr::case_when(
-    source == "cain_australia_herbexclusion_2021_macropod_plants.csv" &
-      abundance == "n/a" ~ "0",
-    T ~ abundance)) %>% 
+  # Remove non-numbers
+  dplyr::mutate(abundance = gsub(pattern = "^.$", replacement = "", x = abundance)) %>% 
+  dplyr::mutate(abundance = ifelse(
+    test = abundance %in% c("n/a", "—", "na"),
+    yes = "", no = abundance)) %>% 
   # Remove any rows where no metric of abundance is included
   dplyr::filter(is.na(abundance) != T &
                   nchar(abundance) != 0 &
                   abundance != "NaN") %>% 
-  # Drop duplicate rows
-  dplyr::distinct() %>% 
   # Make abundance truly a number
-  dplyr::mutate(abundance = as.numeric(abundance))
+  dplyr::mutate(abundance = as.numeric(abundance)) %>% 
+  # Remove any rows with zero abundace
+  ## (We'll zero fill later but fewer rows means faster computing in the meantime)
+  dplyr::filter(abundance > 0)
 
 # Check structure
 dplyr::glimpse(combo_v5)
