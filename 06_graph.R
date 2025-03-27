@@ -83,7 +83,7 @@ for(focal_src in sort(unique(beta_viz$source))){
  
   # Upload to Drive
   googledrive::drive_upload(media = focal_path, overwrite = T,
-                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1R5BW-RvIey8nggUsgPEDtkvEv0GDozzZ"))
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1bZiSTpRbcGU3L0_Krdfd9MPGjVeVbKLj"))
    
 }
 
