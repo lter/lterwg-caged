@@ -42,10 +42,10 @@ tidy_v2 <- tidy_v1 %>%
       ### Cage Present
       cage.tmp %in% c("full", "exclosure", "start", "exclusion", 
                         "fenced", "caged", "2.full.cage",
-                        "full nitex", "full quarter",
+                        "full nitex", "full quarter", "cage",
                         "control small fenced", "np small fenced",
                         "small fenced no fertilizer", "full exclosure",
-                        "nodeer", "total_excl", "closed") ~ "caged",
+                        "nodeer", "total_excl", "closed", "oui") ~ "caged",
       ### Partial cage
       cage.tmp %in% c("partial", "3.part.cage", 
                         "partial nitex", "partial quarter",
@@ -54,7 +54,7 @@ tidy_v2 <- tidy_v1 %>%
       cage.tmp %in% c("none", "open", "end/control", "control", 
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
-                        "deer", "grazed") ~ "uncaged",
+                        "deer", "grazed", "non") ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
