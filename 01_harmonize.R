@@ -71,74 +71,104 @@ rm(list = ls()); gc()
 # Harmonize! ----
 ## ------------------------------------------- ##
 
-# Read in data key
-key <- read.csv(file = file.path("data", "caged_data-key.csv"))
+# Read in & check data key
+key <- read.csv(file = file.path("data", "caged_data-key.csv")) %>% 
+  ltertools::check_key(key = .)
 
 # Check that looks roughly right
 dplyr::glimpse(key)
 
-# Perform harmonization
-combo_v1 <- ltertools::harmonize(key = key, 
-                                 raw_folder = file.path("data", "raw"),
-                                 data_format = "csv", quiet = F)
+# Read in all data (as a list)
+list_raw <- ltertools::read(raw_folder = file.path("data", "raw"), 
+                            data_format = "csv")
 
-# Check that structure out
+# Check structure of one element
+dplyr::glimpse(list_raw[10])
+
+# Make a list to store standardized outputs
+list_std <- list()
+
+# Now, let's loop across datasets in the key
+for(focal_src in sort(unique(key$source))){
+  # focal_src <- "beguin_quebec_largeherbivores_1995-2011_whitetaileddeer_understoryplants.csv" # composite
+  # focal_src <- "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" # wide tax
+  # focal_src <- "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" # wide spatial
+  
+  # Progress message
+  message("Standarizing file: '", focal_src, "'")
+  
+  # Standardize this file
+  focal_v1 <- ltertools::standardize(focal_file = focal_src, 
+                                     key = key, 
+                                     df_list = list_raw)
+  
+  # Handle 'composite' columns if any are present
+  if(any(stringr::str_detect(string = names(focal_v1), pattern = "composite_"))){
+    
+    # Identify composite column name
+    comp_col <- names(focal_v1)[stringr::str_detect(string = names(focal_v1), pattern = "composite_")]
+    
+    # Identify what columns it should be split into (removing "composite" flag)
+    split_cols <- stringr::str_split_1(string = gsub("composite_", "", comp_col), pattern = "_")
+    
+    # Actually split composite column
+    focal_v2 <- focal_v1 %>% 
+      tidyr::separate_wider_delim(cols = dplyr::contains(comp_col),
+                                  names = split_cols, delim = " ")
+    
+    # If no such columns found, just increment the data object version number
+  } else { focal_v2 <- focal_v1 }
+  
+  # Do some bonus processing if taxa are in wide format
+  if(any(stringr::str_detect(string = names(focal_v2), pattern = "orig.taxa_"))){
+    
+    # Flip it to long format & tidy up taxa names
+    focal_v3 <- focal_v2 %>% 
+      tidyr::pivot_longer(cols = dplyr::starts_with("orig.taxa_"),
+                          names_to = "orig.taxa",
+                          values_to = "abundance") %>% 
+      dplyr::mutate(orig.taxa = gsub(pattern = "orig.taxa_", replacement = "", x = orig.taxa))
+      
+  } else { focal_v3 <- focal_v2 }
+  
+  # Also process wide-format spatial information (if any is found)
+  if(any(stringr::str_detect(string = names(focal_v3), pattern = "exp.design.1_"))){
+    
+    # Flip to long format and tidy up resulting long-form design column
+    focal_v4 <- focal_v3 %>% 
+      tidyr::pivot_longer(cols = dplyr::starts_with("exp.design.1_"),
+                          names_to = "exp.design.1",
+                          values_to = "abundance") %>% 
+      dplyr::mutate(exp.design.1 = gsub(pattern = "exp.design.1_", replacement = "",
+                                        x = exp.design.1))
+    
+  } else { focal_v4 <- focal_v3 }
+  
+  # Make a final object
+  focal_std <- focal_v4
+  
+  # Add to output list
+  list_std[[focal_src]] <- focal_std
+  
+} # Close loop
+
+# Unlist outputs 
+combo_v1 <- purrr::list_rbind(x = list_std)
+
+# Check structure
 dplyr::glimpse(combo_v1)
 
 ## ------------------------------------------- ##
-# "Composite" Columns ----
-## ------------------------------------------- ##
-# Some datasets entered multiple pieces of information in the same column
-# These are identified as "composite_..." and are handled here
-
-# Which datasets have composite columns?
-composite_sources <- combo_v1 %>% 
-  dplyr::filter(!is.na(composite_exp.design.1_orig.treat_site_idpair_exclosure_quadrat_idquadrat_year)) %>% 
-  dplyr::pull(source) %>% unique(); composite_sources
-
-# Check values in known composite columns
-sort(unique(combo_v1$composite_exp.design.1_orig.treat_site_idpair_exclosure_quadrat_idquadrat_year))
-
-# Handle these columns
-combo_v2 <- combo_v1 %>% 
-  # Split composite column(s) as appropriate
-  tidyr::separate_wider_delim(cols = composite_exp.design.1_orig.treat_site_idpair_exclosure_quadrat_idquadrat_year,
-                              names = c("exp.design.3_temporary",
-                                        "exp.design.2_temporary", 
-                                        "orig.treat_temporary", 
-                                        "exp.design.1_temporary", 
-                                        "year_temporary"), delim = " ") %>% 
-  # Coalesce with "real" versions of columns
-  dplyr::mutate(exp.design.1 = dplyr::coalesce(exp.design.1, exp.design.1_temporary)) %>% 
-  dplyr::mutate(exp.design.2 = dplyr::coalesce(exp.design.2, exp.design.2_temporary)) %>% 
-  dplyr::mutate(exp.design.3 = dplyr::coalesce(exp.design.3, exp.design.3_temporary)) %>% 
-  dplyr::mutate(orig.treat = dplyr::coalesce(orig.treat, orig.treat_temporary)) %>% 
-  dplyr::mutate(year = dplyr::coalesce(year, year_temporary)) %>% 
-  # Drop composite & temporary columns
-  dplyr::select(-dplyr::starts_with("composite_") , -dplyr::ends_with("_temporary"))
-
-# Any surprising gained / lost columns?
-supportR::diff_check(old = names(combo_v1), new = names(combo_v2))
-
-# Check that worked
-combo_v2 %>% 
-  dplyr::filter(source %in% composite_sources) %>% 
-  dplyr::select(dplyr::where(fn = ~ !all(is.na(.) | nchar(.) == 0))) %>% 
-  dplyr::select(dplyr::starts_with("exp.design."), orig.treat, year) %>% 
-  dplyr::distinct() %>% 
-  dplyr::glimpse()
-
-## ------------------------------------------- ##
-# Treatments ----
+# Streamline Treatments ----
 ## ------------------------------------------- ##
 
 # What kinds of treatments are used (in at least one dataset)?
-combo_v2 %>% 
+combo_v1 %>% 
   dplyr::select(dplyr::contains("orig.treat")) %>% 
   dplyr::glimpse()
 
 # Combine/streamline treatment information
-combo_v3 <- combo_v2 %>% 
+combo_v2 <- combo_v1 %>% 
   # Rename treatments more clearly
   dplyr::rename(
     treat.artificial = orig.treat_artificial,
@@ -173,221 +203,23 @@ combo_v3 <- combo_v2 %>%
   dplyr::select(-dplyr::contains("orig.treat"))
 
 # Check for any 'bad' treatments
-combo_v3 %>% 
+combo_v2 %>% 
   dplyr::select(source, treat.cage) %>% 
   dplyr::distinct() %>% 
   dplyr::filter(treat.cage == "NO CAGE TREATMENT IDENTIFIED")
 
 # Check for lost columns
-supportR::diff_check(old = names(combo_v2), new = names(combo_v3))
+supportR::diff_check(old = names(combo_v1), new = names(combo_v2))
 
 # Check structure
-dplyr::glimpse(combo_v3)
-
-## ------------------------------------------- ##
-# Pivot Wide Spatial Data ----
-## ------------------------------------------- ##
-
-# Identify all data files in the key that were in wide spatial format
-spat_wide_files <- key %>% 
-  dplyr::filter(stringr::str_detect(string = tidy_name, pattern = "exp.design.1_")) %>% 
-  dplyr::select(source) %>% 
-  dplyr::distinct() %>% 
-  dplyr::pull()
-
-# Separate data
-spat_wides <- combo_v3 %>% 
-  dplyr::filter(source %in% spat_wide_files) %>% 
-  dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
-spat_longs <- combo_v3 %>% 
-  dplyr::filter(source %in% spat_wide_files == F) %>% 
-  dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
-
-# Check none are lost
-nrow(combo_v3) == nrow(spat_wides) + nrow(spat_longs)
-
-# Rotate wide spatial into long
-spat_wides_pivot <- spat_wides %>% 
-  tidyr::pivot_longer(cols = dplyr::starts_with("exp.design.1_"),
-                      names_to = "exp.design.1_pivot",
-                      values_to = "abundance") %>% 
-  dplyr::filter(!is.na(exp.design.1_pivot) & !is.na(abundance)) %>% 
-  dplyr::mutate(exp.design.1 = gsub(pattern = "exp.design.1_", replacement = "",
-                                    x = exp.design.1_pivot)) %>% 
-  dplyr::select(-exp.design.1_pivot)
- 
-# Check structure
-dplyr::glimpse(spat_wides_pivot)
-
-# Recombine data
-combo_v4 <- dplyr::bind_rows(spat_longs, spat_wides_pivot)
-
-# Identify columns that are dropped
-supportR::diff_check(old = names(combo_v3), new = names(combo_v4))
-
-# Check structure
-dplyr::glimpse(combo_v4)
-
-## ------------------------------------------- ##
-# Zero Fill Long Communities ----
-## ------------------------------------------- ##
-
-# Need to separate long/wide data to handle 0s/missing data
-combo_v5 <- combo_v4 %>% 
-  # Generate 'flag' for long versus wide data
-  dplyr::group_by(source) %>% 
-  dplyr::mutate(data_are_long = !is.na(orig.taxa) ) %>% 
-  dplyr::ungroup()
-
-# Also check for non-numbers in the 'abundance' column for long data
-supportR::num_check(data = combo_v5, col = "abundance")
-
-# Separate long from wide data
-tax_longs <- combo_v5 %>% 
-  dplyr::filter(data_are_long == TRUE) %>% 
-  dplyr::select(-data_are_long) %>% 
-  # Fix any issues with abundance
-  dplyr::mutate(abundance = gsub(pattern = "^\\.$|na", replacement = "", x = abundance)) %>%
-  # Make abundance numeric in case we need to summarize across duplicates
-  dplyr::mutate(abundance = as.numeric(abundance))
-
-# Separate wide from long data
-tax_wides <- combo_v5 %>% 
-  dplyr::filter(data_are_long == FALSE) %>% 
-  dplyr::select(-data_are_long)
-
-# Check that's the right number of rows
-nrow(combo_v5) == nrow(tax_longs) + nrow(tax_wides)
-
-# Make a list to store outputs
-zerofill_list <- list()
-
-# Process long data
-for(focal_source in unique(tax_longs$source)){
-  
-  # Print progress message
-  message("Zero filling dataset: '", focal_source, "'")
-  
-  # Subset to focal dataset
-  focal_sub <- tax_longs %>% 
-    dplyr::filter(source == focal_source) %>% 
-    dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
-    dplyr::filter(nchar(orig.taxa) != 0 & !is.na(orig.taxa)) %>% 
-    dplyr::distinct()
-  
-  # Identify all columns other than the 'taxonomy' & 'abundance' columns
-  focal_names <- setdiff(x = names(focal_sub), y = c("orig.taxa", "abundance"))
-  
-  # Average across any duplicates (should be no duplicates)
-  focal_smy <- focal_sub %>% 
-    dplyr::group_by(dplyr::across(dplyr::all_of(x = c(focal_names, "orig.taxa")))) %>% 
-    dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                     .groups = "keep") %>% 
-    dplyr::ungroup()
-  
-  # Pivot to wide format (filling with zeros on the way)
-  focal_flip <- focal_smy %>% 
-    tidyr::pivot_wider(names_from = orig.taxa,
-                       values_from = abundance,
-                       values_fill = 0)
-  
-  # Pivot back to long format
-  focal_zerofill <- focal_flip %>% 
-    tidyr::pivot_longer(cols = -dplyr::all_of(focal_names),
-                        names_to = "original.taxa",
-                        values_to = "abundance")
-  
-  # Add to output list
-  zerofill_list[[focal_source]] <- focal_zerofill
-  
-}
-
-# Unlist the list
-tax_longs_v2 <- zerofill_list %>% 
-  purrr::list_rbind(x = .) %>% 
-  # And make abundance back into a character vector
-  dplyr::mutate(abundance = as.character(abundance))
-
-# Check structure
-dplyr::glimpse(tax_longs_v2)
-
-## ------------------------------------------- ##
-# Reshape Wide Communities to Long ----
-## ------------------------------------------- ##
-
-# Re-check structure of wide 'split' of data
-dplyr::glimpse(tax_wides)
-
-# Make an output list
-pivot_list <- list()
-
-# Process wide data
-for(focal_source in unique(tax_wides$source)){
-  
-  # Print progress message
-  message("Reshaping dataset: '", focal_source, "'")
-  
-  # Subset data to relevant source
-  focal_sub <- tax_wides %>% 
-    dplyr::filter(source == focal_source) %>% 
-    dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
-    dplyr::distinct()
-  
-  # Identify taxonomic granularity of this dataset
-  tax_gran <- sort(unique(stringr::str_extract(string = names(focal_sub), 
-                                   pattern = "\\.[:alpha:]{1,9}_")))
-  
-  # Pivot longer for this taxonomic level
-  focal_pivot <- focal_sub %>% 
-    tidyr::pivot_longer(cols = dplyr::starts_with(paste0("orig", tax_gran)),
-                        names_to = paste0("orig", tax_gran),
-                        values_to = paste0("abun", tax_gran))
-  
-  # Add output to list
-  pivot_list[[focal_source]] <- focal_pivot
-  
-}
-
-# Unlist the output
-tax_wides_v2 <- pivot_list %>% 
-  purrr::list_rbind(x = .) %>% 
-  # Coalesce abundance information
-  dplyr::mutate(abundance = ifelse(is.na(abun.taxa_),
-                                   yes = NA, no = abun.taxa_)) %>% 
-  # Drop superseded abundance columns
-  dplyr::select(-dplyr::starts_with("abun.")) %>% 
-  # Tidy up taxon column names
-  dplyr::rename(original.taxa = orig.taxa_)
-
-# Check structure
-dplyr::glimpse(tax_wides_v2)
-
-# Check for lost/gained columns from pre-loop data
-supportR::diff_check(old = names(tax_wides), new = names(tax_wides_v2))
-
-## ------------------------------------------- ##
-# Recombine Wide / Long Data ----
-## ------------------------------------------- ##
-
-# Re-check structure to remind self
-dplyr::glimpse(tax_wides_v2)
-dplyr::glimpse(tax_longs_v2)
-
-# Combine the data and do needed wrangling
-combo_v6 <- dplyr::bind_rows(tax_wides_v2, tax_longs_v2) %>% 
-  # Clean up taxa names
-  dplyr::mutate(original.taxa = gsub(pattern = "orig\\.taxa_", replacement = "",
-                                     x = original.taxa))
-
-# Recheck structure
-dplyr::glimpse(combo_v6)
+dplyr::glimpse(combo_v2)
 
 ## ------------------------------------------- ##
 # Column Re-Ordering ----
 ## ------------------------------------------- ##
 
 # Reorder columns more logically
-combo_v7 <- combo_v6 %>% 
+combo_v3 <- combo_v2 %>% 
   # Treatment information first
   dplyr::relocate(treat.cage, dplyr::starts_with("treat."), exclosure.age, .after = source) %>% 
   # Experimental design nestedness (lower numbers are more granular)
@@ -398,25 +230,27 @@ combo_v7 <- combo_v6 %>%
   # Order temporal information
   dplyr::relocate(sampling.point, .after = year) %>% 
   # Taxon information after spatial information
-  dplyr::relocate(original.taxa, .after = dplyr::starts_with("distance.from."))
+  dplyr::relocate(orig.taxa, .after = dplyr::starts_with("distance.from.")) %>% 
+  # Rename taxon information to avoid abbreviation
+  dplyr::rename(original.taxa = orig.taxa)
 
 # Check structure
-dplyr::glimpse(combo_v7)
+dplyr::glimpse(combo_v3)
 
 # Check that **no columns are lost / gained**
-supportR::diff_check(old = names(combo_v6), new = names(combo_v7))
+supportR::diff_check(old = names(combo_v3), new = names(combo_v2))
 
 ## ------------------------------------------- ##
 # File Name Information ----
 ## ------------------------------------------- ##
 
 # Make sure all file names have correctly-formatted filenames
-combo_v7 %>% 
+combo_v3 %>% 
   dplyr::select(source) %>% dplyr::distinct() %>% 
   dplyr::filter(stringr::str_count(string = source, pattern = "_") != 5)
 
 # Break useful information out of file name ("source" column)
-combo_v8 <- combo_v7 %>% 
+combo_v4 <- combo_v3 %>% 
   # Separate by underscore
   tidyr::separate_wider_delim(cols = source, delim = "_",
                               names = c("organization", "site", 
@@ -430,17 +264,17 @@ combo_v8 <- combo_v7 %>%
   dplyr::relocate(source, .before = dplyr::everything())
 
 # Check structure
-dplyr::glimpse(combo_v8)
+dplyr::glimpse(combo_v4)
 
 ## ------------------------------------------- ##
 # Check for Non-Numeric Abundance ----
 ## ------------------------------------------- ##
 
 # Identify any instances of non-numeric abundance
-supportR::num_check(data = combo_v8, col = "abundance")
+supportR::num_check(data = combo_v4, col = "abundance")
 
 # Do needed processing
-combo_v9 <- combo_v8 %>% 
+combo_v5 <- combo_v4 %>% 
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Replace "NA" with zero where appropriate
@@ -458,14 +292,14 @@ combo_v9 <- combo_v8 %>%
   dplyr::mutate(abundance = as.numeric(abundance))
 
 # Check structure
-dplyr::glimpse(combo_v9)
+dplyr::glimpse(combo_v5)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-combo_v99 <- combo_v9
+combo_v99 <- combo_v5
 
 # Check structure
 dplyr::glimpse(combo_v99)
