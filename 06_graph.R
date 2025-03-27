@@ -12,10 +12,10 @@ librarian::shelf(tidyverse, googledrive, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("graphs"), showWarnings = F)
-dir.create(path = file.path("graphs", "per-dataset-violins"), showWarnings = F)
+dir.create(path = file.path("graphs", "per-dataset-boxplots"), showWarnings = F)
 
 # Authorize GoogleDrive
-googledrive::googledrive_auth()
+googledrive::drive_auth()
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -55,7 +55,7 @@ for(focal_src in sort(unique(beta_viz$source))){
   # focal_src <- "soler_argentina_native-alienplants_2015-2020_herbivores_vegetation.csv"
   
   # Progress message
-  message("Making exploratory violins for file: '", focal_src, "'")
+  message("Making exploratory boxplots for file: '", focal_src, "'")
   
   # Subset data
   focal_sub <- dplyr::filter(.data = beta_viz, source == focal_src)
@@ -68,6 +68,8 @@ for(focal_src in sort(unique(beta_viz$source))){
     facet_wrap(. ~ source) +
     labs(x = "Cage Treatment", y = "Beta Dispersion",
          title = paste0("Graph created on ", Sys.Date())) +
+    scale_fill_manual(values = c("caged" = "red", "uncaged" = "blue", "partial" = "purple", 
+                                 "unknown" = "gray", "uncertain" = "gray20")) +
     theme(legend.position = "none",
           legend.title = element_blank(),
           strip.text = element_text(size = 8),
@@ -75,8 +77,8 @@ for(focal_src in sort(unique(beta_viz$source))){
     supportR::theme_lyon()
   
   # Create nice file name/path
-  focal_name <- paste0("06_betadisp-violins_", gsub(".csv", "", focal_src), ".png")
-  focal_path <- file.path("graphs", "per-dataset-violins", focal_name)
+  focal_name <- paste0("06_betadisp-boxplots_", gsub(".csv", "", focal_src), ".png")
+  focal_path <- file.path("graphs", "per-dataset-boxplots", focal_name)
   
   # Save locally
   ggsave(filename = focal_path, width = 6, height = 4, units = "in")
