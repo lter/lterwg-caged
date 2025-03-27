@@ -17,7 +17,7 @@ dir.create(path = file.path("graphs"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Read in data
-caged_v1 <- read.csv(file.path("data", "04_caged_beta-disp.csv"))
+caged_v1 <- read.csv(file.path("data", "05_caged_beta-disp.csv"))
 
 # Check structure
 dplyr::glimpse(caged_v1)
@@ -57,7 +57,7 @@ ggplot(beta_viz, aes(x = cage.treatment_std, y = betadisp.comm.dist)) +
         axis.text.x = element_text(angle = 35, hjust = 1))
 
 # Export locally
-ggsave(filename = file.path("graphs", "05_betadisp-violins.png"),
+ggsave(filename = file.path("graphs", "06_betadisp-violins.png"),
        width = 12, height = 12, units = "in")
 
 # End ----

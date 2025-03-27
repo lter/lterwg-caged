@@ -25,7 +25,7 @@ source(file.path("tools", "fxn_calc-betadisp.R"))
 min_reps <- 4
 
 # Read in data
-beta_v1 <- read.csv(file.path("data", "03_caged_filtered.csv"))
+beta_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
 
 # Check structure
 dplyr::glimpse(beta_v1)
@@ -455,7 +455,7 @@ supportR::diff_check(old = unique(beta_v2$source), new = unique(beta_v7$source))
 beta_v99 <- beta_v7
 
 # Identify tidy file name / path
-beta_name <- "04_caged_beta-disp.csv"
+beta_name <- "05_caged_beta-disp.csv"
 beta_path <- file.path("data", beta_name)
 
 # Export locally
@@ -470,7 +470,7 @@ for(item in seq_along(beta_deslists)){
   # Assemble file path
   partial_level <- gsub(pattern = "\\.", replacement = "-", 
                         x = unique(beta_deslists[[item]]$betadisp.design.level))
-  partial_beta_name <- paste0("04_caged_beta-disp_", partial_level, ".csv")
+  partial_beta_name <- paste0("05_caged_beta-disp_", partial_level, ".csv")
   partial_beta_path <- file.path("data", partial_beta_name)
   
   # Export locally
@@ -479,7 +479,7 @@ for(item in seq_along(beta_deslists)){
 } # Close loop
 
 # Upload all of these to the Drive
-purrr::walk(.x = dir(path = file.path("data"), pattern = "04_caged_beta-disp"),
+purrr::walk(.x = dir(path = file.path("data"), pattern = "05_caged_beta-disp"),
             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
