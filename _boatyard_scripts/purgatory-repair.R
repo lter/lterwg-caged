@@ -604,26 +604,62 @@ googledrive::drive_upload(media = proj10_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 11 (TBD) ----
+# Project 11 (Clausing NZ Intertidal) ----
 ## ------------------------------------------- ##
 
 # Reason for purgatory status
-## 
+## Need to attach metadata from a separate file
+
+# Download the relevant metadata file too
+googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1X9vCLm1GRE2-HWhzg8KdUEue62wskRxJ")) %>% 
+  dplyr::filter(name == "Clausing_metadata.csv") %>% 
+  googledrive::drive_download(file = .$id, path = file.path("data", "purgatory", .$name), overwrite = T)
+
+# Read in metadata
+proj11_meta_raw <- read.csv(file.path("data", "purgatory", "Clausing_metadata.csv"))
+
+# Check structure
+dplyr::glimpse(proj11_meta_raw)
+
+# Do any needed metadata repair
+proj11_meta <- proj11_meta_raw
+
+# Re-check structure
+dplyr::glimpse(proj11_meta)
 
 # Read in data
-proj11_raw <- read.csv(file.path("data", "purgatory", "BAD_FILE.csv"))
+proj11_raw <- read.csv(file.path("data", "purgatory", "Clausing_algal_count_data.csv"))
 
 # Check structure
 dplyr::glimpse(proj11_raw)
 
 # Do needed repairs
-proj11 <- proj11_raw
+proj11 <- proj11_raw %>% 
+  # Break "ID" into relevant columns
+  tidyr::separate_wider_delim(cols = ID, delim = "_", names = c("month", "plot")) %>% 
+  dplyr::mutate(plot = as.numeric(plot),
+                month = as.numeric(month)) %>% 
+  # Join on metadata info
+  dplyr::left_join(y = proj11_meta, by = "plot") %>% 
+  # Relocate somewhat
+  dplyr::relocate(dplyr::all_of(names(proj11_meta)), .before = dplyr::everything()) %>% 
+  # Clarify treatment columns
+  dplyr::mutate(herbivore_treatment = ifelse(H == 0, yes = "removal", no = "ambient"),
+                nutrient_treatment = ifelse(N == 0, yes = "ambient", no = "enriched"),
+                .after = H) %>% 
+  # Clarify month column too
+  ## Derived directly from the published paper
+  dplyr::mutate(date = as.Date("2010-03-01") + months(month),
+                year = stringr::str_sub(string = date, start = 1, end = 4),
+                .after = nutrient_treatment) %>% 
+  # Drop superseded columns
+  dplyr::select(-N, -H, -month)
 
 # Re-check structure
 dplyr::glimpse(proj11)
 
 # Create good/new file name
-proj11_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
+proj11_name <- "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv"
 proj11_path <- file.path("data", "drydock", proj11_name)
 
 # Export locally
@@ -631,7 +667,7 @@ write.csv(x = proj11, file = proj11_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj11_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/11/folders/1EOSlNF3zz-ktBQwoIt1a311dv11azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
