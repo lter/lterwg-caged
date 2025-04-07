@@ -38,7 +38,7 @@ fill_list <- list()
 for(focal_src in sort(unique(fill_v1$source))){
   
   # Progress message
-  message("Standarizing file: '", focal_src, "'")
+  message("Zero-filling file: '", focal_src, "'")
   
   # Subset the data
   fill_sub <- dplyr::filter(.data = fill_v1, source == focal_src)
