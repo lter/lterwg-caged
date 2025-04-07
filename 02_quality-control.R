@@ -55,6 +55,11 @@ tidy_v2 <- tidy_v1 %>%
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
                         "deer", "grazed", "non") ~ "uncaged",
+      ## Organization-dependent changes
+      organization == "gex" & cage.tmp == "g" ~ "uncaged", # G = grazed (?)
+      organization == "gex" & cage.tmp == "u" ~ "caged", # U = ungrazed (?)
+      organization == "clausing" & cage.tmp == "removal" ~ "caged",
+      organization == "clausing" & cage.tmp == "ambient" ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
@@ -71,6 +76,25 @@ tidy_v2 %>%
   dplyr::filter(cage.treatment_std == "uncertain") %>% 
   dplyr::select(organization, cage.treatment_orig) %>% 
   dplyr::distinct()
+
+# Should a diagnostic CSV be exported summarizing that information?
+diagnostic_export <- FALSE
+
+# Generate / export a diagnostic if desired
+if(diagnostic_export == TRUE){
+  
+  # Generate
+  diagnose_treats <- tidy_v2 %>% 
+    dplyr::group_by(source, cage.treatment_std) %>% 
+    dplyr::summarize(original.treatments = paste(unique(cage.treatment_orig), collapse = "; "),
+                     .groups = "keep") %>% 
+    dplyr::filter(cage.treatment_std %in% c("caged", "uncaged", "partial") != T)
+  
+  # Export
+  write.csv(x = diagnose_treats, na = '', row.names = F,
+            file = file.path("data", "cage-treatment-standardization.csv"))
+  
+}
 
 # Re-check structure
 dplyr::glimpse(tidy_v2)
