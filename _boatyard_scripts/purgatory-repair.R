@@ -8,6 +8,11 @@
 ## then does necessary wrangling to get the data in the needed format
 ## then uploads back to google drive
 
+# NOTE
+## This script assumes (1) access to the "LTER-WG_CAGED" Shared Drive (2) authentication with R
+## For more information on authentication, see the following tutorial:
+### https://lter.github.io/scicomp/tutorial_googledrive-pkg.html
+
 ## ------------------------------------------- ##
 # Housekeeping ----
 ## ------------------------------------------- ##
@@ -24,30 +29,6 @@ dir.create(path = file.path("data", "drydock"), showWarnings = F)
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Download Data ----
-## ------------------------------------------- ##
-
-# NOTE
-## This script assumes (1) access to the "LTER-WG_CAGED" Shared Drive (2) authentication with R
-## For more information on authentication, see the following tutorial:
-### https://lter.github.io/scicomp/tutorial_googledrive-pkg.html
-
-# Identify wanted files
-files_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iH9CHW7xS0ZWk7LdB2Glb0LrfJF8dUOL")) %>% 
-  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv|\\.txt|\\.xlsx|\\.xls"))
-
-# Did that work?
-files_drive
-
-# Download them!
-purrr::walk2(.x = files_drive$id, .y = files_drive$name,
-             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
-                                                path = file.path("data", "purgatory", .y)))
-
-# Clear environment + collect garbage
-rm(list = ls()); gc()
-
-## ------------------------------------------- ##
 # Project 1 (Royo PA) ----
 ## ------------------------------------------- ##
 
@@ -57,8 +38,20 @@ rm(list = ls()); gc()
 ## We just want the data on all seedlings because germinants are a subset of seedlings 
 ## also want to drop the "ht" (height) data
 
+# Identify file(s) name(s)
+proj1_raw_name <- "allegheny_regen_data.csv"
+
+# Identify file(s) in Drive
+proj1_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1YBZyynyjvQ8dliloVB1i9iH-IqKXBsvZ")) %>% 
+  dplyr::filter(name %in% c(proj1_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj1_gdrive$id, .y = proj1_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj1_raw <- read.csv(file = file.path("data", "purgatory", "allegheny_regen_data.csv"))
+proj1_raw <- read.csv(file = file.path("data", "purgatory", proj1_raw_name))
 
 # Check structure
 dplyr::glimpse(proj1_raw)
@@ -118,6 +111,19 @@ rm(list = ls()); gc()
 # Reason for purgatory status:
 ## Treatments split into separate data files that need to be combined
 
+# Identify file(s) in Drive
+proj3_gdrive <- dplyr::bind_rows(
+  ## Looks different because pulling from several different Drive folders
+  googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1FAOlV1D79jrVbqrYRuRuwjvObGWrW2wI")),
+  googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1hnYvUf3R97MT6qYSR7c4YP6h0hbB6YD2")),
+  googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1IJNyY6BtaiEokxVgWASIGIOY2k_GiYxb"))) %>% 
+  dplyr::filter(stringr::str_detect(string = name, pattern = "Ranktime"))
+
+# Download file(s)
+purrr::walk2(.x = proj3_gdrive$id, .y = proj3_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Output list
 proj3_list <- list()
 
@@ -128,11 +134,11 @@ for(proj3_file in dir(path = file.path("data", "purgatory"), pattern = "_Ranktim
   message("Grabbing file '", proj3_file, "'")
   
   # Read in data and pivot longer
-  proj3_df <- read.delim(file=file.path("data", "purgatory", proj3_file)) %>% 
+  proj3_df <- read.delim(file = file.path("data", "purgatory", proj3_file)) %>% 
     tidyr::pivot_longer(cols = -Species,
-                        names_to="Timepoint",
-                        values_to="Abundance") %>%
-    dplyr::mutate(input_file = proj3_file, .before=everything())
+                        names_to = "Timepoint",
+                        values_to = "Abundance") %>%
+    dplyr::mutate(input_file = proj3_file, .before = dplyr::everything())
   
   # Read in data and assign to list
   proj3_list[[proj3_file]] <- proj3_df
@@ -187,15 +193,39 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## Triple header rows
 
+# Identify file(s) name(s)
+proj4_raw_name <- "MSH-GCED-2308_Experiment_1_0.CSV"
+
+# Identify file(s) in Drive
+proj4_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Q5a3ZYxFbaNAOp_GI55bdmcyY1boErYE")) %>% 
+  dplyr::filter(name %in% c(proj4_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj4_gdrive$id, .y = proj4_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj4_raw <- read.csv(file = file.path("data", "purgatory", "MSH-GCED-2308_Experiment_1_0.CSV"))
+proj4_raw <- read.csv(file = file.path("data", "purgatory", proj4_raw_name),
+                      row.names = NULL)
 
 # Check structure
 dplyr::glimpse(proj4_raw)
 
 # Do needed repair
-proj4 <- proj4_raw %>% 
-  dplyr::filter(!Year %in% c("YYYY", "datetime"))
+proj4_prep <- proj4_raw %>% 
+  # Drop bad header rows
+  dplyr::filter(!row.names %in% c("YYYY", "datetime") & nchar(row.names) != 0)
+
+# Rename columns as a human eye knows they should be called
+proj4 <- proj4_prep %>%
+  ## (i.e., first row of 'real' data)
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = as.character(proj4_prep[1, ])) %>% 
+  # Drop now-superseded first row of data 
+  dplyr::filter(Year != "Year") %>% 
+  # Drop bad column
+  dplyr::select(-`NA`)
 
 # Re-check structure
 dplyr::glimpse(proj4)
@@ -228,8 +258,20 @@ rm(list = ls()); gc()
 ## Count column is just the number of quadrats for all blocks
 ## Average column is the average of all species and tissue type for all quadrats and across all blocks. So our abundance measurement should come from B#Q# columns???
 
+# Identify file(s) name(s)
+proj5_raw_name <- "1999gsexclosbm.csv"
+
+# Identify file(s) in Drive
+proj5_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1562H3RGfLnVaP-gnEwVf0aJcj1YxZfEe")) %>% 
+  dplyr::filter(name %in% c(proj5_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj5_gdrive$id, .y = proj5_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj5_raw <- read.csv(file = file.path("data", "purgatory", "1999gsexclosbm.csv"))
+proj5_raw <- read.csv(file = file.path("data", "purgatory", proj5_raw_name))
 
 # Check structure
 dplyr::glimpse(proj5_raw)
@@ -285,9 +327,23 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## Extra headers **that contain necessary metadata**
 
-# Identify the input files + what they should be called when they are output
+# Identify the input files
 proj6_rawfiles <- c("Freestone_et_al_2019_data_newjersey.csv",
                     "Freestone_et_al_2019_data_panama.csv")
+
+# Identify file(s) in Drive
+proj6_gdrive <- dplyr::bind_rows(
+  ## Looks different because pulling from several different Drive folders
+  googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1msPdHowORXZo3crd2BY_TMV0pRsrgMIH")),
+  googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1OJD2XUx-u5OCFFLECzB8nAy8RgJpc9El"))) %>% 
+  dplyr::filter(name %in% proj6_rawfiles)
+
+# Download file(s)
+purrr::walk2(.x = proj6_gdrive$id, .y = proj6_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify the name for each tidied file
 proj6_tidyfiles <- c("freestone_newjersey_freestone-new-jersey_2019_predators_seagrass.csv",
                      "freestone_panama_freestone-panama_2019_predators_seagrass.csv")
 
@@ -351,8 +407,20 @@ rm(list = ls()); gc()
 ## Abundance is implied by number of rows with particular genera so: 
 ## needs to be calculated by number of rows per combination of grouping variables
 
+# Identify file(s) name(s)
+proj7_raw_name <- "PointCounts_Week12.csv"
+
+# Identify file(s) in Drive
+proj7_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1M5xhOalBqsrUlVjHv4lz3tuLvW0T4X3t")) %>% 
+  dplyr::filter(name %in% c(proj7_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj7_gdrive$id, .y = proj7_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj7_raw <- read.csv(file = file.path("data", "purgatory", "PointCounts_Week12.csv"))
+proj7_raw <- read.csv(file = file.path("data", "purgatory", proj7_raw_name))
 
 # Check structure
 dplyr::glimpse(proj7_raw)
@@ -395,8 +463,20 @@ rm(list = ls()); gc()
 ## Data collected per tree / seedling
 ## Need to summarize within spatial groups & species to get tree counts
 
+# Identify file(s) name(s)
+proj8_raw_name <- "hf174-06-tree-seedlings-2010.csv"
+
+# Identify file(s) in Drive
+proj8_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/16nI87V_gJ1pqUMD27kcNDV1BdkzJQPau")) %>% 
+  dplyr::filter(name %in% c(proj8_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj8_gdrive$id, .y = proj8_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj8_raw <- read.csv(file.path("data", "purgatory", "hf174-06-tree-seedlings-2010.csv"))
+proj8_raw <- read.csv(file.path("data", "purgatory", proj8_raw_name))
 
 # Check structure
 dplyr::glimpse(proj8_raw)
@@ -434,8 +514,20 @@ rm(list = ls()); gc()
 ## Deleted bad header manually and re-uploaded to purgatory as a CSV
 ## Removal of standard error columns accomplished below
 
+# Identify file(s) name(s)
+proj9_raw_name <- "41467_2016_BFncomms11833_MOESM1571_ESM.csv"
+
+# Identify file(s) in Drive
+proj9_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1L6j-RhoUmvGu3QOB2t5uGugJ_2PjEaT_")) %>% 
+  dplyr::filter(name %in% c(proj9_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj9_gdrive$id, .y = proj9_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj9_raw <- read.csv(file.path("data", "purgatory", "41467_2016_BFncomms11833_MOESM1571_ESM.csv"))
+proj9_raw <- read.csv(file.path("data", "purgatory", proj9_raw_name))
 
 # Check structure
 dplyr::glimpse(proj9_raw)
@@ -474,8 +566,20 @@ rm(list = ls()); gc()
 ## Unequal numbers of plots within treatments
 ## Need to **randomly** subset within grouping variables to make reps equal
 
+# Identify file(s) name(s)
+proj10_raw_name <- "boer-ca-n4.csv"
+
+# Identify file(s) in Drive
+proj10_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1BKLOFzyBtPTbLRzwL5gr-6FYvo5lEJDl")) %>% 
+  dplyr::filter(name %in% c(proj10_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj10_gdrive$id, .y = proj10_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj10_raw <- read.csv(file.path("data", "purgatory", "boer-ca-n4.csv"))
+proj10_raw <- read.csv(file.path("data", "purgatory", proj10_raw_name))
 
 # Check structure
 dplyr::glimpse(proj10_raw)
@@ -610,13 +714,18 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## Need to attach metadata from a separate file
 
-# Identify metadata file name
+# Identify raw data and metadata file names
+proj11_raw_name <- "Clausing_algal_count_data.csv"
 proj11_meta_name <- "Clausing_metadata.csv"
 
 # Download the relevant metadata file too
-googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1X9vCLm1GRE2-HWhzg8KdUEue62wskRxJ")) %>% 
-  dplyr::filter(name == proj11_meta_name) %>% 
-  googledrive::drive_download(file = .$id, path = file.path("data", "purgatory", .$name), overwrite = T)
+proj11_gdrive <- googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1X9vCLm1GRE2-HWhzg8KdUEue62wskRxJ")) %>% 
+  dplyr::filter(name %in% c(proj11_raw_name, proj11_meta_name))
+
+# Download file(s)
+purrr::walk2(.x = proj11_gdrive$id, .y = proj11_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
 
 # Read in metadata
 proj11_meta_raw <- read.csv(file.path("data", "purgatory", proj11_meta_name))
@@ -631,7 +740,7 @@ proj11_meta <- proj11_meta_raw
 dplyr::glimpse(proj11_meta)
 
 # Read in data
-proj11_raw <- read.csv(file.path("data", "purgatory", "Clausing_algal_count_data.csv"))
+proj11_raw <- read.csv(file.path("data", "purgatory", proj11_raw_name))
 
 # Check structure
 dplyr::glimpse(proj11_raw)
@@ -682,8 +791,20 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## Too many plots in one treatment versus the other two
 
+# Identify file(s) name(s)
+proj12_raw_name <- "Bakker_ShortGrassSteppe.csv"
+
+# Identify file(s) in Drive
+proj12_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1rWZf3Jl-h1cMK2FZoe96oC2BwJb0sbQ5")) %>% 
+  dplyr::filter(name %in% c(proj12_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj12_gdrive$id, .y = proj12_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj12_raw <- read.csv(file.path("data", "purgatory", "Bakker_ShortGrassSteppe.csv")) %>% 
+proj12_raw <- read.csv(file.path("data", "purgatory", proj12_raw_name)) %>% 
   ## Fix obvious issue with column names
   dplyr::rename(SITE = SITE..,
                 Plot = Plot..)
@@ -755,13 +876,18 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## Need to attach metadata from a separate file
 
-# Identify relevant metadata file name
+# Identify relevant raw data and metadata file names
+proj13_raw_name <- "species_incidence.csv"
 proj13_meta_name <- "wetland_id_treatments.csv"
 
 # Download the relevant metadata file too
-googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1uZvL1NI5AkIxMVkB_CSvFbj9tCa2zB_r")) %>% 
-  dplyr::filter(name == proj13_meta_name) %>% 
-  googledrive::drive_download(file = .$id, path = file.path("data", "purgatory", .$name), overwrite = T)
+proj13_gdrive <- googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1uZvL1NI5AkIxMVkB_CSvFbj9tCa2zB_r")) %>% 
+  dplyr::filter(name %in% c(proj13_raw_name, proj13_meta_name))
+
+# Download file(s)
+purrr::walk2(.x = proj13_gdrive$id, .y = proj13_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
 
 # Read in metadata
 proj13_meta_raw <- read.csv(file.path("data", "purgatory", proj13_meta_name))
@@ -780,7 +906,7 @@ proj13_meta <- proj13_meta_raw %>%
 dplyr::glimpse(proj13_meta)
 
 # Read in data
-proj13_raw <- read.csv(file.path("data", "purgatory", "species_incidence.csv"))
+proj13_raw <- read.csv(file.path("data", "purgatory", proj13_raw_name))
 
 # Check structure
 dplyr::glimpse(proj13_raw)
@@ -817,8 +943,20 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## 
 
+# Identify file(s) name(s)
+proj0_raw_name <- "BAD_FILE.csv"
+
+# Identify file(s) in Drive
+proj0_gdrive <- googledrive::drive_ls(googledrive::as_id("raw file GDrive link (in subfolder of 'metadata' folder)")) %>% 
+  dplyr::filter(name %in% c(proj0_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj0_gdrive$id, .y = proj0_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
 # Read in data
-proj0_raw <- read.csv(file.path("data", "purgatory", "BAD_FILE.csv"))
+proj0_raw <- read.csv(file.path("data", "purgatory", proj0_raw_name))
 
 # Check structure
 dplyr::glimpse(proj0_raw)
