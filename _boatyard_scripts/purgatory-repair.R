@@ -610,13 +610,16 @@ rm(list = ls()); gc()
 # Reason for purgatory status
 ## Need to attach metadata from a separate file
 
+# Identify metadata file name
+proj11_meta_name <- "Clausing_metadata.csv"
+
 # Download the relevant metadata file too
 googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1X9vCLm1GRE2-HWhzg8KdUEue62wskRxJ")) %>% 
-  dplyr::filter(name == "Clausing_metadata.csv") %>% 
+  dplyr::filter(name == proj11_meta_name) %>% 
   googledrive::drive_download(file = .$id, path = file.path("data", "purgatory", .$name), overwrite = T)
 
 # Read in metadata
-proj11_meta_raw <- read.csv(file.path("data", "purgatory", "Clausing_metadata.csv"))
+proj11_meta_raw <- read.csv(file.path("data", "purgatory", proj11_meta_name))
 
 # Check structure
 dplyr::glimpse(proj11_meta_raw)
@@ -740,6 +743,67 @@ write.csv(x = proj12, file = proj12_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj12_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 13 (Sonnier FL) ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Need to attach metadata from a separate file
+
+# Identify relevant metadata file name
+proj13_meta_name <- "wetland_id_treatments.csv"
+
+# Download the relevant metadata file too
+googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1uZvL1NI5AkIxMVkB_CSvFbj9tCa2zB_r")) %>% 
+  dplyr::filter(name == proj13_meta_name) %>% 
+  googledrive::drive_download(file = .$id, path = file.path("data", "purgatory", .$name), overwrite = T)
+
+# Read in metadata
+proj13_meta_raw <- read.csv(file.path("data", "purgatory", proj13_meta_name))
+
+# Check structure
+dplyr::glimpse(proj13_meta_raw)
+
+# Do any needed metadata repair
+proj13_meta <- proj13_meta_raw %>% 
+  # Clarify 'pasture type'
+  dplyr::mutate(pasture_type = dplyr::case_when(
+    pasture_type == "IMP" ~ "improved",
+    pasture_type == "SNP" ~ "semi-native"))
+
+# Re-check structure
+dplyr::glimpse(proj13_meta)
+
+# Read in data
+proj13_raw <- read.csv(file.path("data", "purgatory", "species_incidence.csv"))
+
+# Check structure
+dplyr::glimpse(proj13_raw)
+
+# Do needed repairs
+proj13 <- proj13_raw %>% 
+  # Attach metadata
+  dplyr::left_join(y = proj13_meta, by = "wetland_ID") %>% 
+  # Reorder columns
+  dplyr::relocate(pasture_type:burn_type, .after = wetland_ID)
+
+# Re-check structure
+dplyr::glimpse(proj13)
+
+# Create good/new file name
+proj13_name <- "sonnier_florida_wetlandexclosure_2006-2020_cattle_plants.csv"
+proj13_path <- file.path("data", "drydock", proj13_name)
+
+# Export locally
+write.csv(x = proj13, file = proj13_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj13_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 # Clear environment + collect garbage
