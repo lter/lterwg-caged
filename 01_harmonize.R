@@ -178,14 +178,14 @@ combo_v2 <- combo_v1 %>%
     treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
     treat.disturbance = orig.treat_disturbance,
-    treat.fire = orig.treat_fire,
     treat.gap = orig.treat_gap,
     treat.nitrogen.addition = orig.treat_nitrogen.addition
   ) %>% 
   # Combine synonymous-sounding treatments
   dplyr::mutate(
     treat.nutrients = dplyr::coalesce(orig.treat_nut.trt, orig.treat_nutrients, 
-                                      orig.treat_nitrogen.treatment)
+                                      orig.treat_nitrogen.treatment),
+    treat.fire = dplyr::coalesce(orig.treat_fire, orig.treat_burn)
   ) %>% 
   # Coalesce cage/cage-related treatments separately
   dplyr::mutate(treat.cage = dplyr::case_when(
