@@ -1,5 +1,5 @@
 ## --------------------------------------------------------------- ##
-# CAGED Beta Dispersion Calculation
+# CAGED Exploratory Graph Creation
 ## --------------------------------------------------------------- ##
 # Written by: Nick J Lyon, ...
 
