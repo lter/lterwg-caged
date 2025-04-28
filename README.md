@@ -17,7 +17,8 @@ Briefly describe the purpose of each script (or folder of scripts) here as you c
 - `03_filter.R` -- Filters out rows/columns that made sense to harmonize & tidy but are likely not useful for (the current) analysis
 - `04_zero-fill.R` -- Zero fills community data (necessary due to betadispersion calculation requirements)
 - `05_calc-beta.R` -- Calculate beta dispersion at various spatial/temporal scales
-- `06_beta-boxplots.R` -- Create exploratory (i.e., not publication quality) graphs
+- `06_beta-boxplots.R` -- Create exploratory boxplots of betadispersion
+- `07_attach-metadata.R` -- Attach site-level metadata collated by group members
 
 ## Supplementary Resources
 
