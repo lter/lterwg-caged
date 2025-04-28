@@ -158,13 +158,26 @@ sort(unique(w.meta_v3$lat))
 # Check structure more generally
 dplyr::glimpse(w.meta_v3)
 
+## ------------------------------------------- ##
+# Standardize Free Text Columns ----
+## ------------------------------------------- ##
+
+# This is harder to do extensively but some coarse stuff makes sense
+w.meta_v4 <- w.meta_v3 %>% 
+  # Make some columns lowercase
+  dplyr::mutate(dplyr::across(.cols = c(ecotype2, target.consumer, nontarget.consumer,
+                                        resource.type, consumer.trophic.level),
+                              .fns = ~ tolower(x = .)))
+
+# Re-check structure
+dplyr::glimpse(w.meta_v4)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-w.meta_v99 <- w.meta_v3
+w.meta_v99 <- w.meta_v4
 
 # Identify tidy file name / path
 zerow.meta_name <- "07_caged_with-metadata.csv"
