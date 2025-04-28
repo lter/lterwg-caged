@@ -92,8 +92,71 @@ supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v3$exp.
 
 # Actually join the metadata with the 'actual' data
 w.meta_v2 <- w.meta_v1 %>% 
-  dplyr::left_join(y = meta_v3, by = c("source", "exp.name"))
+  dplyr::left_join(y = meta_v3, by = c("source", "exp.name")) %>% 
+  # Relocate all of these columns more intuitively
+  dplyr::relocate(assigned.to:notes, .after = exp.name) %>% 
+  # Drop likely unwanted columns
+  dplyr::select(-assigned.to, -notes)
 
+# Check structure
+dplyr::glimpse(w.meta_v2)
+
+## ------------------------------------------- ##
+# Standardize Lat/Long Format ----
+## ------------------------------------------- ##
+
+# Check current lat/long formats
+sort(unique(w.meta_v2$lat))
+
+# Do needed repairs
+w.meta_v3 <- w.meta_v2 %>% 
+  # Rename & duplicate original lat/long cols
+  dplyr::mutate(lat.orig = lat,
+                long.orig = long) %>% 
+  # Replace degree symbol with period
+  dplyr::mutate(dplyr::across(.cols = lat:long,
+                              .fns = ~ gsub(pattern = "°|º", replacement = ".", x = .))) %>% 
+  # Remove unwanted characters
+  dplyr::mutate(dplyr::across(.cols = lat:long,
+                              .fns = ~ gsub(pattern = "’|'|′|\\\"", replacement = "", x = .))) %>% 
+  # Replace N/S and E/W with negative symbols as needed
+  dplyr::mutate(dplyr::across(.cols = lat:long,
+                              .fns = ~ ifelse(stringr::str_detect(string = ., pattern = "S"),
+                                              yes = paste0("-", .), no = .))) %>% 
+  dplyr::mutate(dplyr::across(.cols = lat:long,
+                              .fns = ~ ifelse(stringr::str_detect(string = ., pattern = "W"),
+                                              yes = paste0("-", .), no = .))) %>% 
+  # Then remove superseded cardinal direction letters
+  dplyr::mutate(dplyr::across(.cols = lat:long,
+                              .fns = ~ gsub(pattern = "N|S|E|W", replacement = "", x = .))) %>% 
+  # Remove spaces after periods
+  dplyr::mutate(dplyr::across(.cols = lat:long,
+                              .fns = ~ gsub(pattern = "\\. ", replacement = "\\.", x = .))) %>% 
+  # Split based on periods
+  tidyr::separate_wider_delim(cols = lat, delim = ".", names = c("tmp__lat", "tmp__lat2"),
+                              too_many = "merge", too_few = "align_start") %>% 
+  tidyr::separate_wider_delim(cols = long, delim = ".", names = c("tmp__long", "tmp__long2"),
+                              too_many = "merge", too_few = "align_start") %>% 
+  # Remove periods from all four temp columns
+  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("tmp__"),
+                              .fns = ~ gsub(pattern = "\\.", replacement = "", x = .))) %>% 
+  # Recombine temp columns with period between first and second
+  dplyr::mutate(lat = ifelse(!is.na(tmp__lat) & !is.na(tmp__lat2),
+                             yes = paste0(tmp__lat, ".", tmp__lat2),
+                             no = "")) %>% 
+  dplyr::mutate(long = ifelse(!is.na(tmp__long) & !is.na(tmp__long2),
+                              yes = paste0(tmp__long, ".", tmp__long2),
+                              no = "")) %>% 
+  # Remove temp columns
+  dplyr::select(-dplyr::starts_with("tmp__")) %>% 
+  # Reorder some other columns
+  dplyr::relocate(lat.orig:long, .after = exp.name)
+
+# Re-check formats
+sort(unique(w.meta_v3$lat))
+
+# Check structure more generally
+dplyr::glimpse(w.meta_v3)
 
 
 ## ------------------------------------------- ##
@@ -101,7 +164,7 @@ w.meta_v2 <- w.meta_v1 %>%
 ## ------------------------------------------- ##
 
 # Create final object name
-w.meta_v99 <- w.meta_v2
+w.meta_v99 <- w.meta_v3
 
 # Identify tidy file name / path
 zerow.meta_name <- "07_caged_with-metadata.csv"
