@@ -281,10 +281,9 @@ combo_v5 <- combo_v4 %>%
   # Remove any rows where no taxon information is included
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Remove non-numbers
-  dplyr::mutate(abundance = gsub(pattern = "^.$", replacement = "", x = abundance)) %>% 
-  dplyr::mutate(abundance = ifelse(
-    test = abundance %in% c("n/a", "—", "na"),
-    yes = "", no = abundance)) %>% 
+  dplyr::mutate(abundance = gsub(pattern = "\\.", replacement = "", x = abundance)) %>% 
+  dplyr::mutate(abundance = ifelse(test = abundance %in% c("n/a", "—", "na"),
+                                   yes = "", no = abundance)) %>% 
   # Remove any rows where no metric of abundance is included
   dplyr::filter(is.na(abundance) != T &
                   nchar(abundance) != 0 &
