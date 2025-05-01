@@ -12,7 +12,6 @@ librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("graphs"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -478,9 +477,9 @@ for(item in seq_along(beta_deslists)){
   
 } # Close loop
 
-# Upload all of these to the Drive
-purrr::walk(.x = dir(path = file.path("data"), pattern = "05_caged_beta-disp"),
-            .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
-                                             path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
+# # Upload all of these to the Drive
+# purrr::walk(.x = dir(path = file.path("data"), pattern = "05_caged_beta-disp"),
+#             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
+#                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
 # End ----

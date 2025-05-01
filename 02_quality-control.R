@@ -335,8 +335,8 @@ tidy_path <- file.path("data", tidy_name)
 # Export locally
 write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 
-# Upload to Drive
-googledrive::drive_upload(media = tidy_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+# # Upload to Drive
+# googledrive::drive_upload(media = tidy_path, overwrite = T,
+#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----

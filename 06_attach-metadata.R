@@ -186,8 +186,8 @@ w.meta_path <- file.path("data", w.meta_name)
 # Export locally
 write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
 
-# Upload to Drive
-googledrive::drive_upload(media = w.meta_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+# # Upload to Drive
+# googledrive::drive_upload(media = w.meta_path, overwrite = T,
+#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----
