@@ -180,14 +180,14 @@ dplyr::glimpse(w.meta_v4)
 w.meta_v99 <- w.meta_v4
 
 # Identify tidy file name / path
-zerow.meta_name <- "06_caged_with-metadata.csv"
-zerow.meta_path <- file.path("data", zerow.meta_name)
+w.meta_name <- "06_caged_with-metadata.csv"
+w.meta_path <- file.path("data", w.meta_name)
 
 # Export locally
-write.csv(x = w.meta_v99, row.names = F, na = '', file = zerow.meta_path)
+write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
 
 # Upload to Drive
-googledrive::drive_upload(media = zerow.meta_path, overwrite = T,
+googledrive::drive_upload(media = w.meta_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----
