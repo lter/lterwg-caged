@@ -77,7 +77,7 @@ for(focal_src in sort(unique(beta_viz$source))){
     supportR::theme_lyon()
   
   # Create nice file name/path
-  focal_name <- paste0("06_betadisp-boxplots_", gsub(".csv", "", focal_src), ".png")
+  focal_name <- paste0("05a_betadisp-boxplots_", gsub(".csv", "", focal_src), ".png")
   focal_path <- file.path("graphs", "per-dataset-boxplots", focal_name)
   
   # Save locally
