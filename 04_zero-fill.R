@@ -92,7 +92,9 @@ for(focal_src in sort(unique(fill_v2$source))){
     dplyr::mutate(taxa = gsub("temporary_", replacement = "",
                               x = taxa)) %>% 
     # Drop row ID column
-    dplyr::select(-unique.id)
+    dplyr::select(-unique.id) %>% 
+    # Drop non-unique rows
+    dplyr::distinct()
   
   # Add to list output
   fill_list[[focal_src]] <- focal_fill
