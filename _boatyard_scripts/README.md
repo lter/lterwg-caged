@@ -10,4 +10,6 @@ The script(s) in this folder exist to handle any problems that occur relatively 
     3. Repaired purgatory files are then re-uploaded to the Drive in the "data" folder
     4. Harmonization then uses all files in the "data" folder (whether they were placed there originally or were uploaded there after some amount of processing in the 'boatyard')
 - `expand_key.R` - Identify "source" and "raw_name" columns for the data key for not-yet-harmonized data
-    - Note this requires a manual copy/pasting of these columns into the data key GoogleSheet but is otherwise automated
+    - Note this requires manual copy/pasting of these columns into the data key GoogleSheet but is otherwise automated
+- `expand_metadata.R` - Identify data files that have been harmonized but are not included in the site-level metadata GoogleSheet
+    - Note this requires manual copy/pasting of this script's output into the sitelevel metadata GoogleSheet but is otherwise automated
