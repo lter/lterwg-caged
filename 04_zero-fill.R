@@ -28,6 +28,38 @@ fill_v1 <- read.csv(file.path("data", "03_caged_filtered.csv"))
 dplyr::glimpse(fill_v1)
 
 ## ------------------------------------------- ##
+# Aggregate Within Groups ----
+## ------------------------------------------- ##
+
+# Why is this done here?
+## Zero-filling adds a _huge_ number of rows
+## If we did this aggregation step after this script does its job,
+## we'd just be creating a bunch of useless rows and blowing up the size of file coming out of this script
+### (beyond how huge it will be if it works as designed!)
+
+# Summarize to only one replicate within the finest design scale
+## Standardization of treatments alone will result in "duplicates" across which we'd want to average
+fill_v2 <- fill_v1 %>% 
+  dplyr::group_by(
+    dplyr::across(
+      dplyr::all_of(setdiff(x = names(fill_v1), y = "abundance")))) %>% 
+  dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# How many rows were summarized across?
+message(nrow(fill_v1) - nrow(fill_v2), " rows lost by summarizing within 'exp.design.1'")
+## May need to double check source of this if this number is non-zero!
+## Note though that streamlining treatments will likely make this number non-zero 
+### (E.g., "Exclosure" and "Fence" would be different rows but synonymizing them fixes that)
+
+# Identify any datasets dropped entirely (shouldn't be any)
+supportR::diff_check(old = unique(fill_v1$source), new = unique(fill_v2$source))
+
+# Re-check structure
+dplyr::glimpse(fill_v2)
+
+## ------------------------------------------- ##
 # Zero-Fill Community Data ----
 ## ------------------------------------------- ##
 
@@ -35,13 +67,13 @@ dplyr::glimpse(fill_v1)
 fill_list <- list()
 
 # Loop across datasets
-for(focal_src in sort(unique(fill_v1$source))){
+for(focal_src in sort(unique(fill_v2$source))){
   
   # Progress message
   message("Zero-filling file: '", focal_src, "'")
   
   # Subset the data
-  fill_sub <- dplyr::filter(.data = fill_v1, source == focal_src)
+  fill_sub <- dplyr::filter(.data = fill_v2, source == focal_src)
   
   # Zero fill by flipping to wide format then back to long
   focal_fill <- fill_sub %>% 
@@ -71,20 +103,20 @@ for(focal_src in sort(unique(fill_v1$source))){
 } # Close loop
 
 # Collapse list
-fill_v2 <- purrr::list_rbind(x = fill_list)
+fill_v3 <- purrr::list_rbind(x = fill_list)
 
 # Out of curiosity, how many rows does that add?
-nrow(fill_v2) - nrow(fill_v1)
+message(nrow(fill_v3) - nrow(fill_v2), " rows gained by zero-filling")
 
 # Check structure
-dplyr::glimpse(fill_v2)
+dplyr::glimpse(fill_v3)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-fill_v99 <- fill_v2
+fill_v99 <- fill_v3
 
 # Identify tidy file name / path
 zerofill_name <- "04_caged_zero-filled.csv"

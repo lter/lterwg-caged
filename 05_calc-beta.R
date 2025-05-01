@@ -33,24 +33,9 @@ dplyr::glimpse(beta_v1)
 # Data Preparation ----
 ## ------------------------------------------- ##
 
-# Summarize to only one replicate within the finest design scale
-## Should already be one rep by now but better to make sure
-beta_v2 <- beta_v1 %>% 
-  dplyr::group_by(
-    dplyr::across(
-      dplyr::all_of(setdiff(x = names(beta_v1), y = "abundance")))) %>% 
-  dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                   .groups = "keep") %>% 
-  dplyr::ungroup()
-
-# How many rows were summarized across?
-message(nrow(beta_v1) - nrow(beta_v2), " rows lost by summarizing within 'exp.design.1'")
-## May need to double check source of this if this number is non-zero!
-## Note though that streamlining treatments will likely make this number non-zero 
-### (E.g., "Exclosure" and "Fence" would be different rows but synonymizing them fixes that)
-
-# Identify any datasets dropped entirely (shouldn't be any)
-setdiff(x = unique(beta_v1$source), y = unique(beta_v2$source))
+# Perform any needed pre-calculation wrangling
+beta_v2 <- beta_v1
+# NO SUCH WRANGLING REQUIRED (CURRENTLY)
 
 # Re-check structure
 dplyr::glimpse(beta_v2)
