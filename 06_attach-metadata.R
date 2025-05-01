@@ -180,7 +180,7 @@ dplyr::glimpse(w.meta_v4)
 w.meta_v99 <- w.meta_v4
 
 # Identify tidy file name / path
-zerow.meta_name <- "07_caged_with-metadata.csv"
+zerow.meta_name <- "06_caged_with-metadata.csv"
 zerow.meta_path <- file.path("data", zerow.meta_name)
 
 # Export locally
