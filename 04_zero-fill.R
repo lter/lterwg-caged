@@ -68,6 +68,7 @@ fill_list <- list()
 
 # Loop across datasets
 for(focal_src in sort(unique(fill_v2$source))){
+  # focal_src <- "amundrud_britishcolumbia_eelgrassexclosure_2011_predators_mesograzers.csv"
   
   # Progress message
   message("Zero-filling file: '", focal_src, "'")
@@ -78,8 +79,7 @@ for(focal_src in sort(unique(fill_v2$source))){
   # Zero fill by flipping to wide format then back to long
   focal_fill <- fill_sub %>% 
     # Make row ID column + make taxa names better for col names
-    dplyr::mutate(unique.id = 1:nrow(.),
-                  taxa = paste0("temporary_", taxa)) %>% 
+    dplyr::mutate(taxa = paste0("temporary_", taxa)) %>% 
     # Pivot wide filling with 0
     tidyr::pivot_wider(names_from = taxa,
                        values_from = abundance,
@@ -91,8 +91,6 @@ for(focal_src in sort(unique(fill_v2$source))){
     # Remove temp label from taxon names
     dplyr::mutate(taxa = gsub("temporary_", replacement = "",
                               x = taxa)) %>% 
-    # Drop row ID column
-    dplyr::select(-unique.id) %>% 
     # Drop non-unique rows
     dplyr::distinct()
   
