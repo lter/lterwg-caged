@@ -102,7 +102,7 @@ as.data.frame(multi.times)
 ## View(multi.times)
 
 # Do desired subsetting
-sub_v4 <- sub_v3b %>% 
+sub_v3c <- sub_v3b %>% 
   dplyr::filter(
     # Keep any datasets with only one sampling event per year
     time.ct == 1 |
@@ -187,15 +187,28 @@ sub_v4 <- sub_v3b %>%
          sampling.point == "105")
       # (source == "" &
       #    year == "" & sampling.point == "")
-  ) %>% 
-  # Drop "sampling.point" column plus any temporary columns
-  dplyr::select(-sampling.point, -time.ct, -times)
+  )
 
 # Check number of lost rows (hopefully few rows but understandable if some/many)
-message(nrow(sub_v3) - nrow(sub_v4), " rows lost")
+message(nrow(sub_v3) - nrow(sub_v3c), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
-setdiff(x = unique(sub_v3$source), y = unique(sub_v4$source))
+setdiff(x = unique(sub_v3$source), y = unique(sub_v3c$source))
+
+# Re-check sampling point for same datasets that previously had more than 1
+multi.times_v2 <- sub_v3c %>% 
+  dplyr::filter(source %in% multi.times$source) %>% 
+  dplyr::select(source, year, sampling.point) %>% 
+  dplyr::distinct()
+
+# Check that out
+dplyr::glimpse(multi.times_v2)
+## View(multi.times_v2)
+
+# Drop the temp columns once everything looks good
+sub_v4 <- sub_v3c %>% 
+  # Drop "sampling.point" column plus any temporary columns
+  dplyr::select(-sampling.point, -time.ct, -times)
 
 # Re-check structure
 dplyr::glimpse(sub_v4)
