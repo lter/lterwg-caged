@@ -13,3 +13,5 @@ The script(s) in this folder exist to handle any problems that occur relatively 
     - Note this requires manual copy/pasting of these columns into the data key GoogleSheet but is otherwise automated
 - `expand_metadata.R` - Identify data files that have been harmonized but are not included in the site-level metadata GoogleSheet
     - Note this requires manual copy/pasting of this script's output into the sitelevel metadata GoogleSheet but is otherwise automated
+- `check_dropped-value.R` - For a given set of sequential data tables, identify where a particular value (from a column found in all tables) is dropped. Useful for QC purposes to ensure the workflow isn't randomly dropping certain values
+    - Developed to check for lost datasets but is written to be generic to any value from any column
