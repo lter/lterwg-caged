@@ -82,7 +82,7 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 
 # Identify local data files
-beta_files <- dir(path = file.path("data"), pattern = "05_caged_beta-disp_exp-design-")
+beta_files <- dir(path = file.path("data"), pattern = "05_caged_beta-disp_exp-")
 
 # Output list
 beta_list <- list()
