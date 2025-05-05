@@ -197,8 +197,14 @@ tidy_v4 <- tidy_v3 %>%
     ## If 'exp.name' is missing, fill with full dataset filename
     exp.name = ifelse(nchar(exp.name) == 0 | is.na(exp.name),
                       yes = source, no = exp.name)
-  )
-
+  ) %>% 
+  # Fix problem with Ashton dataset
+  ## Blocks are accidentally uniquely identified by trailing period + number
+  dplyr::mutate(exp.design.2 = ifelse(source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv",
+                                      yes = gsub(pattern = paste0("\\.", 1:9, collapse = "|"),
+                                                 replacement = "",
+                                                 x = exp.design.2),
+                                      no = exp.design.2))
 # Re-check
 tidy_v4 %>% 
   dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
