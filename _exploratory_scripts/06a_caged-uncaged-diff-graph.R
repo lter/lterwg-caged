@@ -14,7 +14,7 @@
 librarian::shelf(tidyverse, googledrive, supportR)
 
 # Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+dir.create(path = file.path("graphs"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -64,6 +64,16 @@ ggplot(caged_v2, aes(x = diff, y = reorder(source, dplyr::desc(-diff)),
   supportR::theme_lyon() +
   theme(axis.text.y = element_blank())
 
+# Define file name
+diff_name_one <- file.path("graphs", "06a_diff-graph_across-design-levels.png")
+
+# Export locally
+ggsave(filename = diff_name_one, width = 6, height = 5, units = "in")
+
+# Upload to Drive
+googledrive::drive_upload(media = diff_name_one, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/folders/1R5BW-RvIey8nggUsgPEDtkvEv0GDozzZ"))
+
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
@@ -84,7 +94,7 @@ for(focal_file in sort(unique(beta_files))){
   message("Processing file: ", focal_file)
   
   # Read in the data
-  caged_v1 <- read.csv(file = file.path("data", focal_file)) %>% 
+  caged_wdes_v1 <- read.csv(file = file.path("data", focal_file)) %>% 
     # Remove missing beta dispersion
     dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
     # Keep only good treatments
@@ -103,22 +113,22 @@ for(focal_file in sort(unique(beta_files))){
     dplyr::mutate(diff = uncaged - caged)
   
   # Add to list
-  beta_list[[focal_file]] <- caged_v1
+  beta_list[[focal_file]] <- caged_wdes_v1
   
 }
 
 # Unlist output
-caged_v2 <- purrr::list_rbind(x = beta_list)
+caged_wdes_v2 <- purrr::list_rbind(x = beta_list)
 
 # Check structure
-dplyr::glimpse(caged_v2)
+dplyr::glimpse(caged_wdes_v2)
 
 ## ------------------------------------------- ##
 # Generate Exploratory Graph (Within Design Levels) ----
 ## ------------------------------------------- ##
 
 # Start graphing!
-ggplot(caged_v2, aes(x = diff, y = reorder(source, dplyr::desc(-diff)), 
+ggplot(caged_wdes_v2, aes(x = diff, y = reorder(source, dplyr::desc(-diff)), 
                      color = betadisp.design.level)) +
   geom_point() +
   geom_vline(xintercept = 0, linetype = 3) +
@@ -127,9 +137,14 @@ ggplot(caged_v2, aes(x = diff, y = reorder(source, dplyr::desc(-diff)),
   supportR::theme_lyon() +
   theme(axis.text.y = element_blank())
 
+# Define file name
+diff_name_two <- file.path("graphs", "06a_diff-graph_within-design-levels.png")
 
+# Export locally
+ggsave(filename = diff_name_two, width = 6, height = 5, units = "in")
 
-
-
+# Upload to Drive
+googledrive::drive_upload(media = diff_name_two, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/folders/1R5BW-RvIey8nggUsgPEDtkvEv0GDozzZ"))
 
 # End ----
