@@ -190,4 +190,43 @@ write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
 # googledrive::drive_upload(media = w.meta_path, overwrite = T,
 #                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
+## ------------------------------------------- ##
+# Attach Metadata to Design-Specific Beta Disp ----
+## ------------------------------------------- ##
+
+# List exp.design/.name-specific files
+(beta_files <- dir(path = file.path("data"), pattern = "05_caged_beta-disp_exp-"))
+
+# Iterate across them
+for(focal_file in beta_files){
+  
+  # Progress message
+  message("Attaching metadata to ", focal_file)
+  
+  # Read in data
+  focal_df <- read.csv(file = file.path("data", focal_file))
+  
+  # Check for join key mismatches
+  supportR::diff_check(old = unique(focal_df$source), new = unique(meta_v5$source))
+  supportR::diff_check(old = unique(focal_df$exp.name), new = unique(meta_v5$exp.name))
+  
+  # Attach metadata & do minor wrangling
+  focal_join <- focal_df %>% 
+    dplyr::left_join(y = meta_v5, by = c("source", "exp.name")) %>% 
+    dplyr::relocate(assigned.to:notes, .after = exp.name) %>% 
+    dplyr::select(-assigned.to, -notes)
+  
+  # Create a new file name
+  focal_out1 <- gsub(pattern = "beta-disp", replacement = "with-metadata", x = focal_file)
+  focal_out <- gsub(pattern = "05", replacement = "06", x = focal_out1)
+  
+  # Export locally
+  write.csv(x = focal_join, na = '', row.names = F,
+            file = file.path("data", focal_out))
+  
+}
+
+# Check the structure of one of those ouputs
+dplyr::glimpse(focal_join)
+
 # End ----
