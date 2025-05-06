@@ -988,6 +988,63 @@ googledrive::drive_upload(media = proj13_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 14 (Gex Kenya Pringle) ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Plots are only uniquely identified within the context of treatments
+## Need to add treatment info to plot info in a new column between plot / block
+
+# Identify file(s) name(s)
+proj14_raw_name <- "RAWish_gex_pringle-kenya_klee_2008-2013_grazers_plants.csv"
+
+# Identify file(s) in Drive
+proj14_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/10AMs27vn07TQKCI8lg1UVfhtrpLvlt7E")) %>% 
+  dplyr::filter(name %in% c(proj14_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj14_gdrive$id, .y = proj14_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj14_raw <- read.csv(file.path("data", "purgatory", proj14_raw_name))
+
+# Check structure
+dplyr::glimpse(proj14_raw)
+
+# Do needed repairs
+proj14 <- proj14_raw %>% 
+  # Make a new block + treatment column
+  dplyr::mutate(subblock = paste0(block, "-", trt),
+                .before = plot) %>% 
+  # Make site names lowercase to account for casing difference
+  dplyr::mutate(site = tolower(site))
+
+# How many plot reps within 'subblock'?
+proj14 %>% 
+  group_by(block, subblock) %>%
+  summarize(plots = paste(unique(plot), collapse = "; "),
+            plot_ct = length(unique(plot)))
+
+# Re-check structure
+dplyr::glimpse(proj14)
+
+# Create good/new file name
+proj14_name <- "gex_pringle-kenya_klee_2008-2013_grazers_plants.csv"
+proj14_path <- file.path("data", "drydock", proj14_name)
+
+# Export locally
+write.csv(x = proj14, file = proj14_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj14_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
