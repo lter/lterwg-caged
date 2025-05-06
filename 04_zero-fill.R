@@ -67,14 +67,14 @@ dplyr::glimpse(fill_v2)
 fill_list <- list()
 
 # Loop across datasets
-for(focal_src in sort(unique(fill_v2$source))){
-  # focal_src <- "amundrud_britishcolumbia_eelgrassexclosure_2011_predators_mesograzers.csv"
+for(focal_xpname in sort(unique(fill_v2$exp.name))){
+  # focal_xpname <- "White Hill"
   
   # Progress message
-  message("Zero-filling file: '", focal_src, "'")
+  message("Zero-filling 'exp.name': '", focal_xpname, "'")
   
   # Subset the data
-  fill_sub <- dplyr::filter(.data = fill_v2, source == focal_src)
+  fill_sub <- dplyr::filter(.data = fill_v2, exp.name == focal_xpname)
   
   # Zero fill by flipping to wide format then back to long
   focal_fill <- fill_sub %>% 
@@ -95,7 +95,7 @@ for(focal_src in sort(unique(fill_v2$source))){
     dplyr::distinct()
   
   # Add to list output
-  fill_list[[focal_src]] <- focal_fill
+  fill_list[[focal_xpname]] <- focal_fill
   
   # Clear environment (as much as possible) and collect garbage
   rm(list = c("fill_sub", "focal_fill")); gc() 

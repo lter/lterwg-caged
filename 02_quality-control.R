@@ -289,7 +289,8 @@ tidy_v6 %>%
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   .groups = "keep")
+                   .groups = "keep") %>% 
+  as.data.frame()
 
 # Fill in missing years as appropriate
 tidy_v7 <- tidy_v6 %>% 
@@ -302,14 +303,19 @@ tidy_v7 <- tidy_v6 %>%
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
     ## Date in mm/dd/yy format
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
-    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
+    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point)),
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ "year")) %>% 
   # Do any needed post-processing
   ## Drop season names
   dplyr::mutate(year = gsub(pattern = "Fall |Spring |Summer |Winter ", 
-                            replacement = "", x = year))
+                            replacement = "", x = year)) %>% 
+  # Fix Sevilleta problem
+  dplyr::mutate(year = dplyr::case_when(
+    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" & year == "95" ~ "1995",
+    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" & year == "05" ~ "2005",
+    T ~ year))
 
 # Re-check years
 tidy_v7 %>% 

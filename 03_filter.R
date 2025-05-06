@@ -36,7 +36,7 @@ sub_v2 <- sub_v1 %>%
   # Drop unstandardized cage treatments too
   #dplyr::select(-cage.treatment_orig) %>% 
   # 'Distance from' column(s)
-  dplyr::select(-distance.from.surface, -distance.from.source) %>% 
+  dplyr::select(-dplyr::starts_with("distance.from.")) %>% 
   # Exclosure age
   dplyr::select(-exclosure.age)
 
@@ -298,7 +298,21 @@ dplyr::glimpse(sub_v6)
 sort(unique(sub_v6$taxa))
 
 # Remove non-living ones
-sub_v7 <- sub_v6
+sub_v7 <- sub_v6%>%
+  dplyr::filter(!taxa %in% c("LITT","Bare", "Dead Barnacle","Amphipod tube","bare",
+                             "Mud Tube","Jingle shell","Sand tube","Little Black tubes",
+                             "Mud tube","Branch","rock","BARE","Litter",
+                             "Bareground","cactus__dead_","QUERCUS DOUGSEED","QUERCUS DOUGLASII_SEED",
+                             "SEED2 SPECIES","SEED1 SPECIES","QUERCUS AGRIFOLIA_SEED",
+                             "QUERCUS AG_SEED","ZZZZ general codes","#N/A","per.bare",
+                             "litter","standing dead Betula nana","caribou feces",
+                             "frost boil","animal litter","Squirrel feces","vole trail",
+                             "vole litter","human trail","vole hole","vole trail",
+                             "Mixed dead litter","Bare soil","Standing Dead Betula nana",
+                             "Soil Frost boil","Standing Dead Salix pulchra","Ledum palustre-Dead",
+                             "Miscellaneous litter","Pine needles","Radulations",
+                             "Bare.cropped.substrate","Rubble","Sand","SOIL",
+                             "sediment","substrate","Rock","Dung"))
 
 
 # Check for lost files
