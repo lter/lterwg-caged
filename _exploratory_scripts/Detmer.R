@@ -29,7 +29,7 @@ dt2 <- dt1 %>%
   # Calculate difference
   dplyr::mutate(diff = uncaged - caged)
 
-#unique(dt2$ecotype1)
+unique(dt2$ecotype1)
 
 # make a boxplot showing difference between caged and uncaged for each ecotype1
 dt2 %>% filter(ecotype1 != "") %>% 
