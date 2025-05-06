@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools)
+librarian::shelf(tidyverse, ltertools, update_all= TRUE)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -34,7 +34,7 @@ sub_v2 <- sub_v1 %>%
   # Superseded "original" columns (standardized in QC script)
   dplyr::select(-dplyr::starts_with("treat.")) %>% 
   # Drop unstandardized cage treatments too
-  dplyr::select(-cage.treatment_orig) %>% 
+  #dplyr::select(-cage.treatment_orig) %>% 
   # 'Distance from' column(s)
   dplyr::select(-distance.from.surface, -distance.from.source) %>% 
   # Exclosure age
