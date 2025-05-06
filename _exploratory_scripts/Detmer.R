@@ -31,7 +31,7 @@ dt2 <- dt1 %>%
 
 #unique(dt2$ecotype1)
 
-# make a boxplot showing difference for each ecotype1
+# make a boxplot showing difference between caged and uncaged for each ecotype1
 dt2 %>% filter(ecotype1 != "") %>% 
 ggplot(aes(x = ecotype1, y = diff)) +
   geom_boxplot(aes(fill = ecotype1), alpha = 0.4) +
