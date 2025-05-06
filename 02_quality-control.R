@@ -261,8 +261,12 @@ sort(unique(tidy_v5$original.taxa))
 # Do desired wrangling
 tidy_v6 <- tidy_v5 %>% 
   dplyr::mutate(taxa = dplyr::case_when(
+    #removing "bleached" from species names to lump with living taxa
+    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Crustose"~"Crustose",
+    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Jointed Calcareous"~"Jointed Calcareous",
+    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Sheet"~"Sheet",
+    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Coarsely Branched"~"Coarsely Branched",
     
-    # No wrangling done here (yet)
     
     T ~ original.taxa), .after = original.taxa) %>% 
   # Drop original taxa name
