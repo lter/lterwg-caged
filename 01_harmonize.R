@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, googledrive, supportR)
+librarian::shelf(tidyverse, ltertools, googledrive, supportR, update_all= TRUE)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)

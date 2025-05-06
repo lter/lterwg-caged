@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, googledrive, supportR)
+librarian::shelf(tidyverse, googledrive, supportR, update_all= TRUE)
 
 # Create needed folder(s)
 dir.create(path = file.path("graphs"), showWarnings = F)
