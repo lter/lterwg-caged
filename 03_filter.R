@@ -291,6 +291,26 @@ supportR::diff_check(old = unique(sub_v5$source), new = unique(sub_v6$source))
 dplyr::glimpse(sub_v6)
 
 ## ------------------------------------------- ##
+# Remove Non-Living Taxa ----
+## ------------------------------------------- ##
+
+# Check current taxa
+sort(unique(sub_v6$taxa))
+
+# Remove non-living ones
+sub_v7 <- sub_v6
+
+
+# Check for lost files
+supportR::diff_check(old = unique(sub_v6$taxa), new = unique(sub_v7$taxa))
+
+# How many lost rows?
+message(nrow(sub_v6) - nrow(sub_v7), " rows lost")
+
+# Full check structure
+dplyr::glimpse(sub_v7)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
