@@ -276,11 +276,26 @@ sub_v5 %>%
 dplyr::glimpse(sub_v5)
 
 ## ------------------------------------------- ##
+# Remove Particular Datasets
+## ------------------------------------------- ##
+
+# Remove any unwanted datasets by hand
+sub_v6 <- sub_v5 %>% 
+  # Jamie says this dataset is really the last year of a different dataset so should be removed
+  dplyr::filter(source != "mcdevittirwin_palmyra_palmyratiles_2014_fish_benthic.csv")
+
+# Double check only unwanted data are lost
+supportR::diff_check(old = unique(sub_v5$source), new = unique(sub_v6$source))
+
+# Check structure
+dplyr::glimpse(sub_v6)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v5
+sub_v99 <- sub_v6
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
