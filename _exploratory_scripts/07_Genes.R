@@ -47,3 +47,5 @@ caged_wdes_v2 <- purrr::list_rbind(x = beta_list)
 # Check structure
 dplyr::glimpse(caged_wdes_v2)
 
+### prepare for analysis
+
