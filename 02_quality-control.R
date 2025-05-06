@@ -45,7 +45,8 @@ tidy_v2 <- tidy_v1 %>%
                         "full nitex", "full quarter", "cage",
                         "control small fenced", "np small fenced",
                         "small fenced no fertilizer", "full exclosure",
-                        "nodeer", "total_excl", "ungrazed", "closed", "oui") ~ "caged",
+                        "nodeer", "total_excl", "ungrazed", "closed", 
+                        "oui", "in") ~ "caged",
       ### Partial cage
       cage.tmp %in% c("partial", "3.part.cage", 
                         "partial nitex", "partial quarter",
@@ -54,7 +55,8 @@ tidy_v2 <- tidy_v1 %>%
       cage.tmp %in% c("none", "open", "end/control", "control", 
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
-                        "deer", "grazed", "non") ~ "uncaged",
+                        "deer", "grazed", "non", "out", "open-grazed", 
+                        "nitrogen phosphorus unfenced") ~ "uncaged",
       ## Organization-dependent changes
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
       organization == "clausing" & cage.tmp == "removal" ~ "caged",
@@ -76,6 +78,9 @@ tidy_v2 <- tidy_v1 %>%
                                                    "lfct17", "sfct17", "mfct17") ~ "caged",
       organization == "lter-arc" & cage.tmp %in% c("nfct", "nfnp", "ct", 
                                                    "np", "n", "p") ~ "uncaged",
+      organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
+      organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
+      organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
       ## Some variance in CDR number treatments (this is why we don't use ambiguous integers for critical treatment ID!)
       ###  1984-85 'herbivores'
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
