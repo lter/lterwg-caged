@@ -108,11 +108,25 @@ sort(unique(meta_v2$lat))
 dplyr::glimpse(meta_v2)
 
 ## ------------------------------------------- ##
+# Standardize Free Text Columns ----
+## ------------------------------------------- ##
+
+# This is harder to do extensively but some coarse stuff makes sense
+meta_v3 <- meta_v2 %>% 
+  # Make some columns lowercase
+  dplyr::mutate(dplyr::across(.cols = c(ecotype2, target.consumer, nontarget.consumer,
+                                        resource.type, consumer.trophic.level),
+                              .fns = ~ tolower(x = .)))
+
+# Re-check structure
+dplyr::glimpse(meta_v3)
+
+## ------------------------------------------- ##
 # Check Join Keys for Mismatches ----
 ## ------------------------------------------- ##
 
 # Check for mismatches in which datasets are in the data but not metadata (or vice versa)
-supportR::diff_check(old = unique(w.meta_v1$source), new = unique(meta_v2$source))
+supportR::diff_check(old = unique(w.meta_v1$source), new = unique(meta_v3$source))
 ## If any are in data but not *metadata*:
 ### Run "_boatyard_scripts/expand_metadata.R" and follow instructions at end of script
 
@@ -122,11 +136,11 @@ supportR::diff_check(old = unique(w.meta_v1$source), new = unique(meta_v2$source
 ### Check data key to confirm
 
 # Remove any files not found in the data from the metadata
-meta_v3 <- dplyr::filter(.data = meta_v2, source %in% w.meta_v1$source)
+meta_v4 <- dplyr::filter(.data = meta_v3, source %in% w.meta_v1$source)
 
 # Now check for mismatches in "exp.name" column
 ## This is why this metadata is "site level"
-supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v3$exp.name))
+supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v4$exp.name))
 ## If any are in data but not *metadata*:
 ### The metadata had this info entered incorrectly
 ### Open the GoogleSheet and edit the "exp.name" column as needed
@@ -137,11 +151,11 @@ supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v3$exp.
 ### Check original data and beta dispersion calculation script to debug
 
 # Remove any experiment names not found in data
-meta_v4 <- dplyr::filter(.data = meta_v3, exp.name %in% w.meta_v1$exp.name)
+meta_v5 <- dplyr::filter(.data = meta_v4, exp.name %in% w.meta_v1$exp.name)
 
 # Re-check that there are no mismatches
-supportR::diff_check(old = unique(w.meta_v1$source), new = unique(meta_v4$source))
-supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v4$exp.name))
+supportR::diff_check(old = unique(w.meta_v1$source), new = unique(meta_v5$source))
+supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v5$exp.name))
 
 ## ------------------------------------------- ##
 # Join Metadata ----
@@ -149,7 +163,7 @@ supportR::diff_check(old = unique(w.meta_v1$exp.name), new = unique(meta_v4$exp.
 
 # Actually join the metadata with the 'actual' data
 w.meta_v2 <- w.meta_v1 %>% 
-  dplyr::left_join(y = meta_v4, by = c("source", "exp.name")) %>% 
+  dplyr::left_join(y = meta_v5, by = c("source", "exp.name")) %>% 
   # Relocate all of these columns more intuitively
   dplyr::relocate(assigned.to:notes, .after = exp.name) %>% 
   # Drop likely unwanted columns
@@ -159,25 +173,11 @@ w.meta_v2 <- w.meta_v1 %>%
 dplyr::glimpse(w.meta_v2)
 
 ## ------------------------------------------- ##
-# Standardize Free Text Columns ----
-## ------------------------------------------- ##
-
-# This is harder to do extensively but some coarse stuff makes sense
-w.meta_v3 <- w.meta_v2 %>% 
-  # Make some columns lowercase
-  dplyr::mutate(dplyr::across(.cols = c(ecotype2, target.consumer, nontarget.consumer,
-                                        resource.type, consumer.trophic.level),
-                              .fns = ~ tolower(x = .)))
-
-# Re-check structure
-dplyr::glimpse(w.meta_v3)
-
-## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-w.meta_v99 <- w.meta_v3
+w.meta_v99 <- w.meta_v2
 
 # Identify tidy file name / path
 w.meta_name <- "06_caged_with-metadata.csv"
