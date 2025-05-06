@@ -214,11 +214,73 @@ sub_v4 <- sub_v3c %>%
 dplyr::glimpse(sub_v4)
 
 ## ------------------------------------------- ##
+# Handle Multi-Annual Sampling ----
+## ------------------------------------------- ##
+
+# How many datasets have more than one year of data?
+sub_v4 %>% 
+  dplyr::group_by(source) %>% 
+  dplyr::summarize(yr_ct = length(unique(year))) %>% 
+  dplyr::filter(yr_ct > 1) %>% 
+  as.data.frame()
+
+# List for outputs
+sub_list <- list()
+
+# Iterate across datasets
+for(focal_src in sort(unique(sub_v4$source))){
+  
+  # Progress message
+  message("Working on file ", focal_src)
+  
+  # Subset data
+  focal_df <- dplyr::filter(.data = sub_v4, source == focal_src)
+  
+  # Count number of years of data within that dataset
+  yr_ct <- length(unique(focal_df$year))
+  
+  # If just one year, return that
+  if(yr_ct == 1){
+    focal_out <- focal_df
+    
+    # Otherwise...
+  } else {
+    
+    # Identify the last year
+    last_yr <- sort(unique(focal_df$year))[yr_ct]
+    
+    # Subset the data
+    focal_out <- dplyr::filter(.data = focal_df, year == last_yr)
+    
+    # Print message
+    print(paste0(yr_ct, " years identified. ", last_yr, " identified as the last."))
+    
+  } # Close conditional
+  
+  # Add outputs to list
+  sub_list[[focal_src]] <- focal_out
+  
+}
+
+# Unlist outputs
+sub_v5 <- purrr::list_rbind(x = sub_list)
+
+# Re-check multi-annual data
+sub_v5 %>% 
+  dplyr::group_by(source) %>% 
+  dplyr::summarize(yr_ct = length(unique(year))) %>% 
+  dplyr::filter(yr_ct > 1) %>% 
+  as.data.frame()
+
+# Re-check structure more generally
+dplyr::glimpse(sub_v5)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v4
+sub_v99 <- sub_v5
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
