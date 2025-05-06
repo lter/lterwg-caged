@@ -48,7 +48,7 @@ caged_v2 <- caged_v1 %>%
   # not interested in filtering out canopy
   #filter(!treat.canopy %in%) %>%
   # not interested in filtering out disturbance
-  #filter(!treat.disturbance ) %>%
+  filter(!treat.disturbance %in% c("prairie dog")) %>%
   # not interested in filtering out distance 
   #filter(!treat.distance) %>%
   # not interested in filtering out gap
