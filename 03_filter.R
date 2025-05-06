@@ -36,7 +36,7 @@ sub_v2 <- sub_v1 %>%
   # Drop unstandardized cage treatments too
   #dplyr::select(-cage.treatment_orig) %>% 
   # 'Distance from' column(s)
-  dplyr::select(-distance.from.surface, -distance.from.source) %>% 
+  dplyr::select(-dplyr::starts_with("distance.from.")) %>% 
   # Exclosure age
   dplyr::select(-exclosure.age)
 
