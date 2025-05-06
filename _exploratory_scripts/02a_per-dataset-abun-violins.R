@@ -53,7 +53,7 @@ for(focal_src in sort(unique(abun_viz$source))){
   # Create graph
   ggplot(focal_sub, aes(x = exp.name, y = abundance)) +
     # geom_boxplot(alpha = 0.4, fill = "#00aa50") +
-    geom_jitter(alpha = 0.1, width = 0.15, size = 2.5, pch = 21, fill = "#000") +
+    geom_jitter(alpha = 0.1, width = 0.15, size = 2.5, pch = 21, fill = "#000000") +
     geom_violin(alpha = 0.8, fill = "#00aa50") +
     facet_wrap(. ~ source) +
     labs(x = "Experiment Name", y = "Abundance",
