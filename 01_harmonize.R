@@ -89,7 +89,7 @@ dplyr::glimpse(list_raw[10])
 list_std <- list()
 
 # Now, let's loop across datasets in the key
-for(focal_src in sort(unique(key$source))){
+for(focal_src in sort(intersect(x = key$source, y = names(list_raw)))){
   # focal_src <- "beguin_quebec_largeherbivores_1995-2011_whitetaileddeer_understoryplants.csv" # composite
   # focal_src <- "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" # wide tax
   # focal_src <- "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" # wide spatial
