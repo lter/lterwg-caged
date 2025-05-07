@@ -37,6 +37,7 @@ dplyr::glimpse(fill_v1)
 ## we'd just be creating a bunch of useless rows and blowing up the size of file coming out of this script
 ### (beyond how huge it will be if it works as designed!)
 
+
 # Summarize to only one replicate within the finest design scale
 ## Standardization of treatments alone will result in "duplicates" across which we'd want to average
 fill_v2 <- fill_v1 %>% 
@@ -44,18 +45,31 @@ fill_v2 <- fill_v1 %>%
     dplyr::across(
       dplyr::all_of(setdiff(x = names(fill_v1), y = "abundance")))) %>% 
   dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                   # count the number of rows (we want this to be 1)
                    count=dplyr::n(),
+                   # this lets you know what the multiple values are 
                    abunda.vals=paste(abundance, collapse="; "),
                    sd.abund =sd(abundance, na.rm=T),
                    .groups = "keep") %>% 
   dplyr::ungroup() %>%
+  # filter out the problem datasets that have more than one value 
   filter(count >1)
 
 view(fill_v2)
 
+# Which datasets are the problem?
 fill_v2 %>%
   pull(source) %>%
   unique()
+
+
+
+# Why are there duplicate values?
+# sometimes datasets have a blank value and an abundance value, so then it will have two rows, and if we average
+# across them, it will fix the issue (blank is not zero!)
+
+
+
 
 # How many rows were summarized across?
 message(nrow(fill_v1) - nrow(fill_v2), " rows lost by summarizing within 'exp.design.1'")
