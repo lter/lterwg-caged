@@ -1034,6 +1034,68 @@ googledrive::drive_upload(media = proj14_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 15 (Sevilleta Mammals) ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Need to sum presences of taxa across "start" points
+
+# Identify file(s) name(s)
+proj15_raw_name <- "sev095_smeslineint_01122009_0.csv"
+
+# Identify file(s) in Drive
+proj15_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1yGVkzEub7JDMEL2tF8LAqLouN7s0lPO2")) %>% 
+  dplyr::filter(name %in% c(proj15_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj15_gdrive$id, .y = proj15_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj15_raw <- read.csv(file.path("data", "purgatory", proj15_raw_name))
+
+# Check structure
+dplyr::glimpse(proj15_raw)
+
+# Do needed repairs
+proj15_tmp <- proj15_raw %>% 
+  # Generate year column
+  dplyr::mutate(year = stringr::str_sub(string = date, 
+                                        start = nchar(date) - 3,
+                                        end = nchar(date)),
+                .before = date) %>% 
+  # Drop 'comments' column
+  dplyr::select(-comments, -intercept)
+
+# Do needed repairs
+proj15 <- proj15_tmp %>% 
+  # Count rows within all columns except 'start'
+  dplyr::group_by(
+    dplyr::across(
+      dplyr::all_of(setdiff(x = names(proj15_tmp), y = "start")))) %>% 
+  dplyr::summarize(abun = dplyr::n(),
+                   .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Re-check structure
+dplyr::glimpse(proj15)
+
+# Create good/new file name
+proj15_name <- "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv"
+proj15_path <- file.path("data", "drydock", proj15_name)
+
+# Export locally
+write.csv(x = proj15, file = proj15_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj15_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
