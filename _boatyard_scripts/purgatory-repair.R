@@ -1160,7 +1160,7 @@ proj16 <- proj16_raw %>%
 dplyr::glimpse(proj16)
 
 # Create good/new file name
-proj16_name <- "galetti_brazil_atlanticforest_cardoso_2009-2023_herbivores_trees.csv"
+proj16_name <- "galetti_brazil-atlanticforest_cardoso_2009-2023_herbivores_trees.csv"
 proj16_path <- file.path("data", "drydock", proj16_name)
 
 # Export locally
@@ -1238,7 +1238,7 @@ proj17 <- proj17_raw %>%
 dplyr::glimpse(proj17)
 
 # Create good/new file name
-proj17_name <- "galetti_brazil_atlanticforest_carlosbotelho_2009-2018_herbivores_trees.csv"
+proj17_name <- "galetti_brazil-atlanticforest_carlosbotelho_2009-2018_herbivores_trees.csv"
 proj17_path <- file.path("data", "drydock", proj17_name)
 
 # Export locally
@@ -1316,7 +1316,7 @@ proj18 <- proj18_raw %>%
 dplyr::glimpse(proj18)
 
 # Create good/new file name
-proj18_name <- "galetti_brazil_atlanticforest_itamambuca_2009-2023_herbivores_trees.csv"
+proj18_name <- "galetti_brazil-atlanticforest_itamambuca_2009-2023_herbivores_trees.csv"
 proj18_path <- file.path("data", "drydock", proj18_name)
 
 # Export locally
@@ -1394,7 +1394,7 @@ proj19 <- proj19_raw %>%
 dplyr::glimpse(proj19)
 
 # Create good/new file name
-proj19_name <- "galetti_brazil_atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv"
+proj19_name <- "galetti_brazil-atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv"
 proj19_path <- file.path("data", "drydock", proj19_name)
 
 # Export locally
