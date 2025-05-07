@@ -233,6 +233,10 @@ sort(unique(tidy_v4$exp.design.1))
 
 # Do needed processing
 tidy_v5 <- tidy_v4 %>% 
+  # Combine experiment name and design 4 if not the same
+  dplyr::mutate(exp.design.4 = ifelse(exp.name == exp.design.4,
+                                      yes = exp.design.4, 
+                                      no = paste(exp.name, exp.design.4, sep = "__"))) %>% 
   # Combine design 3 and 4 if not the same
   dplyr::mutate(exp.design.3 = ifelse(exp.design.4 == exp.design.3,
                                       yes = exp.design.3, 
