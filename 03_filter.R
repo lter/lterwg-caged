@@ -237,6 +237,9 @@ for(focal_src in sort(unique(sub_v3$source))){
 # Unlist outputs
 sub_v4 <- purrr::list_rbind(x = sub_list)
 
+# Any full datasets lost?
+supportR::diff_check(old = unique(sub_v3$source), new = unique(sub_v4$source))
+
 # Re-check multi-annual data
 sub_v4 %>% 
   dplyr::group_by(source) %>% 
@@ -295,18 +298,43 @@ supportR::diff_check(old = unique(sub_v5$taxa), new = unique(sub_v6$taxa))
 # How many lost rows?
 message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
-# Full check structure
+# Full structure check
 dplyr::glimpse(sub_v6)
+
+## ------------------------------------------- ##
+# Remove Confounding Treatments ----
+## ------------------------------------------- ##
+
+# For this paper, some treatments are likely confounding the effect of exclosures
+sub_v7 <- sub_v6 %>% 
+  # Don't want insecticided plots
+  dplyr::filter(!treat.insecticide %in% c("Sprayed")) %>%
+  # Don't want Nitrogen addition
+  dplyr::filter(!treat.nitrogen.addition %in% c(16, 50)) %>%
+  # Don't want prairie dog disturbance
+  # dplyr::filter(!treat.disturbance %in% c("prairie dog")) %>%
+  # Don't want certain nutrient 
+  dplyr::filter(!treat.nutrients %in% c("Nutrient Pollution", "enriched",
+                                        "NP", "N", "P", 1:9))
+
+# How many rows lost?
+message(nrow(sub_v6) - nrow(sub_v7), " rows lost")
+
+# Lose any full datasets (we shouldn't)?
+supportR::diff_check(old = unique(sub_v6$source), new = unique(sub_v7$source))
+
+# Check structure
+dplyr::glimpse(sub_v7)
 
 ## ------------------------------------------- ##
 # Drop Unwanted Columns ----
 ## ------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(sub_v6)
+dplyr::glimpse(sub_v7)
 
 # Drop any columns we know we don't want at the outset
-sub_v7 <- sub_v6 %>% 
+sub_v8 <- sub_v7 %>% 
   # Superseded "original" columns (standardized in QC script)
   dplyr::select(-dplyr::starts_with("treat.")) %>% 
   # Drop unstandardized cage treatments too
@@ -317,17 +345,17 @@ sub_v7 <- sub_v6 %>%
   dplyr::select(-exclosure.age)
 
 # Double check gained/lost columns
-supportR::diff_check(old = names(sub_v6), new = names(sub_v7))
+supportR::diff_check(old = names(sub_v7), new = names(sub_v8))
 
 # Re-check structure
-dplyr::glimpse(sub_v7)
+dplyr::glimpse(sub_v8)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v7
+sub_v99 <- sub_v8
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
