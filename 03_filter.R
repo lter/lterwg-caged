@@ -23,38 +23,14 @@ sub_v1 <- read.csv(file.path("data", "02_caged_tidied.csv"))
 dplyr::glimpse(sub_v1)
 
 ## ------------------------------------------- ##
-# Drop Unwanted Columns ----
+# Drop Zero-Abundance Samples ----
 ## ------------------------------------------- ##
 
 # Check structure
 dplyr::glimpse(sub_v1)
 
-# Drop any columns we know we don't want at the outset
-sub_v2 <- sub_v1 %>% 
-  # Superseded "original" columns (standardized in QC script)
-  dplyr::select(-dplyr::starts_with("treat.")) %>% 
-  # Drop unstandardized cage treatments too
-  #dplyr::select(-cage.treatment_orig) %>% 
-  # 'Distance from' column(s)
-  dplyr::select(-dplyr::starts_with("distance.from.")) %>% 
-  # Exclosure age
-  dplyr::select(-exclosure.age)
-
-# Double check gained/lost columns
-supportR::diff_check(old = names(sub_v1), new = names(sub_v2))
-
-# Re-check structure
-dplyr::glimpse(sub_v2)
-
-## ------------------------------------------- ##
-# Drop Zero-Abundance Samples ----
-## ------------------------------------------- ##
-
-# Check structure
-dplyr::glimpse(sub_v2)
-
 # Remove 'exp.design.1' levels without any abundance
-sub_v3 <- sub_v2 %>% 
+sub_v2 <- sub_v1 %>% 
   # Average abundance withing experimental design level 1
   dplyr::group_by(
     dplyr::across(dplyr::all_of(setdiff(x = names(.),
@@ -68,23 +44,23 @@ sub_v3 <- sub_v2 %>%
   dplyr::select(-avg.abun)
 
 # Check number of lost rows
-message(nrow(sub_v2) - nrow(sub_v3), " rows lost")
+message(nrow(sub_v1) - nrow(sub_v2), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
-setdiff(x = unique(sub_v2$source), y = unique(sub_v3$source))
+setdiff(x = unique(sub_v1$source), y = unique(sub_v2$source))
 
 # Re-check structure
-dplyr::glimpse(sub_v3)
+dplyr::glimpse(sub_v2)
 
 ## ------------------------------------------- ##
 # Handle Sub-Annual Sampling ----
 ## ------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(sub_v3)
+dplyr::glimpse(sub_v2)
 
 # Do needed processing
-sub_v3b <- sub_v3 %>% 
+sub_v2b <- sub_v2 %>% 
   # Identify cases with more than one sampling point within dataset/year
   dplyr::group_by(source, year) %>% 
   dplyr::mutate(time.ct = length(unique(sampling.point)),
@@ -92,7 +68,7 @@ sub_v3b <- sub_v3 %>%
   dplyr::ungroup()
 
 # Identify any sources with more than one time point
-multi.times <- sub_v3b %>% 
+multi.times <- sub_v2b %>% 
   dplyr::filter(time.ct != 1) %>% 
   dplyr::select(source, year, time.ct, times) %>% 
   dplyr::distinct()
@@ -102,7 +78,7 @@ as.data.frame(multi.times)
 ## View(multi.times)
 
 # Do desired subsetting
-sub_v3c <- sub_v3b %>% 
+sub_v2c <- sub_v2b %>% 
   dplyr::filter(
     # Keep any datasets with only one sampling event per year
     time.ct == 1 |
@@ -175,12 +151,8 @@ sub_v3c <- sub_v3b %>%
       (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
          year == "2018" & sampling.point == "3") |
       ## V
-      (source == "villar_brazil_car_2009-2016_tapirs_forest.csv" &
-         sampling.point == "T73") |
-      (source == "villar_brazil_cbo_2009-2016_tapirs_forest.csv" &
-         sampling.point == "T87") |
-      (source == "villar_brazil_ita_2009-2016_tapirs_forest.csv" &
-         sampling.point == "T74") |
+      (source == "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv" &
+         sampling.point %in% c("T73", "T87", "T74")) |
       (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
          sampling.point == "105") |
       (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
@@ -190,13 +162,13 @@ sub_v3c <- sub_v3b %>%
   )
 
 # Check number of lost rows (hopefully few rows but understandable if some/many)
-message(nrow(sub_v3) - nrow(sub_v3c), " rows lost")
+message(nrow(sub_v2) - nrow(sub_v2c), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
-setdiff(x = unique(sub_v3$source), y = unique(sub_v3c$source))
+setdiff(x = unique(sub_v2$source), y = unique(sub_v2c$source))
 
 # Re-check sampling point for same datasets that previously had more than 1
-multi.times_v2 <- sub_v3c %>% 
+multi.times_v2 <- sub_v2c %>% 
   dplyr::filter(source %in% multi.times$source) %>% 
   dplyr::select(source, year, sampling.point) %>% 
   dplyr::distinct()
@@ -206,19 +178,19 @@ dplyr::glimpse(multi.times_v2)
 ## View(multi.times_v2)
 
 # Drop the temp columns once everything looks good
-sub_v4 <- sub_v3c %>% 
+sub_v3 <- sub_v2c %>% 
   # Drop "sampling.point" column plus any temporary columns
   dplyr::select(-sampling.point, -time.ct, -times)
 
 # Re-check structure
-dplyr::glimpse(sub_v4)
+dplyr::glimpse(sub_v3)
 
 ## ------------------------------------------- ##
 # Handle Multi-Annual Sampling ----
 ## ------------------------------------------- ##
 
 # How many datasets have more than one year of data?
-sub_v4 %>% 
+sub_v3 %>% 
   dplyr::group_by(source) %>% 
   dplyr::summarize(yr_ct = length(unique(year))) %>% 
   dplyr::filter(yr_ct > 1) %>% 
@@ -228,13 +200,13 @@ sub_v4 %>%
 sub_list <- list()
 
 # Iterate across datasets
-for(focal_src in sort(unique(sub_v4$source))){
+for(focal_src in sort(unique(sub_v3$source))){
   
   # Progress message
   message("Working on file ", focal_src)
   
   # Subset data
-  focal_df <- dplyr::filter(.data = sub_v4, source == focal_src)
+  focal_df <- dplyr::filter(.data = sub_v3, source == focal_src)
   
   # Count number of years of data within that dataset
   yr_ct <- length(unique(focal_df$year))
@@ -263,65 +235,91 @@ for(focal_src in sort(unique(sub_v4$source))){
 }
 
 # Unlist outputs
-sub_v5 <- purrr::list_rbind(x = sub_list)
+sub_v4 <- purrr::list_rbind(x = sub_list)
 
 # Re-check multi-annual data
-sub_v5 %>% 
+sub_v4 %>% 
   dplyr::group_by(source) %>% 
   dplyr::summarize(yr_ct = length(unique(year))) %>% 
   dplyr::filter(yr_ct > 1) %>% 
   as.data.frame()
 
 # Re-check structure more generally
-dplyr::glimpse(sub_v5)
+dplyr::glimpse(sub_v4)
 
 ## ------------------------------------------- ##
 # Remove Particular Datasets ----
 ## ------------------------------------------- ##
 
 # Remove any unwanted datasets by hand
-sub_v6 <- sub_v5 %>% 
+sub_v5 <- sub_v4 %>% 
   # Jamie says this dataset is really the last year of a different dataset so should be removed
-  dplyr::filter(source != "mcdevittirwin_palmyra_palmyratiles_2014_fish_benthic.csv")
+  dplyr::filter(source != "mcdevittirwin_palmyra_palmyratiles_2014_fish_benthic.csv") %>% 
+  # Jamie says this dataset is the 4 month version while another dataset is the same but 12-month
+  dplyr::filter(source != "lter-mcr_moorea_grazingintensity_2010_fish_benthic.csv")
 
 # Double check only unwanted data are lost
-supportR::diff_check(old = unique(sub_v5$source), new = unique(sub_v6$source))
+supportR::diff_check(old = unique(sub_v4$source), new = unique(sub_v5$source))
 
 # Check structure
-dplyr::glimpse(sub_v6)
+dplyr::glimpse(sub_v5)
 
 ## ------------------------------------------- ##
 # Remove Non-Living Taxa ----
 ## ------------------------------------------- ##
 
 # Check current taxa
-sort(unique(sub_v6$taxa))
+sort(unique(sub_v5$taxa))
 
 # Remove non-living ones
-sub_v7 <- sub_v6%>%
-  dplyr::filter(!taxa %in% c("LITT","Bare", "Dead Barnacle","Amphipod tube","bare",
-                             "Mud Tube","Jingle shell","Sand tube","Little Black tubes",
-                             "Mud tube","Branch","rock","BARE","Litter",
-                             "Bareground","cactus__dead_","QUERCUS DOUGSEED","QUERCUS DOUGLASII_SEED",
-                             "SEED2 SPECIES","SEED1 SPECIES","QUERCUS AGRIFOLIA_SEED",
-                             "QUERCUS AG_SEED","ZZZZ general codes","#N/A","per.bare",
-                             "litter","standing dead Betula nana","caribou feces",
-                             "frost boil","animal litter","Squirrel feces","vole trail",
-                             "vole litter","human trail","vole hole","vole trail",
-                             "Mixed dead litter","Bare soil","Standing Dead Betula nana",
-                             "Soil Frost boil","Standing Dead Salix pulchra","Ledum palustre-Dead",
-                             "Miscellaneous litter","Pine needles","Radulations",
-                             "Bare.cropped.substrate","Rubble","Sand","SOIL",
-                             "sediment","substrate","Rock","Dung"))
+sub_v6 <- sub_v5 %>%
+  dplyr::filter(!taxa %in% c("LITT", "Bare", "Dead Barnacle", "Amphipod tube", "bare", 
+                             "Mud Tube", "Jingle shell", "Sand tube", "Little Black tubes", 
+                             "Mud tube", "Branch", "rock", "BARE", "Litter", 
+                             "Bareground", "cactus__dead_", "QUERCUS DOUGSEED", "QUERCUS DOUGLASII_SEED", 
+                             "SEED2 SPECIES", "SEED1 SPECIES", "QUERCUS AGRIFOLIA_SEED", 
+                             "QUERCUS AG_SEED", "ZZZZ general codes", "#N/A", "per.bare", 
+                             "litter", "standing dead Betula nana", "caribou feces", 
+                             "frost boil", "animal litter", "Squirrel feces", "vole trail", 
+                             "vole litter", "human trail", "vole hole", "vole trail", 
+                             "Mixed dead litter", "Bare soil", "Standing Dead Betula nana", 
+                             "Soil Frost boil", "Standing Dead Salix pulchra", "Ledum palustre-Dead", 
+                             "Miscellaneous litter", "Pine needles", "Radulations", 
+                             "Bare.cropped.substrate", "Rubble", "Sand", "SOIL", 
+                             "sediment", "substrate", "Rock", "Dung"))
 
 
 # Check for lost files
-supportR::diff_check(old = unique(sub_v6$taxa), new = unique(sub_v7$taxa))
+supportR::diff_check(old = unique(sub_v5$taxa), new = unique(sub_v6$taxa))
 
 # How many lost rows?
-message(nrow(sub_v6) - nrow(sub_v7), " rows lost")
+message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Full check structure
+dplyr::glimpse(sub_v6)
+
+## ------------------------------------------- ##
+# Drop Unwanted Columns ----
+## ------------------------------------------- ##
+
+# Check structure
+dplyr::glimpse(sub_v6)
+
+# Drop any columns we know we don't want at the outset
+sub_v7 <- sub_v6 %>% 
+  # Superseded "original" columns (standardized in QC script)
+  dplyr::select(-dplyr::starts_with("treat.")) %>% 
+  # Drop unstandardized cage treatments too
+  #dplyr::select(-cage.treatment_orig) %>% 
+  # 'Distance from' column(s)
+  dplyr::select(-dplyr::starts_with("distance.from.")) %>% 
+  # Exclosure age
+  dplyr::select(-exclosure.age)
+
+# Double check gained/lost columns
+supportR::diff_check(old = names(sub_v6), new = names(sub_v7))
+
+# Re-check structure
 dplyr::glimpse(sub_v7)
 
 ## ------------------------------------------- ##
@@ -329,7 +327,7 @@ dplyr::glimpse(sub_v7)
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v6
+sub_v99 <- sub_v7
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
