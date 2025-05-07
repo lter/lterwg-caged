@@ -47,8 +47,6 @@ fill_v2 <- fill_v1 %>%
                    .groups = "keep") %>% 
   dplyr::ungroup()
 
-view(fill_v2)
-
 # Why are there duplicate values?
 ## Sometimes datasets have a blank value and an abundance value
 ## So then it will have two rows, and if we average across them, it will fix the issue
@@ -92,7 +90,6 @@ lost_rows %>%
 
 # Re-check structure of filled object
 dplyr::glimpse(fill_v2)
-
 
 ## ------------------------------------------- ##
 # Zero-Fill Community Data ----
