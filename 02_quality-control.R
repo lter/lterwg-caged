@@ -272,16 +272,17 @@ sort(unique(tidy_v5$original.taxa))
 # Do desired wrangling
 tidy_v6 <- tidy_v5 %>% 
   dplyr::mutate(taxa = dplyr::case_when(
-    #removing "bleached" from species names to lump with living taxa
-    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Crustose"~"Crustose",
-    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Jointed Calcareous"~"Jointed Calcareous",
-    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Sheet"~"Sheet",
-    source=="spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"&original.taxa=="Bleached Coarsely Branched"~"Coarsely Branched",
-    
-    
+    # removing "bleached" from species names to lump with living taxa
+    source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" & 
+      original.taxa %in% c("Bleached Crustose", "Bleached Jointed Calcareous", 
+                           "Bleached Sheet", "Bleached Coarsely Branched") ~ gsub(pattern = "Bleached ", replacement = "", x = original.taxa),
+    # Otherwise, keep original name
     T ~ original.taxa), .after = original.taxa) %>% 
   # Drop original taxa name
   dplyr::select(-original.taxa)
+
+# Check difference
+supportR::diff_check(old = unique(tidy_v5$original.taxa), new = unique(tidy_v6$taxa))
 
 # Re-check taxa names
 sort(unique(tidy_v6$taxa))
