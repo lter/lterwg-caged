@@ -18,7 +18,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, googledrive, supportR)
+librarian::shelf(tidyverse, googledrive, supportR, readxl)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -1090,6 +1090,84 @@ write.csv(x = proj15, file = proj15_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj15_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 16 (Galetti Atlantic Forest) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## add column with site name (these count a separate experiment - Cardoso). For future notes - treatment: Control = uncaged, Defaunated = caged
+## Also make "T#" month designations into real months/years columns
+
+# Identify file(s) name(s)
+proj16_raw_name <- "Cardoso_T0_T156.xlsx"
+
+# Identify file(s) in Drive
+proj16_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/1/folders/13WJ3iko1YeTuSS3kvEe50e81edpDgSft")) %>% 
+  dplyr::filter(name %in% c(proj16_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj16_gdrive$id, .y = proj16_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify all sheets
+proj16_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj16_raw_name))
+
+# Read in data as a list
+proj16_raw <- purrr::map(.x = setdiff(x = proj16_sheets, y = "Metadata"),
+                         .f = ~ readxl::read_xlsx(
+                           path = file.path("data", "purgatory", proj16_raw_name),
+                           sheet = .x))
+
+# Check raw structure of one sheet/list element
+dplyr::glimpse(proj16_raw[[1]])
+
+# Do needed repairs
+proj16 <- proj16_raw %>% 
+  # Get sheet name into dataset
+  purrr::map(.f = ~ dplyr::mutate(.data = .x, 
+                                  month_qual = names(.x)[1], 
+                                  .before = dplyr::everything())) %>% 
+  # Drop bad/superseded first column
+  purrr::map(.f = ~ dplyr::select(.data = .x, 
+                                  -dplyr::starts_with(paste0("T", 0:400)))) %>% 
+  # Combine into a flat dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Tidy up the qualitative month
+  dplyr::mutate(month_qual = as.numeric(gsub("T", "", x = month_qual))) %>% 
+  # Make it "real" & extract year
+  dplyr::mutate(month = as.Date("07/01/2009", format = "%m/%d/%Y") + months(month_qual),
+                .before = month_qual) %>% 
+  dplyr::mutate(year = year(month), .before = month) %>% 
+  # Remove qualitative month now that we have 'real' time
+  dplyr::select(-month_qual) %>% 
+  # Pivot community data to long format
+  tidyr::pivot_longer(cols = -year:-treatment,
+                      names_to = "species", values_to = "abun") %>% 
+  # Drop NAs/0s
+  dplyr::filter(!is.na(abun), nchar(abun) != 0, abun > 0) %>% 
+  # Make cage/non-cage more explicit
+  dplyr::mutate(treatment = dplyr::case_when(
+    treatment == "Control" ~ "no cage",
+    treatment == "Defaunation" ~ "cage",
+    T ~ treatment))
+
+# Re-check structure
+dplyr::glimpse(proj16)
+
+# Create good/new file name
+proj16_name <- "galetti_brazil_atlanticforest_cardoso_2009-2023_herbivores_trees.csv"
+proj16_path <- file.path("data", "drydock", proj16_name)
+
+# Export locally
+write.csv(x = proj16, file = proj16_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj16_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 # Clear environment + collect garbage
