@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR, update_all= TRUE)
+librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
