@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, lme4, performance, lubridate, car, njlyon0/supportR) #, update_all= TRUE)
+librarian::shelf(tidyverse, ltertools, lme4, performance, lubridate, car, njlyon0/supportR, MuMIn) #, update_all= TRUE)
 
 # Create needed folder(s)
 #dir.create(path = file.path("data"), showWarnings = F)
@@ -21,11 +21,19 @@ rm(list = ls()); gc()
 alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata.csv"))
 
 # ----tidy and wrangle data----
+#lets see what we are dealing with
 glimpse(alldata_v1)
 
 supportR::num_check(data = alldata_v1, col = "exp.name.spatialextent.category")
 sort(unique(alldata_v1$betadisp.design.level))
 
+supportR::count(vec = alldata_v1$consumer.richness) #so many NAs in consumer richness
+supportR::count(vec = alldata_v1$cage.treatment_std) #deal with this via a filtering
+supportR::count(vec = alldata_v1$betadisp.sample.size) 
+supportR::count(vec = alldata_v1$exp.name.spatialextent.category) 
+
+#supportR::count_diff(vec1 = alldata_v1$betadisp.median , 
+#                     vec2=alldata_v1$betadisp.comm.dist)
 
 #get years and richness into number form
 alldata_v1$year.start.exclosure <- year(as.Date(as.character(alldata_v1$year.start.exclosure), format = "%Y"))
@@ -35,42 +43,60 @@ alldata_v1$lat <- as.numeric(alldata_v1$lat)
 
 #first round of slimming down DF. Might be bad practices to do select() this early
 modeldata_v1 = alldata_v1 |> 
-  select(source, site, sampling.years, excluded.group, measured.group, lat:ecotype1, consumer.richness, natural.vs.artificial.substrate, exclusion.duration, year.start.exclosure, year.end.exclosure, cage.treatment_std, betadisp.design.level:betadisp.comm.dist) |> 
+  select(source, site, project.name, exp.name, #select study ID stuff
+         sampling.years, lat:ecotype1, exclusion.duration, natural.vs.artificial.substrate, year.start.exclosure, year.end.exclosure, cage.treatment_std, exp.name.spatialextent.category, #select important study info. prob bad practices to have the lat:ecotype1
+         excluded.group, consumer.richness, consumer.richness.category, consumer.native.domestic, #select important stuff about consumers
+         
+         measured.group, betadisp.design.level:betadisp.comm.dist) |> #select important stuff about community 
   mutate(exp.age = year.end.exclosure - year.start.exclosure) |> #calculate exclusion age
   filter(cage.treatment_std %in% c('caged', 'uncaged')) #dont need the other treatments
   
 #data QC to make sure its ready to model
 glimpse(modeldata_v1)
 
-#so many NAs in consumer richness
-supportR::count(vec = modeldata_v1$consumer.richness)
-supportR::count(vec = modeldata_v1$cage.treatment_std)
-
 #slim down this DF for initial explorations. this DF will DEF be different for real analyses
 marc.modeldata_v1 = modeldata_v1 |> 
-  select(source, excluded.group, measured.group, lat, ecotype1, consumer.richness, cage.treatment_std, betadisp.design.level, betadisp.sample.size, betadisp.median, betadisp.comm.dist, exp.age)
+  select(source, exp.name, lat, climate.zone, aq.or.terr, ecotype1, exp.age, cage.treatment_std, excluded.group, consumer.richness.category, measured.group, betadisp.design.level, betadisp.sample.size, betadisp.median, betadisp.comm.dist)
 
 glimpse(marc.modeldata_v1)
 
+#create the effect size DF 
+marc.modeldata_ES = marc.modeldata_v1 |> 
+  group_by(exp.name) |> 
+  summarize()
 
+#Blue Skies model structure that will explain everything ----
 
-#Blue Skies model structure that will explain everything 
+#I. B community distance across all experiments
+
 # betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
 #REs: (1| source/expname)
 
 hist(marc.modeldata_v1$betadisp.comm.dist)
 range(marc.modeldata_v1$betadisp.comm.dist)
 
-BaetaDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + #consumer.richness + consumer.richness + gamma diversity + excl size size + 
-                         betadisp.sample.size + betadisp.design.level + lat + exp.age +
-                         (1|source), 
-                   data = marc.modeldata_v1)
+#First cut B comm dist
+BaetaDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + consumer.richness.category + lat + exp.age + betadisp.sample.size + betadisp.design.level +
+                         (1|exp.name), 
+                       data = marc.modeldata_v1)
 
 
 check_model(BaetaDisp.lmer)
+check_collinearity(BaetaDisp.lmer)
 summary(BaetaDisp.lmer)
 car::Anova(BaetaDisp.lmer, test.statistic = "F")
 performance::r2(BaetaDisp.lmer)
+
+#dev.off()
+#dev.new(width = 11, height = 6)
+#area_ts %>% 
+#  distinct(studyid, duration) %>% 
+#  ggplot(data = ., aes(x = duration)) + 
+#  geom_histogram(fill = "grey40") + 
+#  mytheme() + 
+#  scale_x_continuous(breaks = scales::pretty_breaks(n = 8)) +
+#  labs(x = "Duration (years)", y = "Number of studies")
+#ggsave(here::here('figures/SOM/duration_study_count_histogram.png'))
 
 BaetaDispEcoInt.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
                          betadisp.sample.size + betadisp.design.level + lat + exp.age +
