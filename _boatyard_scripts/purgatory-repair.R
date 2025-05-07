@@ -71,7 +71,7 @@ write.csv(x = proj1, na = "", row.names = F, file = proj1_name)
 
 # Upload to Drive
 googledrive::drive_upload(media = proj1_name, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -151,7 +151,7 @@ dplyr::glimpse(proj2)
 # 
 # # Export to Drive
 # googledrive::drive_upload(media = proj2_path, overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -222,7 +222,7 @@ write.csv(x = proj3, file = proj3_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj3_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -280,7 +280,7 @@ write.csv(x = proj4, na = "", row.names = F, file = proj4_path)
 
 # Export to Drive
 googledrive::drive_upload(media = proj4_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -356,7 +356,7 @@ write.csv(x = proj5, na = '', row.names = F, file = proj5_path)
 
 # Export to Drive
 googledrive::drive_upload(media = proj5_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -433,7 +433,7 @@ for(k in seq_along(proj6_rawfiles)){
   
   # Upload to Drive
   googledrive::drive_upload(media = proj6_path, overwrite = T,
-                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
     
 }
 
@@ -491,7 +491,7 @@ write.csv(x = proj7, na = '', row.names = F, file = proj7_path)
 
 # Export to Drive
 googledrive::drive_upload(media = proj7_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -541,7 +541,7 @@ write.csv(x = proj8, file = proj8_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj8_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -594,7 +594,7 @@ write.csv(x = proj9, file = proj9_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj9_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -743,7 +743,7 @@ write.csv(x = proj10, file = proj10_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj10_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -820,7 +820,7 @@ write.csv(x = proj11, file = proj11_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj11_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -905,7 +905,7 @@ write.csv(x = proj12, file = proj12_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj12_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -971,7 +971,7 @@ write.csv(x = proj13, file = proj13_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj13_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -1028,7 +1028,7 @@ write.csv(x = proj14, file = proj14_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj14_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -1090,13 +1090,13 @@ write.csv(x = proj15, file = proj15_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj15_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 16 (Galetti Atlantic Forest) ----
+# Project 16 (Galetti Cardoso) ----
 ## ------------------------------------------- ##
 # Reason for purgatory status
 ## add column with site name (these count a separate experiment - Cardoso). For future notes - treatment: Control = uncaged, Defaunated = caged
@@ -1168,7 +1168,241 @@ write.csv(x = proj16, file = proj16_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj16_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 17 (Galetti Carlos Botelho) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## add column with site name (these count a separate experiment - Cardoso). For future notes - treatment: Control = uncaged, Defaunated = caged
+## Also make "T#" month designations into real months/years columns
+
+# Identify file(s) name(s)
+proj17_raw_name <- "Carlos_Botelho_T0_T108.xlsx"
+
+# Identify file(s) in Drive
+proj17_gdrive <- googledrive::drive_ls(googledrive::as_id("http://drive.google.com/drive/folders/1_EQlwA8hl36wD9lMKBV9ebk0bjooZGBK")) %>% 
+  dplyr::filter(name %in% c(proj17_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj17_gdrive$id, .y = proj17_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify all sheets
+proj17_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj17_raw_name))
+
+# Read in data as a list
+proj17_raw <- purrr::map(.x = setdiff(x = proj17_sheets, y = "metadata"),
+                         .f = ~ readxl::read_xlsx(
+                           path = file.path("data", "purgatory", proj17_raw_name),
+                           sheet = .x))
+
+# Check raw structure of one sheet/list element
+dplyr::glimpse(proj17_raw[[1]])
+
+# Do needed repairs
+proj17 <- proj17_raw %>% 
+  # Get sheet name into dataset
+  purrr::map(.f = ~ dplyr::mutate(.data = .x, 
+                                  month_qual = names(.x)[1], 
+                                  .before = dplyr::everything())) %>% 
+  # Drop bad/superseded first column
+  purrr::map(.f = ~ dplyr::select(.data = .x, 
+                                  -dplyr::starts_with(paste0("T", 0:400)))) %>% 
+  # Combine into a flat dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Tidy up the qualitative month
+  dplyr::mutate(month_qual = as.numeric(gsub("T", "", x = month_qual))) %>% 
+  # Make it "real" & extract year
+  dplyr::mutate(month = as.Date("07/01/2009", format = "%m/%d/%Y") + months(month_qual),
+                .before = month_qual) %>% 
+  dplyr::mutate(year = year(month), .before = month) %>% 
+  # Remove qualitative month now that we have 'real' time
+  dplyr::select(-month_qual) %>% 
+  # Pivot community data to long format
+  tidyr::pivot_longer(cols = -year:-treatment,
+                      names_to = "species", values_to = "abun") %>% 
+  # Drop NAs/0s
+  dplyr::filter(!is.na(abun), nchar(abun) != 0, abun > 0) %>% 
+  # Make cage/non-cage more explicit
+  dplyr::mutate(treatment = dplyr::case_when(
+    treatment == "Control" ~ "no cage",
+    treatment == "Defaunation" ~ "cage",
+    T ~ treatment))
+
+# Re-check structure
+dplyr::glimpse(proj17)
+
+# Create good/new file name
+proj17_name <- "galetti_brazil_atlanticforest_carlosbotelho_2009-2018_herbivores_trees.csv"
+proj17_path <- file.path("data", "drydock", proj17_name)
+
+# Export locally
+write.csv(x = proj17, file = proj17_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj17_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 18 (Galetti Itamambuca) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## add column with site name (these count a separate experiment - Cardoso). For future notes - treatment: Control = uncaged, Defaunated = caged
+## Also make "T#" month designations into real months/years columns
+
+# Identify file(s) name(s)
+proj18_raw_name <- "Itamambuca_T0_T156.xlsx"
+
+# Identify file(s) in Drive
+proj18_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1TPju8hGs_T6Kf7_VES5KyUPjpP-9wbqV")) %>% 
+  dplyr::filter(name %in% c(proj18_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj18_gdrive$id, .y = proj18_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify all sheets
+proj18_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj18_raw_name))
+
+# Read in data as a list
+proj18_raw <- purrr::map(.x = setdiff(x = proj18_sheets, y = "metadata"),
+                         .f = ~ readxl::read_xlsx(
+                           path = file.path("data", "purgatory", proj18_raw_name),
+                           sheet = .x))
+
+# Check raw structure of one sheet/list element
+dplyr::glimpse(proj18_raw[[1]])
+
+# Do needed repairs
+proj18 <- proj18_raw %>% 
+  # Get sheet name into dataset
+  purrr::map(.f = ~ dplyr::mutate(.data = .x, 
+                                  month_qual = names(.x)[1], 
+                                  .before = dplyr::everything())) %>% 
+  # Drop bad/superseded first column
+  purrr::map(.f = ~ dplyr::select(.data = .x, 
+                                  -dplyr::starts_with(paste0("T", 0:400)))) %>% 
+  # Combine into a flat dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Tidy up the qualitative month
+  dplyr::mutate(month_qual = as.numeric(gsub("T", "", x = month_qual))) %>% 
+  # Make it "real" & extract year
+  dplyr::mutate(month = as.Date("07/01/2009", format = "%m/%d/%Y") + months(month_qual),
+                .before = month_qual) %>% 
+  dplyr::mutate(year = year(month), .before = month) %>% 
+  # Remove qualitative month now that we have 'real' time
+  dplyr::select(-month_qual) %>% 
+  # Pivot community data to long format
+  tidyr::pivot_longer(cols = -year:-treatment,
+                      names_to = "species", values_to = "abun") %>% 
+  # Drop NAs/0s
+  dplyr::filter(!is.na(abun), nchar(abun) != 0, abun > 0) %>% 
+  # Make cage/non-cage more explicit
+  dplyr::mutate(treatment = dplyr::case_when(
+    treatment == "Control" ~ "no cage",
+    treatment == "Defaunation" ~ "cage",
+    T ~ treatment))
+
+# Re-check structure
+dplyr::glimpse(proj18)
+
+# Create good/new file name
+proj18_name <- "galetti_brazil_atlanticforest_itamambuca_2009-2023_herbivores_trees.csv"
+proj18_path <- file.path("data", "drydock", proj18_name)
+
+# Export locally
+write.csv(x = proj18, file = proj18_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj18_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 19 (Galetti Vargem) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## add column with site name (these count a separate experiment - Cardoso). For future notes - treatment: Control = uncaged, Defaunated = caged
+## Also make "T#" month designations into real months/years columns
+
+# Identify file(s) name(s)
+proj19_raw_name <- "Vargem_Grande_T0_T156.xlsx"
+
+# Identify file(s) in Drive
+proj19_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1CXfgW-kbw20mS2dlgOgv4tVn7arqbyAk")) %>% 
+  dplyr::filter(name %in% c(proj19_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj19_gdrive$id, .y = proj19_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify all sheets
+proj19_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj19_raw_name))
+
+# Read in data as a list
+proj19_raw <- purrr::map(.x = setdiff(x = proj19_sheets, y = "metadata"),
+                         .f = ~ readxl::read_xlsx(
+                           path = file.path("data", "purgatory", proj19_raw_name),
+                           sheet = .x))
+
+# Check raw structure of one sheet/list element
+dplyr::glimpse(proj19_raw[[1]])
+
+# Do needed repairs
+proj19 <- proj19_raw %>% 
+  # Get sheet name into dataset
+  purrr::map(.f = ~ dplyr::mutate(.data = .x, 
+                                  month_qual = names(.x)[1], 
+                                  .before = dplyr::everything())) %>% 
+  # Drop bad/superseded first column
+  purrr::map(.f = ~ dplyr::select(.data = .x, 
+                                  -dplyr::starts_with(paste0("T", 0:400)))) %>% 
+  # Combine into a flat dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Tidy up the qualitative month
+  dplyr::mutate(month_qual = as.numeric(gsub("T", "", x = month_qual))) %>% 
+  # Make it "real" & extract year
+  dplyr::mutate(month = as.Date("07/01/2009", format = "%m/%d/%Y") + months(month_qual),
+                .before = month_qual) %>% 
+  dplyr::mutate(year = year(month), .before = month) %>% 
+  # Remove qualitative month now that we have 'real' time
+  dplyr::select(-month_qual) %>% 
+  # Pivot community data to long format
+  tidyr::pivot_longer(cols = -year:-treatment,
+                      names_to = "species", values_to = "abun") %>% 
+  # Drop NAs/0s
+  dplyr::filter(!is.na(abun), nchar(abun) != 0, abun > 0) %>% 
+  # Make cage/non-cage more explicit
+  dplyr::mutate(treatment = dplyr::case_when(
+    treatment == "Control" ~ "no cage",
+    treatment == "Defaunation" ~ "cage",
+    T ~ treatment))
+
+# Re-check structure
+dplyr::glimpse(proj19)
+
+# Create good/new file name
+proj19_name <- "galetti_brazil_atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv"
+proj19_path <- file.path("data", "drydock", proj19_name)
+
+# Export locally
+write.csv(x = proj19, file = proj19_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj19_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -1214,7 +1448,7 @@ write.csv(x = proj0, file = proj0_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj0_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
