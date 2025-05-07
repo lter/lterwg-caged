@@ -31,6 +31,7 @@ supportR::count(vec = alldata_v1$consumer.richness) #so many NAs in consumer ric
 supportR::count(vec = alldata_v1$cage.treatment_std) #deal with this via a filtering
 supportR::count(vec = alldata_v1$betadisp.sample.size) 
 supportR::count(vec = alldata_v1$exp.name.spatialextent.category) 
+supportR::count(vec = alldata_v1$ecotype1) 
 
 #supportR::count_diff(vec1 = alldata_v1$betadisp.median , 
 #                     vec2=alldata_v1$betadisp.comm.dist)
@@ -56,14 +57,30 @@ glimpse(modeldata_v1)
 
 #slim down this DF for initial explorations. this DF will DEF be different for real analyses
 marc.modeldata_v1 = modeldata_v1 |> 
-  select(source, exp.name, lat, climate.zone, aq.or.terr, ecotype1, exp.age, cage.treatment_std, excluded.group, consumer.richness.category, measured.group, betadisp.design.level, betadisp.sample.size, betadisp.median, betadisp.comm.dist)
+  select(source, exp.name, lat, climate.zone, aq.or.terr, ecotype1, exp.age, cage.treatment_std, excluded.group, consumer.richness.category, measured.group, betadisp.design.level, betadisp.sample.size, betadisp.comm.dist)
 
 glimpse(marc.modeldata_v1)
 
+supportR::count(vec = marc.modeldata_v1$exp.age) 
+
 #create the effect size DF 
 marc.modeldata_ES = marc.modeldata_v1 |> 
-  group_by(exp.name) |> 
-  summarize()
+  # Remove missing beta dispersion
+  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
+  # Keep only good treatments but shouldnt be any 
+  #dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
+  # Summarize within treatments
+  group_by(across(all_of(setdiff(x = names(marc.modeldata_v1), y = c('betadisp.comm.dist'))))) |>
+  summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T)) %>% 
+  # Pivot to treatment into wide format
+  tidyr::pivot_wider(names_from = cage.treatment_std, values_from = betadisp.mean) %>% 
+  # Calculate difference
+  dplyr::mutate(diff = uncaged - caged)
+
+dplyr::glimpse(marc.modeldata_ES)
+
+
+  
 
 #Blue Skies model structure that will explain everything ----
 
@@ -75,7 +92,7 @@ marc.modeldata_ES = marc.modeldata_v1 |>
 hist(marc.modeldata_v1$betadisp.comm.dist)
 range(marc.modeldata_v1$betadisp.comm.dist)
 
-#First cut B comm dist
+#First cut B comm dist----
 BaetaDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + consumer.richness.category + lat + exp.age + betadisp.sample.size + betadisp.design.level +
                          (1|exp.name), 
                        data = marc.modeldata_v1)
@@ -118,3 +135,16 @@ summary(BaetaDispEco3Int.lmer)
 
 # Next steps: dredge() AIC selection
 # Maybe also random effects AIC selection? on full model
+
+#Effect Size model----
+
+BaetaES.lmer <- lmer(diff ~ ecotype1 + consumer.richness.category + lat + exp.age + betadisp.sample.size + betadisp.design.level +
+                         (1|exp.name), 
+                       data = marc.modeldata_ES)
+
+
+check_model(BaetaES.lmer)
+check_collinearity(BaetaES.lmer)
+summary(BaetaES.lmer)
+car::Anova(BaetaES.lmer, test.statistic = "F")
+performance::r2(BaetaES.lmer)
