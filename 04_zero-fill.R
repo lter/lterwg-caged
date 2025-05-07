@@ -13,7 +13,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, update_all= TRUE)
+librarian::shelf(tidyverse, ltertools)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -44,8 +44,18 @@ fill_v2 <- fill_v1 %>%
     dplyr::across(
       dplyr::all_of(setdiff(x = names(fill_v1), y = "abundance")))) %>% 
   dplyr::summarize(abundance = mean(abundance, na.rm = T),
+                   count=dplyr::n(),
+                   abunda.vals=paste(abundance, collapse="; "),
+                   sd.abund =sd(abundance, na.rm=T),
                    .groups = "keep") %>% 
-  dplyr::ungroup()
+  dplyr::ungroup() %>%
+  filter(count >1)
+
+view(fill_v2)
+
+fill_v2 %>%
+  pull(source) %>%
+  unique()
 
 # How many rows were summarized across?
 message(nrow(fill_v1) - nrow(fill_v2), " rows lost by summarizing within 'exp.design.1'")
