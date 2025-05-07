@@ -133,7 +133,8 @@ supportR::diff_check(old = unique(w.meta_v1$source), new = unique(meta_v3$source
 ## If any are in metadata but not *data*:
 ### For some reason no beta dispersion was calculated for any spatial level
 ### (likely lack of "exp.design" columns in original dataset)
-### Check data key to confirm
+#### Check data key to confirm
+### (or potentially removed due to confounding treatments)
 
 # Remove any files not found in the data from the metadata
 meta_v4 <- dplyr::filter(.data = meta_v3, source %in% w.meta_v1$source)
@@ -167,7 +168,10 @@ w.meta_v2 <- w.meta_v1 %>%
   # Relocate all of these columns more intuitively
   dplyr::relocate(assigned.to:notes, .after = exp.name) %>% 
   # Drop likely unwanted columns
-  dplyr::select(-assigned.to, -notes)
+  dplyr::select(-assigned.to, -contains("notes"))
+
+# What is lost?
+supportR::diff_check(old = unique(w.meta_v1$source), new = unique(w.meta_v2$source))
 
 # Check structure
 dplyr::glimpse(w.meta_v2)
@@ -228,5 +232,10 @@ for(focal_file in beta_files){
 
 # Check the structure of one of those ouputs
 dplyr::glimpse(focal_join)
+
+# # Upload all of these to the Drive
+# purrr::walk(.x = dir(path = file.path("data"), pattern = "06_caged_with-metadata_exp"),
+#             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
+#                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
 # End ----
