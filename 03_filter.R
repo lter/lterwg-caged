@@ -1,14 +1,14 @@
 ## --------------------------------------------------------------- ##
                         # CAGED Filtering
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+# Written by: Nick J Lyon, Tyler Coverdale, Jamie McDevitt-Irwin, Kelly Speare ...
 
 ## ------------------------------------------- ##
 # Housekeeping ----
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, update_all= TRUE)
+librarian::shelf(tidyverse, ltertools)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
