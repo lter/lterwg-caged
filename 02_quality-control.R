@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, update_all= TRUE)
+librarian::shelf(tidyverse, ltertools, update_all = TRUE)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -179,21 +179,43 @@ tidy_v3 <- tidy_v2 %>%
 dplyr::glimpse(tidy_v3)
 
 ## ------------------------------------------- ##
-# Handle Missing Experimental Design Facets ----
+# Contextualize Experiment Names ----
+## ------------------------------------------- ##
+
+# Need to fill missing experiment names and attach relevant context
+tidy_v3b <- tidy_v3 %>% 
+  ## If 'exp.name' is missing, fill with full dataset filename
+  dplyr::mutate(exp.name = ifelse(nchar(exp.name) == 0 | is.na(exp.name),
+                                  yes = source, no = exp.name))
+
+# Check for 'new' experiment names
+supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.name))
+
+# Then, if there is a fire treatment, we want to add that to the experiment name
+tidy_v4 <- tidy_v3b %>% 
+  dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
+                      yes = exp.name, 
+                      no = paste(exp.name, treat.fire, sep = "--")) )
+
+# Check again
+supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
+
+# Check structure
+dplyr::glimpse(tidy_v4)
+
+## ------------------------------------------- ##
+# Fill Missing Experimental Design Levels ----
 ## ------------------------------------------- ##
 
 # Check experimental design columns
-tidy_v3 %>% 
+tidy_v4 %>% 
   dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
   dplyr::distinct() %>% 
   dplyr::glimpse()
 
 # Do needed standardization
-tidy_v4 <- tidy_v3 %>% 
+tidy_v5 <- tidy_v4 %>% 
   dplyr::mutate(
-    ## If 'exp.name' is missing, fill with full dataset filename
-    exp.name = ifelse(nchar(exp.name) == 0 | is.na(exp.name),
-                      yes = source, no = exp.name),
     ## Fill any missing design level values with experiment name
     exp.design.1 = ifelse(nchar(exp.design.1) == 0 | is.na(exp.design.1),
                           yes = exp.name, no = exp.design.1),
@@ -213,7 +235,7 @@ tidy_v4 <- tidy_v3 %>%
                                       no = exp.design.2))
 
 # Re-check
-tidy_v4 %>% 
+tidy_v5 %>% 
   dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
   dplyr::distinct() %>% 
   dplyr::glimpse()
@@ -223,16 +245,16 @@ tidy_v4 %>%
 ## ------------------------------------------- ##
 
 # Check experimental design columns
-tidy_v4 %>% 
+tidy_v5 %>% 
   dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
   dplyr::distinct() %>% 
   dplyr::glimpse()
 
 # Ccheck unique 'exp.design.1' values (across datasets)
-sort(unique(tidy_v4$exp.design.1))
+sort(unique(tidy_v5$exp.design.1))
 
 # Do needed processing
-tidy_v5 <- tidy_v4 %>% 
+tidy_v6 <- tidy_v5 %>% 
   # Combine experiment name and design 4 if not the same
   dplyr::mutate(exp.design.4 = ifelse(exp.name == exp.design.4,
                                       yes = exp.design.4, 
@@ -251,13 +273,13 @@ tidy_v5 <- tidy_v4 %>%
                                       no = paste(exp.design.2, exp.design.1, sep = "__")))
 
 # Re-check unique 'exp.design.1' values
-sort(unique(tidy_v5$exp.design.1))
+sort(unique(tidy_v6$exp.design.1))
 
 # How many new ones gained?
-length(unique(tidy_v5$exp.design.1)) - length(unique(tidy_v4$exp.design.1))
+message(length(unique(tidy_v6$exp.design.1)) - length(unique(tidy_v5$exp.design.1)), " unique 'exp.design.1' levels gained")
 
 # Check experimental design columns
-tidy_v5 %>% 
+tidy_v6 %>% 
   dplyr::select(organization, exp.name, dplyr::starts_with("exp.design.")) %>% 
   dplyr::distinct() %>% 
   dplyr::glimpse()
@@ -267,10 +289,10 @@ tidy_v5 %>%
 ## ------------------------------------------- ##
 
 # Check current taxa names
-sort(unique(tidy_v5$original.taxa))
+sort(unique(tidy_v6$original.taxa))
 
 # Do desired wrangling
-tidy_v6 <- tidy_v5 %>% 
+tidy_v7 <- tidy_v6 %>% 
   dplyr::mutate(taxa = dplyr::case_when(
     # removing "bleached" from species names to lump with living taxa
     source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" & 
@@ -282,17 +304,17 @@ tidy_v6 <- tidy_v5 %>%
   dplyr::select(-original.taxa)
 
 # Check difference
-supportR::diff_check(old = unique(tidy_v5$original.taxa), new = unique(tidy_v6$taxa))
+supportR::diff_check(old = unique(tidy_v6$original.taxa), new = unique(tidy_v7$taxa))
 
 # Re-check taxa names
-sort(unique(tidy_v6$taxa))
+sort(unique(tidy_v7$taxa))
 
 ## ------------------------------------------- ##
 # Standardize Study Years ----
 ## ------------------------------------------- ##
 
 # Check current years
-tidy_v6 %>% 
+tidy_v7 %>% 
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
@@ -300,7 +322,7 @@ tidy_v6 %>%
   as.data.frame()
 
 # Fill in missing years as appropriate
-tidy_v7 <- tidy_v6 %>% 
+tidy_v8 <- tidy_v7 %>% 
   dplyr::mutate(year = dplyr::case_when(
     source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), 
     !is.na(year) ~ as.character(year),
@@ -325,7 +347,7 @@ tidy_v7 <- tidy_v6 %>%
     T ~ year))
 
 # Re-check years
-tidy_v7 %>% 
+tidy_v8 %>% 
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
@@ -336,22 +358,22 @@ tidy_v7 %>%
 ## ------------------------------------------- ##
 
 # Re-check structure
-dplyr::glimpse(tidy_v7)
+dplyr::glimpse(tidy_v8)
 
 # Do desired standardization
-tidy_v8 <- tidy_v7 %>% 
+tidy_v9 <- tidy_v8 %>% 
   # Standardize casing for distance from surface
   dplyr::mutate(distance.from.surface = tolower(distance.from.surface))
 
 # Re-check structure
-dplyr::glimpse(tidy_v8)
+dplyr::glimpse(tidy_v9)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Final pre-export tweaks
-tidy_v99 <- tidy_v8
+tidy_v99 <- tidy_v9
 
 # Check structure
 dplyr::glimpse(tidy_v99)
