@@ -208,32 +208,21 @@ proj3 <- proj3_list %>%
                               names = c("junk", "Treatment", "Time")) %>% 
   tidyr::separate_wider_delim(cols = input_file, delim = "_",cols_remove = F, 
                               names = c("site", "junk2", "junk3")) %>% 
-  dplyr::select(-contains("junk"))
-
+  dplyr::select(-contains("junk")) %>% 
+  
 # Check structure
 dplyr::glimpse(proj3)
 
-# for loop to save each site as a separate file
-for(focalsite3 in unique(proj3$site)){
-  
-  # subset data to just this file (subset data to each of these sites)
-  proj3_sub <- dplyr::filter(proj3, site == focalsite3)
-  
-  # assemble better filename
-  proj3_subname <- paste0("villar_brazil_",  tolower(unique(proj3_sub$site)), 
-                          "_2009-2016_tapirs_forest.csv")
-  
-  proj3_subpath <- file.path("data", "drydock", proj3_subname)
+# Create good/new file name
+proj3_name <- "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv"
+proj3_path <- file.path("data", "drydock", proj3_name)
 
-  
-  #export renamed csv to data/drydock 
-  write.csv(proj3_sub, na = "", row.names = F, file = proj3_subpath) 
-  
-  # Upload to Drive
-  googledrive::drive_upload(media = proj3_subpath, overwrite = T,
-                            path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
-  
-}
+# Export locally
+write.csv(x = proj3, file = proj3_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj3_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
