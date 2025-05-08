@@ -40,14 +40,11 @@ caged_v2 <- caged_v1 %>%
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
   # Summarize
   # Summarize within treatments
-  dplyr::group_by(
-    dplyr::across(
-      dplyr::all_of(setdiff(x = names(fill_v1), y = "betadisp.median")))) %>% 
-  dplyr::summarize(abundance = mean(abundance, na.rm = T),
+  dplyr::group_by(source, betadisp.design.level, cage.treatment_std) %>% 
+  dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
                    .groups = "keep") %>% 
-  dplyr::ungroup()
-  
-# Pivot to treatment into wide format
+  dplyr::ungroup() %>% 
+  # Pivot to treatment into wide format
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = betadisp.mean) %>% 
   # Calculate difference
@@ -56,7 +53,30 @@ caged_v2 <- caged_v1 %>%
 # Re-check structure
 dplyr::glimpse(caged_v2)
 
-caged_v3 <- inner_join(caged_v2, caged_v1)
+## ------------------------------------------- ##
+# Nick's Create Graph (Across Design Levels) ----
+## ------------------------------------------- ##
+
+# Create desired graph
+ggplot(caged_v2, aes(x = diff, y = reorder(source, dplyr::desc(-diff)), 
+                     color = betadisp.design.level)) +
+  geom_point() +
+  geom_vline(xintercept = 0, linetype = 3) +
+  labs(x = "Uncaged - Caged Beta Dispersion",
+       y = "Dataset Source") +
+  supportR::theme_lyon() +
+  theme(axis.text.y = element_blank())
+
+#### re-attach metadata ####
+
+caged_v3<-left_join(caged_v2, caged_v1, by = c("source"))
+
+
+###### Exploratory Plots ######
+
+#consumer richness .category
+
+
 
 caged_v3$natural.vs.artificial.substrate <- as.factor(caged_v3$natural.vs.artificial.substrate)
 
@@ -143,7 +163,6 @@ ggplot(caged_v3, aes(x = cage.treatment_std, y = betadisp.comm.dist)) +
   supportR::theme_lyon()
 
 
-#consumer richness .category
 
 
 
@@ -171,53 +190,85 @@ ggplot(caged_v3, aes(x = consumer.trophic.level, y = diff)) +
 ###
 
 
+##### canibalizing jamie's and marc's script to explore ####
 
 ## ------------------------------------------- ##
-# Nick's modified Data Preparation (Within Design Levels) ----
+# Housekeeping ----
 ## ------------------------------------------- ##
 
+# Load libraries
+librarian::shelf(tidyverse, ltertools, lme4, 
+                 performance, lubridate, car, 
+                 njlyon0/supportR, sjPlot, emmeans, ggpubr) #, update_all= TRUE)
+
+# Create needed folder(s)
+#dir.create(path = file.path("data"), showWarnings = F)
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+# Read in data
+alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata.csv"))
 
 
-# Identify local data files
-beta_files <- dir(path = file.path("data"), pattern = "06_caged_with-metadata.csv")
+## ------------------------------------------- ##
+# Data Wrangling
+## ------------------------------------------- ##
+glimpse(alldata_v1) # 11,875 rows, 51 columns
 
-# Output list
-beta_list <- list()
-
-# Loop across needed data files
-for(focal_file in sort(unique(beta_files))){
-  
-  # Progress message
-  message("Processing file: ", focal_file)
-  
-  # Read in the data
-  caged_wdes_v1 <- read.csv(file = file.path("data", focal_file)) %>% 
-    # Remove missing beta dispersion
-    dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-    # Keep only good treatments
-    dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-    # Summarize within treatments
-    #dplyr::group_by(source, betadisp.design.level, cage.treatment_std) %>% 
-    dplyr::summarize(betadisp = mean(betadisp.comm.dist, na.rm = T),
-                     .groups = "keep") %>% 
-    dplyr::ungroup() %>% 
-    # Pivot to treatment into wide format
-    #tidyr::pivot_wider(names_from = cage.treatment_std, values_from = betadisp) %>% 
-    # Calculate difference
-    #dplyr::mutate(diff = uncaged - caged)
-  
-  # Add to list
-  #beta_list[[focal_file]] <- caged_wdes_v1
-  
-#}
-
-# Unlist output
-caged_wdes_v2 <- purrr::list_rbind(x = beta_list)
-
-# Check structure
-dplyr::glimpse(caged_wdes_v2)
-
-# test
+supportR::num_check(data = alldata_v1, col = "exp.name.spatialextent.category")
+sort(unique(alldata_v1$betadisp.design.level))
 
 
+#get years and richness into number form
+alldata_v1$year.start.exclosure <- year(as.Date(as.character(alldata_v1$year.start.exclosure), format = "%Y"))
+alldata_v1$year.end.exclosure <- year(as.Date(as.character(alldata_v1$year.end.exclosure), format = "%Y"))
+#alldata_v1$consumer.richness <- as.numeric(alldata_v1$consumer.richness) #some stupid shit like ">10" in here, so this gives NA
+alldata_v1$lat <- as.numeric(alldata_v1$lat)
+
+#### lg
+#standardize exclusion.duration column
+
+alldata_v1$exclusion.duration #many different formats, needs to be cleaned - I'm not sure if thats the best way to go
+
+alldata_v1 <- alldata_v1 %>%
+  mutate( 
+    exclusion.digits = as.numeric(str_extract(exclusion.duration, "\\d+")),
+    exclusion.duration.clean = case_when(
+      # Convert years to months
+      str_detect(exclusion.duration, "year") ~ exclusion.digits * 12,
+      
+      # Convert weeks to months (approximate)
+      str_detect(exclusion.duration, "week") ~ exclusion.digits / 4.345,
+      
+      # Keep months as-is
+      str_detect(exclusion.duration, "month") ~ exclusion.digits,
+      
+      # Plain numbers assumed to be months
+     # str_detect(exclusion.duration, "^\\d+$") ~ as.numeric(exclusion.duration), ####risky
+      
+      # Everything else becomes NA
+      TRUE ~ NA_real_
+    )
+  ) %>% select(-exclusion.digits)
+
+
+
+sort(unique(alldata_v1$exclusion.duration.clean))
+## ------------------------------------------- ##
+# Exploratory Figures 
+## ------------------------------------------- ##
+
+###lg
+#exclosure duration
+
+library(dplyr)
+
+ggplot(alldata_v1, aes(x = exclusion.duration.clean, y =betadisp.comm.dist, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Exclusion Duration (months)", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_minimal()
 
