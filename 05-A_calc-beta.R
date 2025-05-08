@@ -439,28 +439,11 @@ supportR::diff_check(old = unique(beta_v2$source), new = unique(beta_v7$source))
 beta_v99 <- beta_v7
 
 # Identify tidy file name / path
-beta_name <- "05_caged_beta-disp"
+beta_name <- "05-A_caged_beta-disp"
 beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))
 
 # Export locally
 write.csv(x = beta_v99, row.names = F, na = '', file = beta_path)
-
-# Let's also export the design-specific files (for posterity)
-for(item in seq_along(beta_deslists)){
-  
-  # Processing message
-  message("Processing sub-output ", item)
-  
-  # Assemble file path
-  partial_level <- gsub(pattern = "\\.", replacement = "-", 
-                        x = unique(beta_deslists[[item]]$betadisp.design.level))
-  partial_beta_name <- paste0("05_caged_beta-disp_", partial_level, ".csv")
-  partial_beta_path <- file.path("data", partial_beta_name)
-  
-  # Export locally
-  write.csv(x = beta_deslists[[item]], row.names = F, na = '', file = partial_beta_path)
-  
-} # Close loop
 
 # And, generate an 'all scales' output too
 beta_allscales <- purrr::list_rbind(x = beta_deslists)
@@ -473,7 +456,7 @@ write.csv(x = beta_allscales, na = '', row.names = F,
           file = file.path("data", paste0(beta_name, "_all-scales.csv")))
 
 # # Upload all of these to the Drive
-# purrr::walk(.x = dir(path = file.path("data"), pattern = "05_caged_beta-disp"),
+# purrr::walk(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"),
 #             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
 #                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
