@@ -190,6 +190,9 @@ ggplot(caged_v3, aes(x = consumer.trophic.level, y = diff)) +
 ###
 
 
+###start here thursday
+
+
 ##### canibalizing jamie's and marc's script to explore ####
 
 ## ------------------------------------------- ##
@@ -208,7 +211,7 @@ librarian::shelf(tidyverse, ltertools, lme4,
 rm(list = ls()); gc()
 
 # Read in data
-alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata.csv"))
+alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata_all-scales.csv"))
 
 
 ## ------------------------------------------- ##
@@ -227,8 +230,8 @@ alldata_v1$year.end.exclosure <- year(as.Date(as.character(alldata_v1$year.end.e
 alldata_v1$lat <- as.numeric(alldata_v1$lat)
 
 #### lg
-#standardize exclusion.duration column
 
+#standardize exclusion.duration column
 alldata_v1$exclusion.duration #many different formats, needs to be cleaned - I'm not sure if thats the best way to go
 
 alldata_v1 <- alldata_v1 %>%
@@ -252,12 +255,36 @@ alldata_v1 <- alldata_v1 %>%
     )
   ) %>% select(-exclusion.digits)
 
-
-
+#checking
 sort(unique(alldata_v1$exclusion.duration.clean))
+
+
 ## ------------------------------------------- ##
 # Exploratory Figures 
 ## ------------------------------------------- ##
+
+### Figure 1 Successional stage ####
+
+### Figure 2 Aquatic vs. Terrestrial ####
+
+#### Figure 3 Eco type #####
+
+### Figure 4 Gamma diversity ####
+
+#### Figure 5 Herbivore richness ####
+
+#### Figure 6 Exclusion time #####
+
+#### Figure 7 Size of cage ####
+
+#### Figure 8 
+
+
+
+
+
+
+
 
 ###lg
 #exclosure duration
