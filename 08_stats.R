@@ -11,17 +11,30 @@
 librarian::shelf(tidyverse, ltertools, lme4, lmerTest, performance, easystats, lubridate, car, njlyon0/supportR, MuMIn, visreg, emmeans, tidymodels, qqplotr) #, update_all= TRUE) 
 
 # Create needed folder(s)
-#dir.create(path = file.path("data"), showWarnings = F)
-#dir.create(path = file.path("data", "raw"), showWarnings = F)
+dir.create(path = file.path("data"), showWarnings = F)
+dir.create(path = file.path("results"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
+
+# Load data
+caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
+
+# Check structure
+dplyr::glimpse(caged_v1)
+
+# Make a version where the unit of replication is averages within treatment
+avg.cage_v1 <- caged_v1 %>% 
+  dplyr::select(-betadisp.design.level:-betadisp.comm.dist) %>% 
+  dplyr::distinct()
+
+# Check structure of that
+dplyr::glimpse(avg.cage_v1)
 
 ## ------------------------------------------- ##
 # Download Data ---- 
 ## ------------------------------------------- ##
 
-caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 #Dreate the Diff df of 234 observations----
 #SHIT. nick told me what to do before they left but now i forgot and am panicking bc i need to have models ready for my friends!! NICK please create this 234 obs dataframe for us <3 
