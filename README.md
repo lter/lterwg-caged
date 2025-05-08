@@ -14,8 +14,10 @@ Principal Investigators:
 - `02_quality-control.R` -- Performs more involved quality control (QC) and metric calculation
 - `03_filter.R` -- Filters out rows/columns that made sense to harmonize & tidy but are likely not useful for (the current) analysis
 - `04_zero-fill.R` -- Zero fills community data (necessary due to betadispersion calculation requirements)
-- `05_calc-beta.R` -- Calculate beta dispersion at various spatial/temporal scales
-- `06_attach-metadata.R` -- Attach site-level metadata collated by group members
+- `05-A_calc-beta.R` -- Calculate beta dispersion at various spatial/temporal scales
+- `05-B_calc-gamma.R` -- Calculate gamma richness for each experiment/dataset
+- `06_calc-mean-beta-diff.R` -- Summarize beta dispersion within experiments and calculate difference between mean _caged_ beta dispersion and mean _uncaged_ beta dispersion
+- `07_attach-metadata.R` -- Attach site-level metadata collated by group members. Also integrates beta dispersion, gamma richness, and mean difference in beta dispersion (produced by `05-A`, `05-B`, and `06` respectively)
 
 ## Supplementary Resources
 
