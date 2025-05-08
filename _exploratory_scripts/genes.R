@@ -315,6 +315,7 @@ ecotype.boxplot
 
 alldata_v2$gamma.richness
 
+#aquatic vs. terrstrial
 ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist, color = aq.or.terr)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = "lm", se = T) +
