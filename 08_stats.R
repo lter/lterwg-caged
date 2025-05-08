@@ -7,8 +7,8 @@
 # Housekeeping ----
 ## ------------------------------------------- ##
 
-# Load libraries
-librarian::shelf(tidyverse, ltertools, lme4, lmerTest, performance, lubridate, car, njlyon0/supportR, MuMIn, visreg, emmeans) #, update_all= TRUE)
+# Load libraries (performance might be within easystats)
+librarian::shelf(tidyverse, ltertools, lme4, lmerTest, performance, easystats, lubridate, car, njlyon0/supportR, MuMIn, visreg, emmeans, tidymodels) #, update_all= TRUE) 
 
 # Create needed folder(s)
 #dir.create(path = file.path("data"), showWarnings = F)
@@ -24,8 +24,11 @@ rm(list = ls()); gc()
 # NOTE if we should be downlaoding this from the drive, might need to do this below.
 #https://drive.google.com/file/d/1nld9xYSSJVxyA-KlOBXqOvDN4BBrCkhB/view?usp=drive_link 
 
-#I was instructed to work off of this for today. this will change soon! 
+#I was instructed to work off of this for now. this will change soon! 
 caged_v1 <- read.csv(file.path("data", "06_caged_with-metadata_finest-scales.csv"))
+
+#Some code here to create a df that doesnt have the DIFF measurements doubled----
+
 
 # ----explore, tidy and wrangle data----
 #lets see what we are dealing with
@@ -97,48 +100,82 @@ cagedmodel.df = caged_v1 |>
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
 
-#ok lets fuckin do this 
+#supportR::num_check(data = cagedmodel.df, col = "consumer.trophic.level") 
+supportR::count(vec = cagedmodel.df$consumer.trophic.level) 
+
+#ok lets fuckin do this ----
 BaeDisp.df = cagedmodel.df %>% 
   #First, select the columns we think we need:
   select(
-    #select study ID vars
     source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, 
-    lat, climate.zone, aq.or.terr, ecotype1,
-    excluded.group, consumer.richness, consumer.richness.category, consumer.native.domestic, consumer.trophic.level,
-    #select response info (GAMMA GOES HERE)
-    #measured.group, resource.type, 
-    #select beta RV and beta info
-    betadisp.sample.size, betadisp.comm.dist) |> 
-  #Grab the treatments
-  filter(cage.treatment_std %in% c('caged', 'uncaged')) #%>% 
-#Do some calculations (SKIPPING BC OF MISSING METADATA)
-#mutate(exp.age = year.end.exclosure - year.start.exclosure) 
-  select(source, exp.name, lat, climate.zone, aq.or.terr, ecotype1, exp.age, cage.treatment_std, excluded.group, consumer.richness.category, measured.group, betadisp.design.level, betadisp.sample.size, betadisp.comm.dist)
+    lat, climate.zone, aq.or.terr, ecotype1, excluded.group, consumer.richness.category, consumer.native.domestic, consumer.trophic.level,
+    betadisp.sample.size, betadisp.comm.dist)
 
-glimpse(marc.modeldata_v1)
-
-supportR::count(vec = marc.modeldata_v1$exp.age) 
+#supportR::count(vec = marc.modeldata_v1$exp.age) 
 
 # Export locally
-write.csv(x = marc.modeldata_v1, row.names = F, na = '',
-          file = file.path("data", "marc.modeldata_v1.csv"))
+write.csv(x = BaeDisp.df, row.names = F, na = '',
+          file = file.path("data", "BaeDisp.df.csv"))
 
-#create the effect size DF 
-marc.modeldata_ES = marc.modeldata_v1 |> 
-  # Remove missing beta dispersion
-  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-  # Keep only good treatments but shouldnt be any 
-  #dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-  # Summarize within treatments
-  group_by(across(all_of(setdiff(x = names(marc.modeldata_v1), y = c('betadisp.comm.dist'))))) |>
-  summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T)) %>% 
-  # Pivot to treatment into wide format
-  tidyr::pivot_wider(names_from = cage.treatment_std, values_from = betadisp.mean) %>% 
-  # Calculate difference
-  dplyr::mutate(diff = uncaged - caged)
 
-dplyr::glimpse(marc.modeldata_ES)
+#Blue Skies model structure----
+#I. B community distance across all experiments, ideal model here. One day we will have this
 
-# Export locally
-write.csv(x = marc.modeldata_ES, row.names = F, na = '',
-          file = file.path("data", "marc.modeldata_ES.csv"))
+# betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
+#REs: (1|expname) or (1| source/expname)
+
+BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
+
+glimpse(BaeDisp.df) #10,881 rows
+hist(BaeDisp.df$betadisp.comm.dist)
+range(BaeDisp.df$betadisp.comm.dist)
+
+#B comm dist ME model----
+#Leave best fitting/favorite model up here:
+BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
+                       consumer.richness.category + #lat + exp.age + 
+                       betadisp.sample.size + 
+                         (1|exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp.lmer)
+check_collinearity(BaeDisp.lmer)
+summary(BaeDisp.lmer)
+car::Anova(BaeDisp.lmer, test.statistic = "F")
+performance::r2(BaeDisp.lmer)
+
+#simple, no interactions
+BaeDisp.lmer_simp <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + consumer.richness.category + #lat + exp.age + 
+                       betadisp.sample.size + 
+                       (1|exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp.lmer_simp) #why tf this not working?
+check_model(BaeDisp.lmer_simp) |> plot() #plot them all 
+check_collinearity(BaeDisp.lmer_simp)
+summary(BaeDisp.lmer_simp)
+car::Anova(BaeDisp.lmer_simp, test.statistic = "F")
+performance::r2(BaeDisp.lmer_simp)
+
+BaetaDispEco3Int.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness + 
+                                betadisp.sample.size + betadisp.design.level + lat + exp.age +
+                                (1|source), 
+                              data = marc.modeldata_v1)
+
+car::Anova(BaetaDispEco3Int.lmer, test.statistic = "F")
+check_model(BaetaDispEco3Int.lmer)
+summary(BaetaDispEco3Int.lmer)
+
+# Next steps: dredge() AIC selection
+# Maybe also random effects AIC selection? on full model
+
+#Effect Size model----
+
+BaetaES.lmer <- lmer(diff ~ ecotype1 + consumer.richness.category + lat + exp.age + betadisp.sample.size + betadisp.design.level +
+                       (1|exp.name), 
+                     data = marc.modeldata_ES)
+
+
+check_model(BaetaES.lmer)
+check_collinearity(BaetaES.lmer)
+summary(BaetaES.lmer)
+car::Anova(BaetaES.lmer, test.statistic = "F")
+performance::r2(BaetaES.lmer)
