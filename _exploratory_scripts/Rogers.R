@@ -21,7 +21,7 @@ dir.create(path = file.path("graphs"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Read in the data
-caged_v1 <- read.csv(file = file.path("data", "06_caged_with-metadata_finest-scales.csv"))
+caged_v1 <- read.csv(file = file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 # Check structure
 dplyr::glimpse(caged_v1)
@@ -32,13 +32,11 @@ head(caged_v1)
 caged_v2 <- caged_v1 %>% 
   # Remove missing beta dispersion
   dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-  # Keep only good treatments
-  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
   # Summarize
   # Summarize within treatments
   dplyr::group_by(source, exp.name, cage.treatment_std,
                   lat, ecotype1, aq.or.terr, exclusion.duration,
-                  climate.zone, consumer.richness.category, natural.vs.artificial.substrate) %>% 
+                  climate.zone, consumer.richness.category, natural.vs.artificial.substrate, gamma.richness) %>% 
   dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
                    .groups = "keep") %>% 
   dplyr::ungroup() %>% 
@@ -47,7 +45,6 @@ caged_v2 <- caged_v1 %>%
                      values_from = betadisp.mean) %>% 
   # Calculate difference
   dplyr::mutate(diff = uncaged - caged)
-
 
 #standardize exclusion.duration column
 caged_v2$exclusion.duration #many different formats, needs to be cleaned - I'm not sure if thats the best way to go
@@ -63,7 +60,7 @@ caged_v3 <- caged_v2 %>%
       str_detect(exclusion.duration, "week") ~ exclusion.digits / 4.345,
       
       # Keep months as-is
-      str_detect(exclusion.duration, "month") ~ exclusion.digits,
+      str_detect(exclusion.duration, "month") ~ exclusion.digits, 
       
       # Plain numbers assumed to be months
       # str_detect(exclusion.duration, "^\\d+$") ~ as.numeric(exclusion.duration), ####risky
@@ -73,18 +70,13 @@ caged_v3 <- caged_v2 %>%
     )
   ) %>% select(-exclusion.digits)
 
+alldata_v2 <- alldata_v1 %>%
+  filter(cage.treatment_std %in% c("caged", "uncaged")) 
+
 #checking
 sort(unique(caged_v3$exclusion.duration.clean))
 
 # Re-check structure
-dplyr::glimpse(caged_v3)
-
-#### re-attach metadata ####
-
-caged_v3<-left_join(caged_v2, caged_v1, by = c("source"))
-
-caged_v3$natural.vs.artificial.substrate <- as.factor(caged_v3$natural.vs.artificial.substrate)
-
 dplyr::glimpse(caged_v3)
 
 ###########
@@ -135,7 +127,8 @@ ecotypediff.boxplot <-
   ggplot(data = ., aes(x = ecotype1, y = diff)) + 
   geom_boxplot() +
   # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
-  labs(y = expression("Beta dis diff (uncaged - caged)"), x = "") +
+  labs(y = expression("Beta dis diff (uncaged - caged)"), x = "", 
+       title = paste0("Graph created on ", Sys.Date())) +
   theme_bw(base_size=12)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
@@ -144,8 +137,20 @@ ecotypediff.boxplot
 
 ### Figure 4 Gamma richness ####
 
+caged_v3$aq.or.terr <- as.factor(caged_v3$aq.or.terr)
+
+caged_v3<- caged_v3 %>%
+  filter(aq.or.terr %in% c("aquatic", "terrestrial")) 
 
 
+gammarichplot <-
+  ggplot(caged_v3, aes(x = gamma.richness, y = diff, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "Beta dis diff (uncaged - caged)") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
+
+gammarichplot
 
 #### Figure 5 Herbivore (consumer) richness ####
 
@@ -154,7 +159,8 @@ conrichdifplot <-
   ggplot(data = ., aes(x = consumer.richness.category, y = diff, fill=aq.or.terr)) + 
   geom_boxplot() +
   # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
-  labs(y = expression("Beta dis diff (uncaged - caged)"), x= "Consumer richness") +
+  labs(y = expression("Beta dis diff (uncaged - caged)"), x= "Consumer richness", 
+       title = paste0("Graph created on ", Sys.Date())) + 
   theme_bw(base_size=12)  +
   theme() +
   ggtitle("Consumer richness")+
@@ -197,5 +203,3 @@ abslatdifplot <-
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
   
 abslatdifplot
-
-
