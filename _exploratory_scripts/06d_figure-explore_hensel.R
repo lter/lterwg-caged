@@ -19,7 +19,9 @@ rm(list = ls()); gc()
 # Read in data
 #NOTE: since this is still initial explorations, you gotta go run the DFs in 06c_model-explore-hensel.R to get the two DFs I used in these. Will fix this later tho
 
-marc.modeldata_v1
+marc.modeldata_v1 <- read.csv(file.path("data", "marc.modeldata_v1.csv"))
+marc.modeldata_ES <- read.csv(file.path("data", "marc.modeldata_ES.csv"))
+
 #alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata.csv"))
 
 #lets see what we are dealing with

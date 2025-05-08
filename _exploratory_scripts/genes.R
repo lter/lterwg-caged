@@ -258,20 +258,16 @@ alldata_v1 <- alldata_v1 %>%
 #checking
 sort(unique(alldata_v1$exclusion.duration.clean))
 
-head(alldata_v1)
-
 
 ## ------------------------------------------- ##
 # Exploratory Figures 
 ## ------------------------------------------- ##
 
-### Figure 1 Successional stage #### - information not yet available
+### Figure 1 Successional stage ####
 
 ### Figure 2 Aquatic vs. Terrestrial ####
 
-
 #### Figure 3 Eco type #####
-
 
 ### Figure 4 Gamma diversity ####
 
@@ -281,15 +277,9 @@ head(alldata_v1)
 
 #### Figure 7 Size of cage ####
 
-#### Figure 8 Latitude ####
+#### Figure 8 
 
 
-### Figure 9 productivity ####
-
-### Figure 10 temperature ####
-
-
-####Figure 11 Herbivore size ####
 
 
 
