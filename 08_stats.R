@@ -8,27 +8,49 @@
 ## ------------------------------------------- ##
 
 # Load libraries (performance might be within easystats)
-librarian::shelf(tidyverse, ltertools, lme4, lmerTest, performance, easystats, lubridate, car, njlyon0/supportR, MuMIn, visreg, emmeans, tidymodels) #, update_all= TRUE) 
+librarian::shelf(tidyverse, ltertools, lme4, lmerTest, performance, easystats, lubridate, car, njlyon0/supportR, MuMIn, visreg, emmeans, tidymodels, qqplotr) #, update_all= TRUE) 
 
 # Create needed folder(s)
-#dir.create(path = file.path("data"), showWarnings = F)
-#dir.create(path = file.path("data", "raw"), showWarnings = F)
+dir.create(path = file.path("data"), showWarnings = F)
+dir.create(path = file.path("results"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
+
+# Load data
+caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
+
+# Check structure
+dplyr::glimpse(caged_v1)
+
+# Make a version where the unit of replication is averages within treatment
+avg.cage_v1 <- caged_v1 %>% 
+  dplyr::select(source:exp.name, lat:long, 
+                cage.treatment_std, 
+                within.cage.treat_betadisp.mean,
+                within.cage.treat_betadisp.mean.diff) %>% 
+  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
+  dplyr::distinct() %>%
+  tidyr::pivot_wider(names_from = cage.treatment_std,
+                     values_from = within.cage.treat_betadisp.mean)
+  
+# Check structure of that
+dplyr::glimpse(avg.cage_v1)
 
 ## ------------------------------------------- ##
 # Download Data ---- 
 ## ------------------------------------------- ##
 
-# NOTE if we should be downlaoding this from the drive, might need to do this below.
-#https://drive.google.com/file/d/1nld9xYSSJVxyA-KlOBXqOvDN4BBrCkhB/view?usp=drive_link 
 
-#I was instructed to work off of this for now. this will change soon! 
-caged_v1 <- read.csv(file.path("data", "06_caged_with-metadata_finest-scales.csv"))
+#Dreate the Diff df of 234 observations----
+#SHIT. nick told me what to do before they left but now i forgot and am panicking bc i need to have models ready for my friends!! NICK please create this 234 obs dataframe for us <3 
+cagedDiff_v1 = caged_v1 %>% 
+  select(within.cage.treat_betadisp.mean.diff) %>% 
+  distinct()
 
-#Some code here to create a df that doesnt have the DIFF measurements doubled----
-
+cagedDiff.df = caged_v1 %>% 
+  group_by(exp.name) %>% 
+#caged_v1
 
 # ----explore, tidy and wrangle data----
 #lets see what we are dealing with
@@ -46,7 +68,7 @@ supportR::num_check(data = caged_v1, col = "year.start.exclosure")
 supportR::num_check(data = caged_v1, col = "betadisp.comm.dist")
 supportR::count(vec = caged_v1$betadisp.comm.dist) 
 
-sort(unique(alldata_v1$betadisp.design.level))
+sort(unique(caged_v1$betadisp.design.level))
 
 supportR::count(vec = caged_v1$cage.treatment_std) 
 supportR::count(vec = caged_v1$consumer.richness) #so many NAs in consumer richness, this is why we will use the categorical for now but this needs to be fixed
@@ -57,12 +79,13 @@ supportR::count(vec = caged_v1$ecotype1)
 supportR::count(vec = caged_v1$lat) #303 unentered
 supportR::count(vec = caged_v1$excluded.group)
 
+supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
 
 #supportR::count_diff(vec1 = alldata_v1$betadisp.median , 
 #                     vec2=alldata_v1$betadisp.comm.dist)
 
 #Data Notes that will affect things downstream----
-#I (marc) am going to ignore the variables that are missing shit for now. Some prepared code is below to wrangle/reformat if and when we get there. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
+#I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
 
 #get years into number form.
 #caged_v1$year.start.exclosure <- year(as.Date(as.character(caged_v1$year.start.exclosure), format = "%Y"))
@@ -89,7 +112,7 @@ cagedmodel.df = caged_v1 |>
     #select consumer info
     excluded.group, consumer.richness, consumer.richness.category, consumer.native.domestic, consumer.trophic.level,
     #select response info (GAMMA GOES HERE)
-    #measured.group, resource.type, 
+    measured.group, resource.type, gamma.richness, 
     #select beta RV and beta info
     betadisp.sample.size, betadisp.comm.dist) |> 
   #Grab the treatments
@@ -103,12 +126,12 @@ glimpse(cagedmodel.df)
 #supportR::num_check(data = cagedmodel.df, col = "consumer.trophic.level") 
 supportR::count(vec = cagedmodel.df$consumer.trophic.level) 
 
-#ok lets fuckin do this ----
+#DF for modeling ----
 BaeDisp.df = cagedmodel.df %>% 
-  #First, select the columns we think we need:
+  #only columns we need and have
   select(
     source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, 
-    lat, climate.zone, aq.or.terr, ecotype1, excluded.group, consumer.richness.category, consumer.native.domestic, consumer.trophic.level,
+    lat, climate.zone, aq.or.terr, ecotype1, excluded.group, consumer.richness.category, consumer.native.domestic, consumer.trophic.level, gamma.richness,
     betadisp.sample.size, betadisp.comm.dist)
 
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
@@ -130,42 +153,120 @@ glimpse(BaeDisp.df) #10,881 rows
 hist(BaeDisp.df$betadisp.comm.dist)
 range(BaeDisp.df$betadisp.comm.dist)
 
+#B comm dist, LM----
+#gotta start most simple! 
+BaeDisp.lm <- lm(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
+                   consumer.richness.category + gamma.richness + #lat + exp.age + 
+                   betadisp.sample.size , data = BaeDisp.df)
+
+check_model(BaeDisp.lm, panel = F) %>% plot()
+summary(BaeDisp.lm)
+car::Anova(BaeDisp.lm)
+performance::r2(BaeDisp.lm)
+
+baecont = emmeans(BaeDisp.lm, specs = ~ cage.treatment_std*ecotype1)
+baecont$contrasts
+
 #B comm dist ME model----
 #Leave best fitting/favorite model up here:
 BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                       consumer.richness.category + #lat + exp.age + 
+                       consumer.richness.category + gamma.richness + #lat + exp.age + 
                        betadisp.sample.size + 
                          (1|exp.name), data = BaeDisp.df)
 
-check_model(BaeDisp.lmer)
+check_model(BaeDisp.lmer, panel = F) %>% plot()
 check_collinearity(BaeDisp.lmer)
 summary(BaeDisp.lmer)
 car::Anova(BaeDisp.lmer, test.statistic = "F")
 performance::r2(BaeDisp.lmer)
 
 #simple, no interactions
-BaeDisp.lmer_simp <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + consumer.richness.category + #lat + exp.age + 
+BaeDispsimp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + consumer.richness.category + gamma.richness + #lat + exp.age + 
                        betadisp.sample.size + 
                        (1|exp.name), data = BaeDisp.df)
 
-check_model(BaeDisp.lmer_simp) #why tf this not working?
-check_model(BaeDisp.lmer_simp) |> plot() #plot them all 
-check_collinearity(BaeDisp.lmer_simp)
-summary(BaeDisp.lmer_simp)
-car::Anova(BaeDisp.lmer_simp, test.statistic = "F")
-performance::r2(BaeDisp.lmer_simp)
+check_model(BaeDispsimp.lmer) #why tf this not working?
+check_model(BaeDispsimp.lmer, panel = F) |> plot() #plot them all 
+summary(BaeDispsimp.lmer)
+car::Anova(BaeDispsimp.lmer, test.statistic = "F")
+performance::r2(BaeDispsimp.lmer)
 
-BaetaDispEco3Int.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness + 
-                                betadisp.sample.size + betadisp.design.level + lat + exp.age +
-                                (1|source), 
-                              data = marc.modeldata_v1)
+#3way cage eco richness interaction
+#"rank deficient" but bolker says that is ok. 
+BaeDisp3way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
+                       betadisp.sample.size + 
+                       (1|exp.name), data = BaeDisp.df)
 
-car::Anova(BaetaDispEco3Int.lmer, test.statistic = "F")
-check_model(BaetaDispEco3Int.lmer)
-summary(BaetaDispEco3Int.lmer)
+check_model(BaeDisp3way.lmer, panel = F) |> plot() #resid normality is wack
+summary(BaeDisp3way.lmer)
+car::Anova(BaeDisp3way.lmer, test.statistic = "F")
+performance::r2(BaeDisp3way.lmer)
 
-# Next steps: dredge() AIC selection
-# Maybe also random effects AIC selection? on full model
+#AIC on the 1|exp.name mods
+#i dont know how to do dredge
+#REexp.dd = dredge(BaeDisp3way.lmer, beta = "sd")
+#plot(dd, labAsExpr = TRUE)
+
+AICc(BaeDisp.lmer, BaeDispsimp.lmer, BaeDisp3way.lmer)
+
+#BDisp Nested ME----
+#simple, no interactions
+BaeDispsimp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + 
+                            consumer.richness.category + gamma.richness + #lat + exp.age + 
+                            betadisp.sample.size + 
+                            (1|source/exp.name), data = BaeDisp.df)
+
+check_model(BaeDispsimp_nest.lmer) #why tf this not working?
+check_model(BaeDispsimp_nest.lmer, panel = F) |> plot() #plot them all 
+summary(BaeDispsimp_nest.lmer)
+car::Anova(BaeDispsimp_nest.lmer, test.statistic = "F")
+performance::r2(BaeDispsimp_nest.lmer)
+
+#2 way int
+BaeDisp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
+                            consumer.richness.category + gamma.richness + #lat + exp.age + 
+                            betadisp.sample.size + 
+                            (1|source/exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp_nest.lmer, panel = F) %>% plot()
+summary(BaeDisp_nest.lmer)
+car::Anova(BaeDisp_nest.lmer, test.statistic = "F")
+performance::r2(BaeDisp_nest.lmer) #conditional .420, marg = .169
+
+#3way cage eco richness interaction
+#"rank deficient" 
+BaeDisp3way_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
+                           betadisp.sample.size + 
+                             (1|source/exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp3way_nest.lmer, panel = F) |> plot() #plot them all 
+summary(BaeDisp3way_nest.lmer)
+car::Anova(BaeDisp3way_nest.lmer, test.statistic = "F")
+performance::r2(BaeDisp3way_nest.lmer)
+
+
+#Bdisp ME random slope----
+#3way cage eco richness interaction
+#Singular
+#BaeDisp3way_slop.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
+#                                betadisp.sample.size + 
+#                                (cage.treatment_std|source/exp.name), data = BaeDisp.df)
+
+#check_model(BaeDisp3way_slop.lmer, panel = F) |> plot() #plot them all 
+#summary(BaeDisp3way_slop.lmer)
+#car::Anova(BaeDisp3way_slop.lmer, test.statistic = "F") #takes 1 million minutes to run
+#performance::r2(BaeDisp3way_slop.lmer)
+
+
+BaeDisp3way_2ME.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
+                                betadisp.sample.size + 
+                                (1|source) + (1|exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp3way_2ME.lmer, panel = F) |> plot() #plot them all 
+summary(BaeDisp3way_2ME.lmer)
+car::Anova(BaeDisp3way_2ME.lmer, test.statistic = "F")
+performance::r2(BaeDisp3way_2ME.lmer)
+
 
 #Effect Size model----
 
