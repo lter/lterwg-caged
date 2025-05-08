@@ -25,9 +25,15 @@ dplyr::glimpse(caged_v1)
 
 # Make a version where the unit of replication is averages within treatment
 avg.cage_v1 <- caged_v1 %>% 
-  dplyr::select(-betadisp.design.level:-betadisp.comm.dist) %>% 
-  dplyr::distinct()
-
+  dplyr::select(source:exp.name, lat:long, 
+                cage.treatment_std, 
+                within.cage.treat_betadisp.mean,
+                within.cage.treat_betadisp.mean.diff) %>% 
+  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
+  dplyr::distinct() %>%
+  tidyr::pivot_wider(names_from = cage.treatment_std,
+                     values_from = within.cage.treat_betadisp.mean)
+  
 # Check structure of that
 dplyr::glimpse(avg.cage_v1)
 
