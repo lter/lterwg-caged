@@ -145,14 +145,21 @@ summary(BaetaDispEco3Int.lmer)
 # Maybe also random effects AIC selection? on full model
 
 #Effect Size model----
+glimpse(avg.cage_v1)
+avg.cage_v1 <- caged_v1 %>% 
+  dplyr::select(source:exp.name, lat:long, ecotype1, consumer.richness.category, betadisp.sample.size, 
+                cage.treatment_std, 
+                within.cage.treat_betadisp.mean,
+                within.cage.treat_betadisp.mean.diff) %>% 
+  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
+  dplyr::distinct() %>%
+  tidyr::pivot_wider(names_from = cage.treatment_std,
+                     values_from = within.cage.treat_betadisp.mean)
 
-BaetaES.lmer <- lmer(diff ~ ecotype1 + consumer.richness.category + lat + exp.age + betadisp.sample.size + betadisp.design.level +
-                         (1|exp.name), 
-                       data = marc.modeldata_ES)
+BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ ecotype1 + consumer.richness.category + abs(lat) + gamma.richness + betadisp.sample.size + (1|source), data = avg.cage_v1)
 
-
-check_model(BaetaES.lmer)
-check_collinearity(BaetaES.lmer)
-summary(BaetaES.lmer)
-car::Anova(BaetaES.lmer, test.statistic = "F")
-performance::r2(BaetaES.lmer)
+check_model(BaeES.lmer, panel = F) %>% plot()
+check_collinearity(BaeES.lmer)
+summary(BaeES.lmer)
+car::Anova(BaeES.lmer, test.statistic = "F")
+performance::r2(BaeES.lmer)

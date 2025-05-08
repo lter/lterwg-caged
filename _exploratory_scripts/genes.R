@@ -305,7 +305,7 @@ ecotype.boxplot <-
   theme_bw(base_size=12)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank()) +
-  facet_wrap(~ecotype1)
+  facet_wrap(~ecotype1, scales = "free_y")
 
 ecotype.boxplot
 
@@ -322,6 +322,26 @@ ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist, color = aq.or.
   labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
   facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+#general
+ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
+ # scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist, fill=cage.treatment_std, color=cage.treatment_std)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
+   scale_fill_manual(values = c("uncaged" = "purple1", "caged" = "grey39")) +
+  scale_color_manual(values = c("uncaged" = "purple1", "caged" = "grey39"))+
+ # facet_wrap(~ cage.treatment_std)+
   theme_classic() + 
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
 
