@@ -63,6 +63,10 @@ glimpse(marc.modeldata_v1)
 
 supportR::count(vec = marc.modeldata_v1$exp.age) 
 
+# Export locally
+write.csv(x = marc.modeldata_v1, row.names = F, na = '',
+          file = file.path("data", "marc.modeldata_v1.csv"))
+
 #create the effect size DF 
 marc.modeldata_ES = marc.modeldata_v1 |> 
   # Remove missing beta dispersion
@@ -78,6 +82,10 @@ marc.modeldata_ES = marc.modeldata_v1 |>
   dplyr::mutate(diff = uncaged - caged)
 
 dplyr::glimpse(marc.modeldata_ES)
+
+# Export locally
+write.csv(x = marc.modeldata_ES, row.names = F, na = '',
+          file = file.path("data", "marc.modeldata_ES.csv"))
 
 
   
