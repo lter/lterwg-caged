@@ -25,7 +25,7 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 
 # Read in the data
-caged_v1 <- read.csv(file = file.path("data", "06_caged_with-metadata.csv"))
+caged_v1 <- read.csv(file = file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 # Check structure
 dplyr::glimpse(caged_v1)
