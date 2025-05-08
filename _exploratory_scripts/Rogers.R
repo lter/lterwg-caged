@@ -1,72 +1,112 @@
 
+## --------------------------------------------------------------- ##
+# CAGED Beta disp.diff figs
+## --------------------------------------------------------------- ##
+# Written by: Ryan Rogers
 
-#extract all unique taxa from column 'taxa'
-taxa_unique = unique(taxa_list$taxa)
+#Figure(s) of ecosystem types x difference (bets diversity, dispersion)
 
-#save list of unique values in 'taxa'
-write.csv(taxa_unique, file = "unique_taxa_06May2025.csv")
+#Aquatic vs terrestiral comaprisons, 
+#Caged treatment standardization, consumer richness.category, lat
 
-#create list of taxa to exclude from ALL studies
-taxa_exclude = c("LITT",
-                 "Bare",
-                 "Dead Barnacle",
-                 "Amphipod tube",
-                 "bare",
-                 "Mud Tube",
-                 "Jingle shell",
-                 "Sand tube",
-                 "Little Black tubes",
-                 "Mud tube",
-                 "Branch",
-                 "rock",
-                 "BARE",
-                 "Litter",
-                 "Bareground",
-                 "cactus__dead_",
-                 "QUERCUS DOUGSEED",
-                 "QUERCUS DOUGLASII_SEED",
-                 "SEED2 SPECIES",
-                 "SEED1 SPECIES",
-                 "QUERCUS AGRIFOLIA_SEED",
-                 "QUERCUS AG_SEED",
-                 "ZZZZ general codes",
-                 "#N/A",
-                 "per.bare",
-                 "litter",
-                 "standing dead Betula nana",
-                 "caribou feces",
-                 "frost boil",
-                 "animal litter",
-                 "Squirrel feces",
-                 "vole trail",
-                 "vole litter",
-                 "human trail",
-                 "vole hole",
-                 "vole trail",
-                 "Mixed dead litter",
-                 "Bare soil",
-                 "Standing Dead Betula nana",
-                 "Soil Frost boil",
-                 "Standing Dead Salix pulchra",
-                 "Ledum palustre-Dead",
-                 "Miscellaneous litter",
-                 "Pine needles",
-                 "Radulations",
-                 "Bare.cropped.substrate",
-                 "Rubble",
-                 "Sand",
-                 "SOIL",
-                 "sediment",
-                 "substrate",
-                 "Rock",
-                 "Dung")
+#################################################
+#Housekeeping
+librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR, ggplot2, update_all= TRUE)
 
-#For spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv, bleached corals need to be lumped with non-bleached:
+# Create needed folder(s)
+dir.create(path = file.path("graphs"), showWarnings = F)
 
-"Bleached Crustose" --> "Crustose"
-"Bleached Jointed Calcareous" --> "Jointed Calcareous"
-"Bleached Sheet" --> "Sheet"
-"Bleached Coarsely Branched" --> "Coarsely Branched"
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+# Read in the data
+caged_v1 <- read.csv(file = file.path("data", "06_caged_with-metadata_finest-scales.csv"))
+
+# Check structure
+dplyr::glimpse(caged_v1)
+
+head(caged_v1)
+
+# Do needed preparing of data
+caged_v2 <- caged_v1 %>% 
+  # Remove missing beta dispersion
+  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
+  # Keep only good treatments
+  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
+  # Summarize
+  # Summarize within treatments
+  dplyr::group_by(source, betadisp.design.level, cage.treatment_std) %>% 
+  dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup() %>% 
+  # Pivot to treatment into wide format
+  tidyr::pivot_wider(names_from = cage.treatment_std,
+                     values_from = betadisp.mean) %>% 
+  # Calculate difference
+  dplyr::mutate(diff = uncaged - caged)
+
+# Re-check structure
+dplyr::glimpse(caged_v2)
+
+## ------------------------------------------- ##
+# Nick's Create Graph (Across Design Levels) ----
+## ------------------------------------------- ##
+
+# Create desired graph
+ggplot(caged_v2, aes(x = diff, y = reorder(source, dplyr::desc(-diff)), 
+                     color = betadisp.design.level)) +
+  geom_point() +
+  geom_vline(xintercept = 0, linetype = 3) +
+  labs(x = "Uncaged - Caged Beta Dispersion",
+       y = "Dataset Source") +
+  supportR::theme_lyon() +
+  theme(axis.text.y = element_blank())
+
+#### re-attach metadata ####
+
+caged_v3<-left_join(caged_v2, caged_v1, by = c("source"))
+
+caged_v3$natural.vs.artificial.substrate <- as.factor(caged_v3$natural.vs.artificial.substrate)
+
+dplyr::glimpse(caged_v3)
+
+#### Exploratory plots, diff x gamma rich (?), ecosystem type, cage size, herbivore rich, latitude
+
+### Figure 1 Successional stage ####
+
+ggplot(caged_v3, aes(x = natural.vs.artificial.substrate, y = diff)) +
+  geom_boxplot(aes(fill = natural.vs.artificial.substrate), alpha = 0.4) +
+  #geom_jitter(aes(fill = natural.vs.artificial.substrate), width = 0.15,
+              #size = 2.5, pch = 21) +
+  labs(x = "Natural vs. artificial substrate (Succession)", y = "diff",
+       title = paste0("Graph created on ", Sys.Date())) +
+  #scale_fill_manual(values = c("caged" = "red", "uncaged" = "blue", "partial" = "purple", 
+  #                            "unknown" = "gray", "uncertain" = "gray20")) +
+  theme(legend.position = "none",
+        legend.title = element_blank(),
+        strip.text = element_text(size = 8),
+        axis.text.x = element_text(angle = 35, hjust = 1)) +
+  supportR::theme_lyon()
+
+### Figure 2 Ecosystem type (coarse) - Terrestrial/Aquatic ####
+
+ggplot(caged_v3)
+
+
+#### Figure 3 Ecosystem type (fine) - Ecosystem types ####
+
+### Figure 4 Gamma richness ####
+
+#### Figure 5 Herbivore richness ####
+
+#### Figure 6 Exclusion time #####
+
+#### Figure 7 Size of cage ####
+
+
+
+
+
 
 
 
