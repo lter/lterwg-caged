@@ -1494,6 +1494,128 @@ googledrive::drive_upload(media = proj20_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 21 (Jennie's DH Tundra) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Treatment column includes nutrient and caging treatments
+## Need to parse out treatment column for nutrients and cage treatment
+### First 2 letters are fencing (LF - excludes caribou only; SF - excludes caribou and small mammals; NF - no fence)
+### Second 2 letters are fertilizing (CT - control; NP - fertilized))
+
+# Identify file(s) name(s)
+proj21_raw_name <- "JennieNew_lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv"
+
+# Identify file(s) in Drive
+proj21_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/16GEmeNy9qDvkH3E3-GuyVlus2Y9KZhna")) %>% 
+  dplyr::filter(name %in% c(proj21_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj21_gdrive$id, .y = proj21_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj21_raw <- read.csv(file.path("data", "purgatory", proj21_raw_name))
+
+# Check structure
+dplyr::glimpse(proj21_raw)
+
+# Do needed repairs
+proj21 <- proj21_raw %>% 
+  # Split treatments
+  dplyr::mutate(Fence = stringr::str_sub(string = Treatment, start = 1, end = 2),
+                Fertilizer = stringr::str_sub(string = Treatment, start = 3, end = 4),
+                .after = Treatment) %>% 
+  # Expand those
+  dplyr::mutate(Fence = dplyr::case_when(
+    Fence == "LF" ~ "caribou fence", # "large fence"
+    Fence == "SF" ~ "caribou and small mammal fence", # "small fence"
+    Fence == "NF" ~ "no fence")) %>% 
+  dplyr::mutate(Fertilizer = dplyr::case_when(
+    Fertilizer == "CT" ~ "fertilizer control",
+    Fertilizer == "NP" ~ "fertilized")) %>% 
+  # Drop original composite treatment
+  dplyr::select(-Treatment)
+
+# Re-check structure
+dplyr::glimpse(proj21)
+
+# Create good/new file name
+proj21_name <- "lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv"
+proj21_path <- file.path("data", "drydock", proj21_name)
+
+# Export locally
+write.csv(x = proj21, file = proj21_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj21_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 22 (Jennie's MA Tundra) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Treatment column includes nutrient and caging treatments
+## Need to parse out treatment column for nutrients and cage treatment
+### First 2 letters are fencing (LF - excludes caribou only; SF - excludes caribou and small mammals; NF - no fence)
+### Second 2 letters are fertilizing (CT - control; NP - fertilized))
+
+# Identify file(s) name(s)
+proj22_raw_name <- "JennieNew_lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv"
+
+# Identify file(s) in Drive
+proj22_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1xx7NXRD-oMeQqsb6dk6vv_pnw6oOI5lh")) %>% 
+  dplyr::filter(name %in% c(proj22_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj22_gdrive$id, .y = proj22_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj22_raw <- read.csv(file.path("data", "purgatory", proj22_raw_name))
+
+# Check structure
+dplyr::glimpse(proj22_raw)
+
+# Do needed repairs
+proj22 <- proj22_raw %>% 
+  # Split treatments
+  dplyr::mutate(Fence = stringr::str_sub(string = Treatment, start = 1, end = 2),
+                Fertilizer = stringr::str_sub(string = Treatment, start = 3, end = 4),
+                .after = Treatment) %>% 
+  # Expand those
+  dplyr::mutate(Fence = dplyr::case_when(
+    Fence == "LF" ~ "caribou fence", # "large fence"
+    Fence == "SF" ~ "caribou and small mammal fence", # "small fence"
+    Fence == "NF" ~ "no fence")) %>% 
+  dplyr::mutate(Fertilizer = dplyr::case_when(
+    Fertilizer == "CT" ~ "fertilizer control",
+    Fertilizer == "NP" ~ "fertilized")) %>% 
+  # Drop original composite treatment
+  dplyr::select(-Treatment)
+
+# Re-check structure
+dplyr::glimpse(proj22)
+
+# Create good/new file name
+proj22_name <- "lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv"
+proj22_path <- file.path("data", "drydock", proj22_name)
+
+# Export locally
+write.csv(x = proj22, file = proj22_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj22_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
