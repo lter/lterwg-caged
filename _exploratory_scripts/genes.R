@@ -211,7 +211,7 @@ librarian::shelf(tidyverse, ltertools, lme4,
 rm(list = ls()); gc()
 
 # Read in data
-alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata_finest-scales.csv"))
+alldata_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 
 ## ------------------------------------------- ##
