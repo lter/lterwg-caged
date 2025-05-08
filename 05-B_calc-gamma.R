@@ -1,5 +1,5 @@
 ## --------------------------------------------------------------- ##
-# CAGED Beta Dispersion Calculation
+# CAGED Gamma Richness Calculation
 ## --------------------------------------------------------------- ##
 # Written by: Nick J Lyon, ...
 
