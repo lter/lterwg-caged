@@ -1616,6 +1616,55 @@ googledrive::drive_upload(media = proj22_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 23 (Lamb Galapagos) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Need exp.name to be seasons concatenated with locality
+
+# Identify file(s) name(s)
+proj23_raw_name <- "biomass.csv"
+
+# Identify file(s) in Drive
+proj23_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1fgcDOopAeYNWYdUWSFcdMuP1IW1kYeCg")) %>% 
+  dplyr::filter(name %in% c(proj23_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj23_gdrive$id, .y = proj23_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj23_raw <- read.csv(file.path("data", "purgatory", proj23_raw_name))
+
+# Check structure
+dplyr::glimpse(proj23_raw)
+
+# Do needed repairs
+proj23 <- proj23_raw %>% 
+  # Make locality + season column
+  dplyr::mutate(Locality_Season = paste0(Locality, "-", Season),
+                .before = dplyr::everything()) %>% 
+  # Drop unwanted columns
+  dplyr::select(-X)
+
+# Re-check structure
+dplyr::glimpse(proj23)
+
+# Create good/new file name
+proj23_name <- "lamb_galapagos_consumermobility_2017_fish-urchins_algae.csv"
+proj23_path <- file.path("data", "drydock", proj23_name)
+
+# Export locally
+write.csv(x = proj23, file = proj23_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj23_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
