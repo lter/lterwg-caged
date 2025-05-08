@@ -116,7 +116,7 @@ coarecodifplot <- ggplot(caged_v3, aes(x = aq.or.terr, y = diff)) +
   geom_boxplot(aes(fill = aq.or.terr), alpha = 0.4) +
   #geom_jitter(aes(fill = natural.vs.artificial.substrate), width = 0.15,
   # size = 2.5, pch = 21) +
-  labs(x = "Ecosystem type (coarse)", y = "Beta dis. diff (Uncaged - Caged)",
+  labs(x = "Ecosystem type (coarse)", y = "Beta dis. diff (uncaged - caged)",
        title = paste0("Graph created on ", Sys.Date())) +
   #scale_fill_manual(values = c("caged" = "red", "uncaged" = "blue", "partial" = "purple", 
   #                            "unknown" = "gray", "uncertain" = "gray20")) +
@@ -128,36 +128,74 @@ coarecodifplot <- ggplot(caged_v3, aes(x = aq.or.terr, y = diff)) +
 
 coarecodifplot
 
-
 #### Figure 3 Ecosystem type (fine) - Ecosystem types ####
-
-#remove NAs for now
 
 ecotypediff.boxplot <-
   caged_v3 %>% 
   ggplot(data = ., aes(x = ecotype1, y = diff)) + 
   geom_boxplot() +
   # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
-  labs(y = expression("Beta diff (Uncaged - Caged)"), x = "") +
+  labs(y = expression("Beta dis diff (uncaged - caged)"), x = "") +
   theme_bw(base_size=12)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
-  #facet_wrap(~ecotype1, scale = "free_y")
 
 ecotypediff.boxplot
 
 ### Figure 4 Gamma richness ####
 
-#### Figure 5 Herbivore richness ####
+
+
+
+#### Figure 5 Herbivore (consumer) richness ####
+
+conrichdifplot <-
+  caged_v3 %>% 
+  ggplot(data = ., aes(x = consumer.richness.category, y = diff, fill=aq.or.terr)) + 
+  geom_boxplot() +
+  # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
+  labs(y = expression("Beta dis diff (uncaged - caged)"), x= "Consumer richness") +
+  theme_bw(base_size=12)  +
+  theme() +
+  ggtitle("Consumer richness")+
+  facet_wrap(~aq.or.terr)
+
+conrichdifplot
 
 #### Figure 6 Exclusion time #####
+
+extimeplot <- ggplot(caged_v3, aes(x = exclusion.duration.clean, y = diff, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Exclusion duration (months)", y ="Beta dis diff (uncaged - caged)") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
+
+extimeplot
 
 #### Figure 7 Size of cage ####
 
 
+#### Figure 8 Latitude, binned and continous
+
+latdifplot <- 
+  ggplot(caged_v3, aes(x = lat, y = diff, color=aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = F) +
+  labs(x = "latitude", y = "Beta dis diff (uncaged - caged)") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
+
+latdifplot
 
 
+caged_v3$absolute_lat <- abs(caged_v3$lat)
 
-
+abslatdifplot <-
+  ggplot(caged_v3, aes(x = absolute_lat, y = diff, color=aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = F) +
+  labs(x = "absolute latitude", y = "Beta dis diff (uncaged - caged)") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
+  
+abslatdifplot
 
 
