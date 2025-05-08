@@ -305,7 +305,7 @@ ecotype.boxplot <-
   theme_bw(base_size=12)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank()) +
-  facet_wrap(~ecotype1)
+  facet_wrap(~ecotype1, scales = "free_y")
 
 ecotype.boxplot
 
