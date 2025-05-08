@@ -295,7 +295,11 @@ avg.cage_v1 <- caged_v1 %>%
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = within.cage.treat_betadisp.mean)
 
-BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ ecotype1 + consumer.richness.category + abs(lat) + gamma.richness + betadisp.sample.size + (1|source), data = avg.cage_v1)
+BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
+                     ecotype1 + consumer.richness.category + 
+                     abs(lat) + gamma.richness + 
+                     betadisp.sample.size + (1|source), 
+                   data = avg.cage_v1)
 
 check_model(BaeES.lmer, panel = F) %>% plot()
 check_collinearity(BaeES.lmer)
