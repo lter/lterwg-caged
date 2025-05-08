@@ -298,8 +298,6 @@ aq.terr.boxplot
 alldata_v3 <- alldata_v2 %>%
   filter(!is.na(ecotype1) & ecotype1 != "")
 
-
-
 ecotype.boxplot <-
   alldata_v3 %>% 
   ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist)) + 
@@ -346,15 +344,57 @@ ggplot(alldata_v3, aes(x = exclusion.duration.clean, y =betadisp.comm.dist, colo
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
 
 
-#### Figure 7 Size of cage ####
+#### Figure 7 Size of cage #### -- needs lots of standardizing
 
 #### Figure 8 Latitude ####
+
+alldata_v3 <- alldata_v2$lat 
+  
+alldata_v3 <- alldata_v2 %>%
+  filter(aq.or.terr %in% c("aquatic", "terrestrial")) 
+
+ggplot(alldata_v3, aes(x = lat, y =betadisp.comm.dist, color=aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = F) +
+  labs(x = "latitude", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ aq.or.terr)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+ggplot(alldata_v2, aes(x = lat, y =betadisp.comm.dist)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = F) +
+  labs(x = "latitude", y = "beta.disp.comm.dist") +
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+alldata_v2
+#bins for climate zones
+
+alldata_v3$climate.zone
+
+#reorder
+alldata_v3$climate.zone <- 
+  factor(alldata_v3$climate.zone, levels = c("polar", "subpolar", "temperate", "subtropical", "tropical"))
+
+  
+climate.zone <-
+  alldata_v3 %>% 
+  ggplot(data = ., aes(x = climate.zone, y = betadisp.comm.dist, fill = aq.or.terr)) + 
+  geom_boxplot() +
+  # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
+  labs(y = expression("Beta dispersion"), x = "") +
+  scale_fill_manual(values = c("aquatic" = "royalblue", "terrestrial" = "green4")) + 
+  theme_bw(base_size=12)  +
+  theme() +
+  facet_wrap(~aq.or.terr)
+climate.zone
 
 
 ### Figure 9 productivity ####
 
 ### Figure 10 temperature ####
-
 
 ####Figure 11 Herbivore size ####
 
