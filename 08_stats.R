@@ -8,7 +8,10 @@
 ## ------------------------------------------- ##
 
 # Load libraries (performance might be within easystats)
-librarian::shelf(tidyverse, ltertools, lme4, lmerTest, performance, easystats, lubridate, car, njlyon0/supportR, MuMIn, visreg, emmeans, tidymodels, qqplotr) #, update_all= TRUE) 
+librarian::shelf(tidyverse, ltertools, lme4, lmerTest, 
+                 performance, easystats, lubridate, car, 
+                 njlyon0/supportR, MuMIn, visreg, 
+                 emmeans, tidymodels, qqplotr, sjPlot) #, update_all= TRUE) 
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -156,7 +159,7 @@ range(BaeDisp.df$betadisp.comm.dist)
 #B comm dist, LM----
 #gotta start most simple! 
 BaeDisp.lm <- lm(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                   consumer.richness.category + gamma.richness + #lat + exp.age + 
+                   consumer.richness.category + gamma.richness + abs(lat) + #exp.age + 
                    betadisp.sample.size , data = BaeDisp.df)
 
 check_model(BaeDisp.lm, panel = F) %>% plot()
@@ -170,7 +173,10 @@ baecont$contrasts
 #B comm dist ME model----
 #Leave best fitting/favorite model up here:
 BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                       consumer.richness.category + gamma.richness + #lat + exp.age + 
+                       consumer.richness.category + 
+                       gamma.richness + 
+                       abs(lat) + 
+                       #exp.age + 
                        betadisp.sample.size + 
                          (1|exp.name), data = BaeDisp.df)
 
@@ -179,6 +185,12 @@ check_collinearity(BaeDisp.lmer)
 summary(BaeDisp.lmer)
 car::Anova(BaeDisp.lmer, test.statistic = "F")
 performance::r2(BaeDisp.lmer)
+
+emmip(BaeDisp.lmer, ~ cage.treatment_std |ecotype1)
+emmip(BaeDisp.lmer, ~ consumer.richness.category)
+
+plot_model(BaeDisp.lmer)
+
 
 #simple, no interactions
 BaeDispsimp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + consumer.richness.category + gamma.richness + #lat + exp.age + 
@@ -201,6 +213,8 @@ check_model(BaeDisp3way.lmer, panel = F) |> plot() #resid normality is wack
 summary(BaeDisp3way.lmer)
 car::Anova(BaeDisp3way.lmer, test.statistic = "F")
 performance::r2(BaeDisp3way.lmer)
+
+emmip(BaeDisp3way.lmer, ~ cage.treatment_std | consumer.richness.category)
 
 #AIC on the 1|exp.name mods
 #i dont know how to do dredge
