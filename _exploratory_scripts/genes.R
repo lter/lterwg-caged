@@ -346,7 +346,6 @@ ggplot(alldata_v3, aes(x = exclusion.duration.clean, y =betadisp.comm.dist, colo
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
 
 
-
 #### Figure 7 Size of cage ####
 
 #### Figure 8 Latitude ####
