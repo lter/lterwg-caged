@@ -272,8 +272,6 @@ alldata_v2 <- alldata_v1 %>%
 ### Figure 2 Aquatic vs. Terrestrial ####
 library(supportR)
 unique(alldata_v1$aq.or.terr)
-sort(unique(alldata_v3$betadisp.comm.dist))
-num_check(alldata_v3, col="betadisp.comm.dist") #check if it's number or NA
 
 alldata_v3 <- alldata_v2 %>%
   filter(aq.or.terr %in% c("aquatic", "terrestrial")) 
@@ -313,7 +311,21 @@ ecotype.boxplot
 
 #save locally
 
-### Figure 4 Gamma diversity #### - do later
+### Figure 4 Gamma diversity #### 
+
+alldata_v2$gamma.richness
+
+ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
+
 
 #### Figure 5 Herbivore richness ####
 #need new clean metadata for continuous herb richness
