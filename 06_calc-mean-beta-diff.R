@@ -50,22 +50,22 @@ for(focal_beta in beta_outs){
     dplyr::group_by(dplyr::across(
       dplyr::all_of(c(diff_groupcols, "cage.treatment_std"))
       )) %>% 
-    dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
-                     betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
-                     betadisp.n = dplyr::n(),
-                     betadisp.se = betadisp.sd / sqrt(betadisp.n),
+    dplyr::summarize(within.cage.treat_betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
+                     within.cage.treat_betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
+                     within.cage.treat_betadisp.n = dplyr::n(),
+                     within.cage.treat_betadisp.se = within.cage.treat_betadisp.sd / sqrt(within.cage.treat_betadisp.n),
                      .groups = "keep") %>% 
     dplyr::ungroup()
   
   # Caculate difference in means
   diff_v3 <- diff_v2 %>% 
     # Dump unwanted columns
-    dplyr::select(-betadisp.sd, -betadisp.n, -betadisp.se) %>% 
+    dplyr::select(-within.cage.treat_betadisp.sd, -within.cage.treat_betadisp.n, -within.cage.treat_betadisp.se) %>% 
     # Pivot wider
     tidyr::pivot_wider(names_from = cage.treatment_std,
-                       values_from = betadisp.mean) %>% 
+                       values_from = within.cage.treat_betadisp.mean) %>% 
     # Calculate difference between uncaged & caged
-    dplyr::mutate(betadisp.mean.diff = uncaged - caged)
+    dplyr::mutate(within.cage.treat_betadisp.mean.diff = uncaged - caged)
   
   # Tidy up that output slightly
   diff_v4 <- diff_v3 %>% 
