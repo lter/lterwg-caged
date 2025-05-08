@@ -25,7 +25,7 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 
 # Read in the data
-caged_v1 <- read.csv(file = file.path("data", "06_caged_with-metadata.csv"))
+caged_v1 <- read.csv(file = file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 # Check structure
 dplyr::glimpse(caged_v1)
@@ -211,7 +211,7 @@ librarian::shelf(tidyverse, ltertools, lme4,
 rm(list = ls()); gc()
 
 # Read in data
-alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata_finest-scales.csv"))
+alldata_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 
 ## ------------------------------------------- ##
@@ -272,8 +272,6 @@ alldata_v2 <- alldata_v1 %>%
 ### Figure 2 Aquatic vs. Terrestrial ####
 library(supportR)
 unique(alldata_v1$aq.or.terr)
-sort(unique(alldata_v3$betadisp.comm.dist))
-num_check(alldata_v3, col="betadisp.comm.dist") #check if it's number or NA
 
 alldata_v3 <- alldata_v2 %>%
   filter(aq.or.terr %in% c("aquatic", "terrestrial")) 
@@ -307,13 +305,48 @@ ecotype.boxplot <-
   theme_bw(base_size=12)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank()) +
-  facet_wrap(~ecotype1)
+  facet_wrap(~ecotype1, scales = "free_y")
 
 ecotype.boxplot
 
 #save locally
 
-### Figure 4 Gamma diversity #### - do later
+### Figure 4 Gamma diversity #### 
+
+alldata_v2$gamma.richness
+
+#aquatic vs. terrstrial
+ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+#general
+ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
+ # scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+ggplot(alldata_v2, aes(x = gamma.richness, y =betadisp.comm.dist, fill=cage.treatment_std, color=cage.treatment_std)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Gamma diversity", y = "beta.disp.comm.dist") +
+   scale_fill_manual(values = c("uncaged" = "purple1", "caged" = "grey39")) +
+  scale_color_manual(values = c("uncaged" = "purple1", "caged" = "grey39"))+
+ # facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
+
 
 #### Figure 5 Herbivore richness ####
 #need new clean metadata for continuous herb richness
