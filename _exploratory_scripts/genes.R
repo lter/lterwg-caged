@@ -313,7 +313,7 @@ ecotype.boxplot
 
 #save locally
 
-### Figure 4 Gamma diversity ####
+### Figure 4 Gamma diversity #### - do later
 
 #### Figure 5 Herbivore richness ####
 #need new clean metadata for continuous herb richness
@@ -324,7 +324,7 @@ alldata_v5 <- alldata_v2 %>%
 
 consumer.richness <-
   alldata_v5 %>% 
-  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist, fill=aq.or.terr)) + 
+  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist)) + 
   geom_boxplot() +
   # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
   labs(y = expression("Beta dispersion"), x="") +
@@ -452,11 +452,12 @@ climate.zone <-
 climate.zone
 
 
-### Figure 9 productivity ####
+### Figure 9 productivity #### - later
 
-### Figure 10 temperature ####
+### Figure 10 temperature #### - later
 
-####Figure 11 Herbivore size ####
+####Figure 11 Herbivore size #### - later
+
 
 
 
