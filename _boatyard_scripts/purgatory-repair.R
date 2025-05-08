@@ -1408,6 +1408,92 @@ googledrive::drive_upload(media = proj19_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 20 (Silock Queensland) ----
+## ------------------------------------------- ##
+# Reason for purgatory status:
+## Someone dragged down the "Block" column too far and now there are duplicates (e.g., row 38 should be a 2 in block not 1)
+
+# Identify file(s) name(s)
+proj20_raw_name <- "Silcock_QueenslandAUS.xlsx"
+
+# Identify file(s) in Drive
+proj20_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/14Sr7iBgnWU2LZIRMgo53kTloUX7JM8R4")) %>% 
+  dplyr::filter(name %in% c(proj20_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj20_gdrive$id, .y = proj20_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj20_raw <- readxl::read_excel(path = file.path("data", "purgatory", proj20_raw_name),
+                                 sheet = "SpeciesData")
+
+# Check structure
+dplyr::glimpse(proj20_raw)
+
+# Check number of plots per block per site
+proj20_raw %>% 
+  dplyr::group_by(`Site Name`, Block) %>% 
+  dplyr::summarize(row_ct = dplyr::n(), .groups = "keep")
+
+# Do needed repairs
+proj20_tmp <- proj20_raw %>% 
+  # Rename some columns better
+  dplyr::rename(Site = `Site Name`,
+                block_orig = Block,
+                Year = `Calendar Year`,
+                year_since_excl_start = `Year since Excl. been up`,
+                anpp = `Biomass/ANPP`,
+                light_availability = `Light availability`) %>% 
+  # Trial the repaired block numbering
+  dplyr::group_by(Site) %>% 
+  dplyr::mutate(Block = c(rep(x = 1, times = 36),
+                          rep(x = 2, times = 36),
+                          rep(x = 3, times = 36)),
+                .after = block_orig) %>% 
+  dplyr::ungroup()
+
+# Does that seem reasonable/correct?
+proj20_tmp %>% 
+  filter(Block != block_orig) %>% 
+  dplyr::select(Site:Treatment) %>% 
+  as.data.frame()
+
+# Re-check to make sure plot numbers are repaired
+proj20_tmp %>% 
+  dplyr::group_by(Site, Block) %>% 
+  dplyr::summarize(row_ct = dplyr::n(), .groups = "keep")
+
+# Do some other nice stuff while we are here
+proj20 <- proj20_tmp %>% 
+  # Drop bad original block info
+  dplyr::select(-block_orig) %>% 
+  # Pivot taxon information long
+  tidyr::pivot_longer(cols = -Site:-light_availability,
+                      names_to = "species",
+                      values_to = "abundance") %>% 
+  # Remove missing abundance
+  dplyr::filter(abundance > 0)
+
+# Re-check structure
+dplyr::glimpse(proj20)
+
+# Create good/new file name
+proj20_name <- "gex_queenslandaus1-5_Silcock_2009_grazers_plants.csv"
+proj20_path <- file.path("data", "drydock", proj20_name)
+
+# Export locally
+write.csv(x = proj20, file = proj20_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj20_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
