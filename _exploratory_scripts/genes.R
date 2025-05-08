@@ -370,6 +370,20 @@ ggplot(alldata_v2, aes(x = lat, y =betadisp.comm.dist)) +
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
 
 alldata_v2
+
+#absolute latitude
+alldata_v3$absolute_lat <- abs(alldata_v3$lat)
+
+ggplot(alldata_v3, aes(x = absolute_lat, y =betadisp.comm.dist, color=aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = F) +
+  labs(x = "absolute latitude", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ aq.or.terr)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
 #bins for climate zones
 
 alldata_v3$climate.zone
