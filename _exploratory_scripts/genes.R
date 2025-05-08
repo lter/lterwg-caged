@@ -316,6 +316,53 @@ ecotype.boxplot
 ### Figure 4 Gamma diversity ####
 
 #### Figure 5 Herbivore richness ####
+#need new clean metadata for continuous herb richness
+
+unique(alldata_v2$consumer.richness.category)
+alldata_v5 <- alldata_v2 %>%
+  filter(consumer.richness.category %in% c("low", "high")) 
+
+consumer.richness <-
+  alldata_v5 %>% 
+  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist, fill=aq.or.terr)) + 
+  geom_boxplot() +
+  # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
+  labs(y = expression("Beta dispersion"), x="") +
+  theme_bw(base_size=12)  +
+  theme() +
+  ggtitle("Consumer richness")+
+  facet_wrap(~consumer.richness.category)
+
+consumer.richness
+
+##split aquatic terrestrial
+
+consumer.richness <-
+  alldata_v5 %>% 
+  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist)) + 
+  geom_boxplot() +
+  # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
+  labs(y = expression("Beta dispersion"), x="") +
+  theme_bw(base_size=12)  +
+  theme() +
+  scale_fill_manual(values = c("aquatic" = "royalblue", "terrestrial" = "green4")) + 
+  ggtitle("Consumer richness")+
+  facet_wrap(~consumer.richness.category + aq.or.terr)
+
+consumer.richness
+
+alldata_v5 %>% 
+  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist, fill=aq.or.terr)) + 
+  geom_boxplot() +
+  # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
+  labs(y = expression("Beta dispersion"), x="") +
+  theme_bw(base_size=12)  +
+  theme() +
+  scale_fill_manual(values = c("aquatic" = "royalblue", "terrestrial" = "green4")) + 
+  ggtitle("Consumer richness")+
+  facet_wrap(~aq.or.terr + consumer.richness.category )
+
+
 
 #### Figure 6 Exclusion time #####
 
@@ -385,7 +432,6 @@ ggplot(alldata_v3, aes(x = absolute_lat, y =betadisp.comm.dist, color=aq.or.terr
 
 
 #bins for climate zones
-
 alldata_v3$climate.zone
 
 #reorder
