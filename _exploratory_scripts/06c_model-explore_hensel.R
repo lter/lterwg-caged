@@ -141,6 +141,27 @@ car::Anova(BaetaDispEco3Int.lmer, test.statistic = "F")
 check_model(BaetaDispEco3Int.lmer)
 summary(BaetaDispEco3Int.lmer)
 
+##post sumamry explore
+#Leave best fitting/favorite model up here:
+BaeDispAT.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*aq.or.terr + 
+                       consumer.richness.category + 
+                       gamma.richness + 
+                       abs(lat) + 
+                       #exp.age + 
+                       betadisp.sample.size + 
+                       (1|exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp.lmer, panel = F) %>% plot()
+check_collinearity(BaeDisp.lmer)
+summary(BaeDisp.lmer)
+car::Anova(BaeDispAT.lmer, test.statistic = "F")
+performance::r2(BaeDispAT.lmer)
+
+emmip(BaeDisp.lmer, ~ cage.treatment_std |ecotype1)
+emmip(BaeDisp.lmer, ~ consumer.richness.category)
+
+plot_model(BaeDisp.lmer)
+
 # Next steps: dredge() AIC selection
 # Maybe also random effects AIC selection? on full model
 
