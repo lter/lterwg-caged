@@ -28,14 +28,14 @@ dplyr::glimpse(caged_v1)
 
 # Make a version where the unit of replication is averages within treatment
 avg.cage_v1 <- caged_v1 %>% 
-  dplyr::select(source:exp.name, lat:long, 
-                cage.treatment_std, 
-                within.cage.treat_betadisp.mean,
+  dplyr::select(source:exp.name, lat:long, ecotype1,  
+                cage.treatment_std, consumer.richness.category,
+                within.cage.treat_betadisp.mean, betadisp.sample.size,
                 within.cage.treat_betadisp.mean.diff) %>% 
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
   dplyr::distinct() %>%
   tidyr::pivot_wider(names_from = cage.treatment_std,
-                     values_from = within.cage.treat_betadisp.mean)
+                     values_from = within.cage.treat_betadisp.mean) 
 
 # Check structure of that
 dplyr::glimpse(avg.cage_v1)
@@ -44,17 +44,6 @@ dplyr::glimpse(avg.cage_v1)
 # Download Data ---- 
 ## ------------------------------------------- ##
 
-
-#Dreate the Diff df of 234 observations----
-#SHIT. nick told me what to do before they left but now i forgot and am panicking bc i need to have models ready for my friends!! NICK please create this 234 obs dataframe for us <3 
-cagedDiff_v1 = caged_v1 %>% 
-  select(within.cage.treat_betadisp.mean.diff) %>% 
-  distinct()
-
-cagedDiff.df = caged_v1 %>% 
-  group_by(exp.name) %>% 
-  #caged_v1
-  
   # ----explore, tidy and wrangle data----
 #lets see what we are dealing with
 glimpse(caged_v1)
@@ -191,6 +180,20 @@ emmip(BaeDisp.lmer, ~ consumer.richness.category)
 
 plot_model(BaeDisp.lmer)
 
+#feedback from the crew
+BaeDisp2Way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
+                       cage.treatment_std:consumer.richness.category + 
+                       gamma.richness + 
+                       abs(lat) + 
+                       #exp.age + 
+                       betadisp.sample.size + 
+                       (1|exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp2Way.lmer, panel = F) %>% plot()
+check_collinearity(BaeDisp2Way.lmer)
+summary(BaeDisp2Way.lmer)
+car::Anova(BaeDisp2Way.lmer, test.statistic = "F")
+performance::r2(BaeDisp2Way.lmer)
 
 #simple, no interactions
 BaeDispsimp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + consumer.richness.category + gamma.richness + #lat + exp.age + 
@@ -295,11 +298,13 @@ avg.cage_v1 <- caged_v1 %>%
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = within.cage.treat_betadisp.mean)
 
+avg.cage_v2 = 
+
 BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
                      ecotype1 + consumer.richness.category + 
                      abs(lat) + gamma.richness + 
                      betadisp.sample.size + (1|source), 
-                   data = avg.cage_v1)
+                   data = avg.cage_v1 %>% filter(consumer.richness.category %in% c("mono", "low", "high")) )
 
 check_model(BaeES.lmer, panel = F) %>% plot()
 check_collinearity(BaeES.lmer)
