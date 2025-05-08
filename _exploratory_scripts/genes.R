@@ -269,6 +269,28 @@ sort(unique(alldata_v1$exclusion.duration.clean))
 
 #### Figure 3 Eco type #####
 
+#remove NAs for now
+
+alldata_v2 <- alldata_v1 %>%
+  filter(!is.na(ecotype1) & ecotype1 != "")
+
+alldata_v2 <- alldata_v2 %>%
+  filter(cage.treatment_std %in% c("caged", "uncaged")) 
+
+
+ecotype.boxplot <-
+  alldata_v2 %>% 
+  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist)) + 
+  geom_boxplot() +
+  # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
+  labs(y = expression("Beta dispersion"), x = "") +
+  theme_bw(base_size=12)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank()) +
+  facet_wrap(~ecotype1)
+
+ecotype.boxplot
+
 ### Figure 4 Gamma diversity ####
 
 #### Figure 5 Herbivore richness ####
@@ -277,13 +299,15 @@ sort(unique(alldata_v1$exclusion.duration.clean))
 
 #### Figure 7 Size of cage ####
 
-#### Figure 8 
+#### Figure 8 Latitude ####
 
 
+### Figure 9 productivity ####
+
+### Figure 10 temperature ####
 
 
-
-
+####Figure 11 Herbivore size ####
 
 
 ###lg
