@@ -211,7 +211,7 @@ librarian::shelf(tidyverse, ltertools, lme4,
 rm(list = ls()); gc()
 
 # Read in data
-alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata_all-scales.csv"))
+alldata_v1 <- read.csv(file.path("data", "06_caged_with-metadata_finest-scales.csv"))
 
 
 ## ------------------------------------------- ##
@@ -275,11 +275,6 @@ unique(alldata_v1$aq.or.terr)
 sort(unique(alldata_v3$betadisp.comm.dist))
 num_check(alldata_v3, col="betadisp.comm.dist") #check if it's number or NA
 
-?count_diff
-x<- alldata_v3$betadisp.comm.dist
-y<- 
-count_diff(x) ##go back to this
-
 alldata_v3 <- alldata_v2 %>%
   filter(aq.or.terr %in% c("aquatic", "terrestrial")) 
 
@@ -300,13 +295,13 @@ aq.terr.boxplot
 #### Figure 3 Eco type #####
 
 #remove NAs for now
-alldata_v2 <- alldata_v1 %>%
+alldata_v3 <- alldata_v2 %>%
   filter(!is.na(ecotype1) & ecotype1 != "")
 
 
 
 ecotype.boxplot <-
-  alldata_v2 %>% 
+  alldata_v3 %>% 
   ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist)) + 
   geom_boxplot() +
   # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
@@ -320,12 +315,37 @@ ecotype.boxplot
 
 #save locally
 
-
 ### Figure 4 Gamma diversity ####
 
 #### Figure 5 Herbivore richness ####
 
 #### Figure 6 Exclusion time #####
+
+ggplot(alldata_v2, aes(x = exclusion.duration.clean, y =betadisp.comm.dist, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Exclusion Duration (months)", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
+#subset time
+
+alldata_v3 <- alldata_v2 %>%
+  filter(exclusion.duration.clean < 250)
+
+ggplot(alldata_v3, aes(x = exclusion.duration.clean, y =betadisp.comm.dist, color = aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "Exclusion Duration (months)", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
 
 #### Figure 7 Size of cage ####
 
@@ -340,16 +360,5 @@ ecotype.boxplot
 ####Figure 11 Herbivore size ####
 
 
-###lg
-#exclosure duration
 
-library(dplyr)
-
-ggplot(alldata_v1, aes(x = exclusion.duration.clean, y =betadisp.comm.dist, color = aq.or.terr)) +
-  geom_point(alpha = 0.7) +
-  geom_smooth(method = "lm", se = T) +
-  labs(x = "Exclusion Duration (months)", y = "beta.disp.comm.dist") +
-  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
-  facet_wrap(~ cage.treatment_std)+
-  theme_minimal()
 
