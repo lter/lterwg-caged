@@ -430,6 +430,18 @@ ggplot(alldata_v3, aes(x = absolute_lat, y =betadisp.comm.dist, color=aq.or.terr
   theme_classic() + 
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
 
+#split cage 
+ggplot(alldata_v3, aes(x = absolute_lat, y =betadisp.comm.dist, color=aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = T) +
+  labs(x = "absolute latitude", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
+
 
 #bins for climate zones
 alldata_v3$climate.zone
@@ -448,7 +460,7 @@ climate.zone <-
   scale_fill_manual(values = c("aquatic" = "royalblue", "terrestrial" = "green4")) + 
   theme_bw(base_size=12)  +
   theme() +
-  facet_wrap(~aq.or.terr)
+  facet_wrap(~cage.treatment_std)
 climate.zone
 
 
