@@ -320,7 +320,7 @@ ecotype.boxplot
 
 unique(alldata_v2$consumer.richness.category)
 alldata_v5 <- alldata_v2 %>%
-  filter(consumer.richness.category %in% c("low", "high")) 
+  filter(consumer.richness.category %in% c("mono","low", "high")) 
 
 consumer.richness <-
   alldata_v5 %>% 
