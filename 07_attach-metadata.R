@@ -23,12 +23,6 @@ dir.create(path = file.path("data"), showWarnings = F)
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
-# Read in data
-w.meta_v1 <- read.csv(file.path("data", "05_caged_beta-disp_finest-scales.csv"))
-
-# Check structure
-dplyr::glimpse(w.meta_v1)
-
 ## ------------------------------------------- ##
 # Download Metadata ----
 ## ------------------------------------------- ##
@@ -120,6 +114,145 @@ meta_v3 <- meta_v2 %>%
 
 # Re-check structure
 dplyr::glimpse(meta_v3)
+
+## ------------------------------------------- ##
+# Remove Unwanted Metadata Columns ----
+## ------------------------------------------- ##
+
+# Remove unwanted columns
+meta_v4 <- meta_v3 %>% 
+  dplyr::select(-dplyr::contains("notes"))
+
+# Check that only drops desired columns
+supportR::diff_check(old = names(meta_v3), new = names(meta_v4))
+
+# Check structure
+dplyr::glimpse(meta_v4)
+
+## ------------------------------------------- ##
+# Download Other Relevant 'Metadata' Info ----
+## ------------------------------------------- ##
+
+# We want everything after beta dispersion calculation
+## **As of 5/8/2025**, outputs of that script are (05-A_)
+other_meta <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
+  dplyr::filter(stringr::str_detect(string = name, pattern = "05-B_|06_"))
+
+# Look like the right files?
+other_meta
+
+# Download 'em
+purrr::walk2(.x = other_meta$id, .y = other_meta$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", .y)))
+
+## ------------------------------------------- ##
+# Check 'Other Metadata' Files ----
+## ------------------------------------------- ##
+
+other_meta
+
+# Read in gamma richness
+gamma_v1 <- read.csv(file = file.path("data", "05-B_caged_gamma-rich.csv"))
+
+# Check structure
+dplyr::glimpse(gamma_v1)
+
+# Read in the mean difference files too
+(diff_outs <- dir(path = file.path("data"), pattern = "06_caged_mean-beta-diff_"))
+diff_list <- purrr::map(.x = diff_outs,
+                        .f = ~ read.csv(file = file.path("data", .x)))
+names(diff_list) <- diff_outs
+
+# Check structure of one
+dplyr::glimpse(diff_list[[1]])
+
+
+
+# Loop across these to be more interpretable than purrr-style functional programming
+for(focal_beta in beta_outs){
+  # focal_beta <- "05-A_caged_beta-disp_all-scales.csv"
+  
+  # Progress message
+  message("Calculating mean difference / summary stats for ", focal_beta)
+  
+  # Read the file in
+  diff_v1 <- read.csv(file = file.path("data", focal_beta))
+  
+  # Identify the grouping columns (we'll use this twice)
+  diff_groupcols <- c("source", "organization", "site", 
+                      "excluded.group", "measured.group", 
+                      "exp.name", "year", "betadisp.design.level")
+  
+  # Do some needed preparatory calculatation
+  diff_v2 <- diff_v1 %>% 
+    # Remove missing beta disp & bad cage treatments
+    dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
+    dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
+    # Summarize within treatments/etc.
+    dplyr::group_by(dplyr::across(
+      dplyr::all_of(c(diff_groupcols, "cage.treatment_std"))
+    )) %>% 
+    dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
+                     betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
+                     betadisp.n = dplyr::n(),
+                     betadisp.se = betadisp.sd / sqrt(betadisp.n),
+                     .groups = "keep") %>% 
+    dplyr::ungroup()
+  
+  # Caculate difference in means
+  diff_v3 <- diff_v2 %>% 
+    # Dump unwanted columns
+    dplyr::select(-betadisp.sd, -betadisp.n, -betadisp.se) %>% 
+    # Pivot wider
+    tidyr::pivot_wider(names_from = cage.treatment_std,
+                       values_from = betadisp.mean) %>% 
+    # Calculate difference between uncaged & caged
+    dplyr::mutate(betadisp.mean.diff = uncaged - caged)
+  
+  # Tidy up that output slightly
+  diff_v4 <- diff_v3 %>% 
+    # Drop the cage/uncage columns
+    dplyr::select(-dplyr::ends_with("caged")) %>% 
+    # Keep only unique rows
+    dplyr::distinct()
+  
+  # Attach that back on the summarized version of the output
+  diff_v5 <- diff_v2 %>% 
+    # ALWAYS CHECK THE 'Y' OBJECT IS CORRECT IF UPDATING SCRIPT
+    dplyr::left_join(y = diff_v4,  by = diff_groupcols)
+  
+  # Add this to the output list
+  diff_list[[focal_beta]] <- diff_v5
+  
+} # Close loop
+
+
+
+## ------------------------------------------- ##
+# Attach *EVERYTHING* to Data ----
+## ------------------------------------------- ##
+## https://tenor.com/view/everyone-the-professional-shout-gif-12696023
+
+# 
+
+
+# BASEMENT----
+
+
+
+# Identify any beta dispersion outputs
+(beta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"))
+
+
+
+# Read in data
+w.meta_v1 <- read.csv(file.path("data", "05_caged_beta-disp_finest-scales.csv"))
+
+# Check structure
+dplyr::glimpse(w.meta_v1)
+
+
 
 ## ------------------------------------------- ##
 # Check Join Keys for Mismatches ----
