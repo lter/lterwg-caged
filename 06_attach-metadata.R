@@ -15,7 +15,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, googledrive, supportR, update_all= TRUE)
+librarian::shelf(tidyverse, googledrive, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -24,7 +24,7 @@ dir.create(path = file.path("data"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Read in data
-w.meta_v1 <- read.csv(file.path("data", "05_caged_beta-disp.csv"))
+w.meta_v1 <- read.csv(file.path("data", "05_caged_beta-disp_finest-scales.csv"))
 
 # Check structure
 dplyr::glimpse(w.meta_v1)
@@ -184,7 +184,7 @@ dplyr::glimpse(w.meta_v2)
 w.meta_v99 <- w.meta_v2
 
 # Identify tidy file name / path
-w.meta_name <- "06_caged_with-metadata.csv"
+w.meta_name <- "06_caged_with-metadata_finest-scales.csv"
 w.meta_path <- file.path("data", w.meta_name)
 
 # Export locally
@@ -237,5 +237,53 @@ dplyr::glimpse(focal_join)
 # purrr::walk(.x = dir(path = file.path("data"), pattern = "06_caged_with-metadata_exp"),
 #             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
 #                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
+
+## ------------------------------------------- ##
+# Attach Metadata to 'All Scales' Beta Disp ----
+## ------------------------------------------- ##
+
+# Read in data
+w.meta_allscales_v1 <- read.csv(file = file.path("data", "05_caged_beta-disp_all-scales.csv"))
+
+# Check for join key mismatches
+supportR::diff_check(old = unique(w.meta_allscales_v1$source), new = unique(meta_v5$source))
+supportR::diff_check(old = unique(w.meta_allscales_v1$exp.name), new = unique(meta_v5$exp.name))
+
+# Attach metadata & do minor wrangling
+w.meta_allscales_v2 <- w.meta_allscales_v1 %>% 
+  dplyr::left_join(y = meta_v5, by = c("source", "exp.name")) %>% 
+  dplyr::relocate(assigned.to:notes, .after = exp.name) %>% 
+  dplyr::select(-assigned.to, -notes)
+
+# Identify tidy file name / path
+w.meta_allscales_name <- "06_caged_with-metadata_all-scales.csv"
+w.meta_allscales_path <- file.path("data", w.meta_allscales_name)
+
+# Export locally
+write.csv(x = w.meta_allscales_v2, row.names = F, na = '', file = w.meta_allscales_path)
+
+# # Upload to Drive
+# googledrive::drive_upload(media = w.meta_allscales_path, overwrite = T,
+#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+
+
+
+# Create a new file name
+w.meta_allscales_name <- 
+
+focal_out1 <- gsub(pattern = "beta-disp", replacement = "with-metadata", x = focal_file)
+focal_out <- gsub(pattern = "05", replacement = "06", x = focal_out1)
+
+# Export locally
+write.csv(x = focal_join, na = '', row.names = F,
+          file = file.path("data", focal_out))
+# Check structure
+dplyr::glimpse(beta_allscales)
+
+# Export locally
+write.csv(x = beta_allscales, na = '', row.names = F,
+          file = file.path("data", paste0(beta_name, "_all-scales.csv")))
+
+
 
 # End ----

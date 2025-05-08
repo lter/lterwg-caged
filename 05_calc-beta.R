@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR, update_all= TRUE)
+librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -439,8 +439,8 @@ supportR::diff_check(old = unique(beta_v2$source), new = unique(beta_v7$source))
 beta_v99 <- beta_v7
 
 # Identify tidy file name / path
-beta_name <- "05_caged_beta-disp.csv"
-beta_path <- file.path("data", beta_name)
+beta_name <- "05_caged_beta-disp"
+beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))
 
 # Export locally
 write.csv(x = beta_v99, row.names = F, na = '', file = beta_path)
@@ -461,6 +461,16 @@ for(item in seq_along(beta_deslists)){
   write.csv(x = beta_deslists[[item]], row.names = F, na = '', file = partial_beta_path)
   
 } # Close loop
+
+# And, generate an 'all scales' output too
+beta_allscales <- purrr::list_rbind(x = beta_deslists)
+
+# Check structure
+dplyr::glimpse(beta_allscales)
+
+# Export locally
+write.csv(x = beta_allscales, na = '', row.names = F,
+          file = file.path("data", paste0(beta_name, "_all-scales.csv")))
 
 # # Upload all of these to the Drive
 # purrr::walk(.x = dir(path = file.path("data"), pattern = "05_caged_beta-disp"),

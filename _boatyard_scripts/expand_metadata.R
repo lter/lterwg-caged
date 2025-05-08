@@ -76,11 +76,13 @@ meta_expansion <- qc_df %>%
 # Re-check structure
 dplyr::glimpse(meta_expansion)
 
-# Export locally
-write.csv(x = meta_expansion, na = '', row.names = F,
-          file = file.path("data", paste0(Sys.Date(), "_new-rows-for-metadata_DELETE-AFTER-USE.csv")))
+# Export locally (if any rows need to be added)
+if(nrow(meta_expansion) != 0){
+  write.csv(x = meta_expansion, na = '', row.names = F,
+            file = file.path("data", paste0(Sys.Date(), "_new-rows-for-metadata_DELETE-AFTER-USE.csv")))
+}
 
-# NOTE TO PERSON RUNNING CODE
+# NOTE TO PERSON RUNNING CODE:
 ## Here's what you should do next:
 ## 1. Open the metadata GoogleSheet file
 ## 2. Scroll to bottom (i.e., end of currently filled-out section)

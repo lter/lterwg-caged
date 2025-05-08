@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, update_all = TRUE)
+librarian::shelf(tidyverse, ltertools)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -56,7 +56,7 @@ tidy_v2 <- tidy_v1 %>%
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
                         "deer", "grazed", "non", "out", "open-grazed", 
-                        "nitrogen phosphorus unfenced") ~ "uncaged",
+                        "nitrogen phosphorus unfenced", "no cage") ~ "uncaged",
       ## Organization-dependent changes
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
       organization == "clausing" & cage.tmp == "removal" ~ "caged",
@@ -167,13 +167,13 @@ tidy_v3 <- tidy_v2 %>%
     cage.treatment_orig == "P" ~ "P",
     cage.treatment_orig == "N" ~ "N",
     stringr::str_detect(string = cage.treatment_orig, pattern = "CT") ~ "none",
-    T ~ treat.nutrients)) %>% 
-  # Handle composite cage + shading treatment from Spiecker
-  dplyr::mutate(treat.canopy = dplyr::case_when(
-    source != "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" ~ treat.canopy,
-    stringr::str_detect(string = cage.treatment_orig, pattern = "L") == T ~ "not shaded",
-    stringr::str_detect(string = cage.treatment_orig, pattern = "L") != T ~ "shaded",
-    T ~ treat.canopy))
+    T ~ treat.nutrients)) # %>% 
+  # # Handle composite cage + shading treatment from Spiecker
+  # dplyr::mutate(treat.canopy = dplyr::case_when(
+  #   source != "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" ~ treat.canopy,
+  #   stringr::str_detect(string = cage.treatment_orig, pattern = "L") == T ~ "not shaded",
+  #   stringr::str_detect(string = cage.treatment_orig, pattern = "L") != T ~ "shaded",
+  #   T ~ treat.canopy))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -332,19 +332,13 @@ tidy_v8 <- tidy_v7 %>%
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
     ## Date in mm/dd/yy format
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
-    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point)),
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ "year")) %>% 
   # Do any needed post-processing
   ## Drop season names
   dplyr::mutate(year = gsub(pattern = "Fall |Spring |Summer |Winter ", 
-                            replacement = "", x = year)) %>% 
-  # Fix Sevilleta problem
-  dplyr::mutate(year = dplyr::case_when(
-    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" & year == "95" ~ "1995",
-    source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" & year == "05" ~ "2005",
-    T ~ year))
+                            replacement = "", x = year))
 
 # Re-check years
 tidy_v8 %>% 
@@ -361,9 +355,8 @@ tidy_v8 %>%
 dplyr::glimpse(tidy_v8)
 
 # Do desired standardization
-tidy_v9 <- tidy_v8 %>% 
-  # Standardize casing for distance from surface
-  dplyr::mutate(distance.from.surface = tolower(distance.from.surface))
+tidy_v9 <- tidy_v8
+# No such wrangling needed (yet)
 
 # Re-check structure
 dplyr::glimpse(tidy_v9)

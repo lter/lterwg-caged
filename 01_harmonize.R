@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, googledrive, supportR, update_all= TRUE)
+librarian::shelf(tidyverse, ltertools, googledrive, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -175,7 +175,7 @@ combo_v2 <- combo_v1 %>%
     treat.artificial = orig.treat_artificial,
     treat.exposure = orig.treat_exposure,
     treat.insecticide = orig.treat_insecticide,
-    treat.canopy = orig.treat_canopy,
+    # treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
    # treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
     treat.gap = orig.treat_gap,
