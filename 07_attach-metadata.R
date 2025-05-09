@@ -118,7 +118,7 @@ dplyr::glimpse(meta_v2)
 meta_v3 <- meta_v2 %>% 
   # Make some columns lowercase
   dplyr::mutate(dplyr::across(.cols = c(ecotype2, target.consumer, nontarget.consumer,
-                                        resource.type, consumer.trophic.level),
+                                        resource.type.notes, consumer.trophic.level),
                               .fns = ~ tolower(x = .)))
 
 # Re-check structure
