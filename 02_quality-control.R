@@ -40,7 +40,7 @@ tidy_v2 <- tidy_v1 %>%
     cage.treatment_std = dplyr::case_when(
       ## Confident changes
       ### Cage Present
-      cage.tmp %in% c("full", "exclosure", "start", "exclusion", 
+      cage.tmp %in% c("full", "exclosure", "exclusion", 
                         "fenced", "caged", "2.full.cage",
                         "full nitex", "full quarter", "cage",
                         "control small fenced", "np small fenced",
@@ -63,7 +63,7 @@ tidy_v2 <- tidy_v1 %>%
       organization == "clausing" & cage.tmp == "ambient" ~ "uncaged",
       organization == "cper" & cage.tmp == "ah" ~ "uncaged", # AH = all herbivores
       organization == "cper" & cage.tmp %in% c("ce", "cre", "re") ~ "caged", #_E = _ exclosure
-      organization == "diaz" & cage.tmp == "artefact" ~ "uncaged",
+      organization == "diaz" & cage.tmp == "artefact" ~ "partial",
       organization == "gex" & cage.tmp %in% c("g", "gg") ~ "uncaged", # G = grazed
       organization == "gex" & cage.tmp %in% c("u", "uu") ~ "caged", # U = ungrazed
       ## Note gex "GS" differs between datasets!
