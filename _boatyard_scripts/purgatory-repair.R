@@ -77,23 +77,16 @@ googledrive::drive_upload(media = proj1_name, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 2 (2006 LTER Heath) ----
+# Project 2 (______) ----
 ## ------------------------------------------- ##
-
-## CONFUSED: need to contact these authors
-
-# Reason for purgatory status:
-## data includes several biomass types, including above and below ground biomass. 
-## we only care about above ground biomass
-## subset to exclude "below", "litter", "vole" and "wood"
-## decided to sum the above ground biomass types "new above" and "old above"
-## Data are also sort of quasi wide format and need to be in long format
+# Reason for purgatory status
+## 
 
 # Identify file(s) name(s)
-proj2_raw_name <- "2006lgdhbmcn.csv"
+proj2_raw_name <- "BAD_FILE.csv"
 
 # Identify file(s) in Drive
-proj2_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1iH9CHW7xS0ZWk7LdB2Glb0LrfJF8dUOL")) %>% 
+proj2_gdrive <- googledrive::drive_ls(googledrive::as_id("raw file GDrive link (in subfolder of 'metadata' folder)")) %>% 
   dplyr::filter(name %in% c(proj2_raw_name))
 
 # Download file(s)
@@ -102,56 +95,27 @@ purrr::walk2(.x = proj2_gdrive$id, .y = proj2_gdrive$name,
                                                 path = file.path("data", "purgatory", .y)))
 
 # Read in data
-proj2_raw <- read.csv(file = file.path("data", "purgatory", proj2_raw_name))
+proj2_raw <- read.csv(file.path("data", "purgatory", proj2_raw_name))
 
 # Check structure
 dplyr::glimpse(proj2_raw)
 
 # Do needed repairs
-proj2 <- proj2_raw %>% 
-  # Drop unwanted columns
-  dplyr::select(-dplyr::starts_with(c("Average.", "Std..Err.", paste0("B", 1:3, "."))), 
-                -Tissue, -Count, -Comments) %>% 
-  # Reshape to long format
-  dplyr::mutate(dplyr::across(.cols = B1Q1:B3Q4, .fns = as.character)) %>% 
-  tidyr::pivot_longer(cols = B1Q1:B3Q4, names_to = "spat", values_to = "abun") %>% 
-  # Separate block/quadrat
-  dplyr::mutate(Block = stringr::str_sub(spat, start = 1, end = 2),
-                Quadrat = stringr::str_sub(spat, start = 3, end = 4),
-                .after = Site) %>% 
-  # Drop superseded column
-  dplyr::select(-spat) %>% 
-  # Exclude unwanted biomass types
-  dplyr::filter(!Biomass.Type %in% c("below", "litter", "vole", "wood")) %>% 
-  # Remove non-numeric abundance
-  ## Identified with `supportR::num_check`
-  dplyr::filter(abun != "#N/A") %>% 
-  # Make abundance numeric
-  dplyr::mutate(abun = as.numeric(abun)) %>% 
-  # Consolidate the two types of aboveground biomass
-  dplyr::mutate(Biomass.Type = ifelse(stringr::str_detect(string = Biomass.Type,
-                                                          pattern = "above") == T,
-                                      yes = "above", no = Biomass.Type)) %>% 
-  # Sum across newly-streamlined biomass types
-  dplyr::group_by(Date, Site, Block, Quadrat, Treatment, 
-                  Growth.Form, Species, Biomass.Type) %>% 
-  dplyr::summarize(abun = sum(abun, na.rm = T),
-                   .groups = "keep") %>% 
-  dplyr::ungroup()
+proj2 <- proj2_raw
 
 # Re-check structure
 dplyr::glimpse(proj2)
 
-# # Create good/new file name
-# proj2_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
-# proj2_path <- file.path("data", "drydock", proj2_name)
-# 
-# # Export locally
-# write.csv(x = proj2, file = proj2_path, na = '', row.names = F)
-# 
-# # Export to Drive
-# googledrive::drive_upload(media = proj2_path, overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+# Create good/new file name
+proj2_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
+proj2_path <- file.path("data", "drydock", proj2_name)
+
+# Export locally
+write.csv(x = proj2, file = proj2_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj2_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
