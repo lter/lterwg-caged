@@ -44,7 +44,7 @@ caged_v2 <- caged_v1 %>%
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = betadisp.mean) %>% 
   # Calculate difference
-  dplyr::mutate(diff = uncaged - caged)
+  dplyr::mutate(diff = abs(uncaged - caged))
 
 #standardize exclusion.duration column
 caged_v2$exclusion.duration #many different formats, needs to be cleaned - I'm not sure if thats the best way to go
@@ -120,7 +120,7 @@ coarecodifplot <- ggplot(caged_v3, aes(x = aq.or.terr, y = diff)) +
 
 coarecodifplot
 
-#### Figure 3 Ecosystem type (fine) - Ecosystem types ####
+#### Figure 3 Ecosystem type (fine) - Ecotype ####
 
 ecotypediff.boxplot <-
   caged_v3 %>% 
@@ -203,3 +203,4 @@ abslatdifplot <-
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
   
 abslatdifplot
+
