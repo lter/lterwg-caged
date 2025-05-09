@@ -311,28 +311,40 @@ performance::r2(BaeDisp3way_2ME.lmer)
 
 
 #Effect Size model----
-#Effect Size model----
-glimpse(avg.cage_v1)
-avg.cage_v1 <- caged_v1 %>% 
-  dplyr::select(source:exp.name, lat:long, ecotype1, consumer.richness.category, betadisp.sample.size, 
-                cage.treatment_std, 
-                within.cage.treat_betadisp.mean,
-                within.cage.treat_betadisp.mean.diff) %>% 
-  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
-  dplyr::distinct() %>%
-  tidyr::pivot_wider(names_from = cage.treatment_std,
-                     values_from = within.cage.treat_betadisp.mean)
-
-avg.cage_v2 = 
+glimpse(BaeDiff.df)
 
 BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
                      ecotype1 + consumer.richness.category + 
                      abs(lat) + gamma.richness + 
                      betadisp.sample.size + (1|source), 
-                   data = avg.cage_v1 %>% filter(consumer.richness.category %in% c("mono", "low", "high")) )
+                   data = BaeDiff.df %>% filter(consumer.richness.category %in% c("mono", "low", "high")) )
 
 check_model(BaeES.lmer, panel = F) %>% plot()
 check_collinearity(BaeES.lmer)
 summary(BaeES.lmer)
 car::Anova(BaeES.lmer, test.statistic = "F")
 performance::r2(BaeES.lmer)
+
+#ES: Lat and Habitat Type Model----
+BaeDiff.df_lat = BaeDiff.df %>% 
+  mutate(ablat = abs(lat), abdiff = abs(within.cage.treat_betadisp.mean.diff) )
+
+LatHabIntES.lmer <- lmer(abdiff ~ 
+                     ablat*aq.or.terr + 
+                       (1|source), 
+                   data = BaeDiff.df_lat)
+
+LatHabES.lmer <- lmer(abdiff ~ 
+                        ablat+aq.or.terr + 
+                        (1|source), 
+                      data = BaeDiff.df_lat)
+AIC(LatHabIntES.lmer, LatHabES.lmer)
+
+check_model(LatHabES.lmer, panel = F) %>% plot()
+summary(LatHabES.lmer)
+car::Anova(LatHabES.lmer, test.statistic = "F")
+performance::r2(LatHabES.lmer)
+
+emmip(LatHabES.lmer, aq.or.terr ~ ablat, cov.reduce = range)
+emtrends(LatHabES.lmer, "aq.or.terr", var = "ablat")
+
