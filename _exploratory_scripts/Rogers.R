@@ -181,7 +181,7 @@ extimeplot
 #### Figure 7 Size of cage ####
 
 
-#### Figure 8 Latitude, binned and continous
+#### Figure 8 Latitude, binned and continuous
 
 latdifplot <- 
   ggplot(caged_v3, aes(x = lat, y = diff, color=aq.or.terr)) +
@@ -203,4 +203,36 @@ abslatdifplot <-
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
   
 abslatdifplot
+
+###### Raw counts, figs
+
+#absolute latitude
+alldata_v3$absolute_lat <- abs(alldata_v3$lat)
+
+ggplot(alldata_v3, aes(x = absolute_lat, y =betadisp.comm.dist, color=aq.or.terr)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = F) +
+  labs(x = "absolute latitude", y = "beta.disp.comm.dist") +
+  scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) + 
+  facet_wrap(~ cage.treatment_std)+
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+#split cage 
+ggplot(alldata_v3, aes(x = absolute_lat, y = betadisp.comm.dist, color = cage.treatment_std)) +
+  geom_point(alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Absolute Latitude", y = "Beta Dispersion (Community Distance)") +
+  scale_color_manual(values = c("caged" = "darkblue", "uncaged" = "green4")) + 
+  facet_wrap(~ aq.or.terr) +
+  theme_classic() + 
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 1))
+
+
+####### Model code, chicken scratch
+
+
+
+
+
 
