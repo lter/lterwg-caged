@@ -44,7 +44,7 @@ caged_v2 <- caged_v1 %>%
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = betadisp.mean) %>% 
   # Calculate difference
-  dplyr::mutate(diff = abs(uncaged - caged))
+  dplyr::mutate(diff = (uncaged - caged))
 
 #standardize exclusion.duration column
 caged_v2$exclusion.duration #many different formats, needs to be cleaned - I'm not sure if thats the best way to go
@@ -90,7 +90,7 @@ succdiffplot <- ggplot(caged_v3, aes(x = natural.vs.artificial.substrate, y = di
   geom_boxplot(aes(fill = natural.vs.artificial.substrate), alpha = 0.4) +
   #geom_jitter(aes(fill = natural.vs.artificial.substrate), width = 0.15,
              # size = 2.5, pch = 21) +
-  labs(x = "Natural vs. artificial substrate (Succession)", y = "Beta diff (Uncaged-Caged)",
+  labs(x = "Natural vs. artificial substrate (Succession)", y = "Abs(Beta diff (Uncaged-Caged))",
        title = paste0("Graph created on ", Sys.Date())) +
   #scale_fill_manual(values = c("caged" = "red", "uncaged" = "blue", "partial" = "purple", 
   #                            "unknown" = "gray", "uncertain" = "gray20")) +
@@ -159,7 +159,7 @@ conrichdifplot <-
   ggplot(data = ., aes(x = consumer.richness.category, y = diff, fill=aq.or.terr)) + 
   geom_boxplot() +
   # geom_jitter(height = 0, width = 0.1, size = .5, alpha = 0.4) +
-  labs(y = expression("Beta dis diff (uncaged - caged)"), x= "Consumer richness", 
+  labs(y = expression("Abs(Beta dis diff (uncaged - caged))"), x= "Consumer richness", 
        title = paste0("Graph created on ", Sys.Date())) + 
   theme_bw(base_size=12)  +
   theme() +
@@ -173,7 +173,7 @@ conrichdifplot
 extimeplot <- ggplot(caged_v3, aes(x = exclusion.duration.clean, y = diff, color = aq.or.terr)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = "lm", se = T) +
-  labs(x = "Exclusion duration (months)", y ="Beta dis diff (uncaged - caged)") +
+  labs(x = "Exclusion duration (months)", y ="(Beta dis diff (uncaged - caged)") +
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
 
 extimeplot
@@ -187,7 +187,7 @@ latdifplot <-
   ggplot(caged_v3, aes(x = lat, y = diff, color=aq.or.terr)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = "lm", se = F) +
-  labs(x = "latitude", y = "Beta dis diff (uncaged - caged)") +
+  labs(x = "latitude", y = "Abs(Beta dis diff (uncaged - caged))") +
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
 
 latdifplot
@@ -199,7 +199,7 @@ abslatdifplot <-
   ggplot(caged_v3, aes(x = absolute_lat, y = diff, color=aq.or.terr)) +
   geom_point(alpha = 0.7) +
   geom_smooth(method = "lm", se = F) +
-  labs(x = "absolute latitude", y = "Beta dis diff (uncaged - caged)") +
+  labs(x = "absolute latitude", y = "Abs(Beta dis diff (uncaged - caged))") +
   scale_color_manual(values = c("aquatic" = "darkblue", "terrestrial" = "green4")) 
   
 abslatdifplot
