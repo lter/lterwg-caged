@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, lme4, performance, lubridate, car, njlyon0/supportR, visreg) #, update_all= TRUE)
+librarian::shelf(tidyverse, ltertools, lme4, performance, lubridate, car, njlyon0/supportR, visreg, patchwork) #, update_all= TRUE)
 
 # Create needed folder(s)
 #dir.create(path = file.path("data"), showWarnings = F)
@@ -17,6 +17,113 @@ librarian::shelf(tidyverse, ltertools, lme4, performance, lubridate, car, njlyon
 rm(list = ls()); gc()
 
 # Read in data
+
+BaeDisp.df.csv <- read.csv(file.path("data", "BaeDisp.df.csv"))
+BaeDiff.df.csv <- read.csv(file.path("data", "BaeDiff.df.csv"))
+
+
+uncagedlat.pointfig = 
+  BaeDisp.df %>% 
+  dplyr::filter(cage.treatment_std == "uncaged", 
+                aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = aq.or.terr)) + 
+  geom_point(size = .5, alpha = .3) +
+ # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+ #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
+  labs(y = expression("Beta dispersion \n(median distance) IN UNCAGED"), x = "absolute value of latitude") +
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+
+uncagedlat.pointfig
+
+cagedlat.pointfig = 
+  BaeDisp.df %>% 
+  dplyr::filter(cage.treatment_std == "caged") %>%
+  filter(aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = aq.or.terr)) + 
+  geom_point(size = .5, alpha = .3) +
+  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
+  labs(y = expression("Beta dispersion \n(median distance) IN CAGED"), x = "absolute value of latitude") +
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+
+cagedlat.pointfig
+
+uncagedlat.pointfig + cagedlat.pointfig
+
+
+lat.Difffig = 
+  BaeDiff.df %>% 
+  dplyr::filter(#cage.treatment_std == "uncaged", 
+                aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = within.cage.treat_betadisp.mean.diff, color = aq.or.terr)) + 
+  geom_point(size = 2, alpha = .3) +
+  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
+  geom_hline(yintercept = 0, linetype = 2, color = "orange", linewidth = 1.5) +
+  labs(y = expression("Beta Eff Size \n(Uncaged - Caged Bdisp) "), x = "absolute value of latitude") +
+  annotate(geom="text", x=60, y=.4, label="Consumers Increase Variability", color="blue") +
+  annotate(geom="text", x=60, y=-.4, label="Consumers Decrease Variability", color="red")+
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+
+(uncagedlat.pointfig + cagedlat.pointfig) / lat.Difffig
+
+lat.Diffabs.fig = 
+  BaeDiff.df %>% 
+  dplyr::filter(#cage.treatment_std == "uncaged", 
+    aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = abs(within.cage.treat_betadisp.mean.diff), color = aq.or.terr)) + 
+  geom_point(size = 2, alpha = .3) +
+  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
+  #geom_hline(yintercept = 0, linetype = 2, color = "orange", linewidth = 1.5) +
+  labs(y = expression("Abs value Beta Eff Size \n(Uncaged - Caged Bdisp) "), x = "absolute value of latitude") +
+  annotate(geom="text", x=20, y=.2, label=expression("Larger #s = \n consumers control B div more"), color="black") +
+ # annotate(geom="text", x=60, y=-.4, label="Consumers Decrease Variability", color="red")+
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+
+lat.Diffabs.fig
+
+View(BaeDiff.df %>% select(source, exp.name, lat, ecotype1, within.cage.treat_betadisp.mean.diff))
+
+cagedlat.pointfig = 
+  BaeDisp.df %>% 
+  dplyr::filter(cage.treatment_std == "caged") %>%
+  filter(aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = aq.or.terr)) + 
+  geom_point(size = .5, alpha = .3) +
+  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
+  labs(y = expression("Beta dispersion \n(median distance) IN CAGED"), x = "absolute value of latitude") +
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+
+cagedlat.pointfig
+
+uncagedlat.pointfig + cagedlat.pointfig
+
+
+
+
+
 #NOTE: since this is still initial explorations, you gotta go run the DFs in 06c_model-explore-hensel.R to get the two DFs I used in these. Will fix this later tho
 
 marc.modeldata_v1 <- read.csv(file.path("data", "marc.modeldata_v1.csv"))

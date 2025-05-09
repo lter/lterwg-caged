@@ -26,14 +26,15 @@ caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 # Check structure
 dplyr::glimpse(caged_v1)
 
-# Make a version where the unit of replication is averages within treatment
+# B Diff Dataset: Make a version where the unit of replication is averages within treatment
 avg.cage_v1 <- caged_v1 %>% 
-  dplyr::select(source:exp.name, lat:long, ecotype1,  
+  dplyr::select(source:exp.name, lat:long, ecotype1, aq.or.terr, climate.zone, 
                 cage.treatment_std, consumer.richness.category,
                 within.cage.treat_betadisp.mean, betadisp.sample.size,
+                excluded.group, consumer.trophic.level, gamma.richness,
                 within.cage.treat_betadisp.mean.diff) %>% 
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
-  dplyr::distinct() %>%
+  dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! 
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = within.cage.treat_betadisp.mean) 
 
@@ -44,7 +45,9 @@ dplyr::glimpse(avg.cage_v1)
 # Download Data ---- 
 ## ------------------------------------------- ##
 
-  # ----explore, tidy and wrangle data----
+  # ----explore and QC data----
+#A ton of this can be dumped into antoher file once we have a complete dataframe we like
+
 #lets see what we are dealing with
 glimpse(caged_v1)
 
@@ -55,20 +58,22 @@ supportR::num_check(data = caged_v1, col = "year") #UGH why no real years
 supportR::count(vec = caged_v1$year) 
 supportR::count(vec = caged_v1$sampling.year) 
 
-supportR::num_check(data = caged_v1, col = "year.start.exclosure") 
-
 supportR::num_check(data = caged_v1, col = "betadisp.comm.dist")
 supportR::count(vec = caged_v1$betadisp.comm.dist) 
 
 sort(unique(caged_v1$betadisp.design.level))
 
 supportR::count(vec = caged_v1$cage.treatment_std) 
-supportR::count(vec = caged_v1$consumer.richness) #so many NAs in consumer richness, this is why we will use the categorical for now but this needs to be fixed
+
 supportR::count(vec = caged_v1$cage.treatment_std) #deal with this via a filtering
 supportR::count(vec = caged_v1$betadisp.sample.size) 
 supportR::count(vec = caged_v1$exp.name.spatialextent.category) 
 supportR::count(vec = caged_v1$ecotype1) 
-supportR::count(vec = caged_v1$lat) #303 unentered
+
+supportR::count(vec = caged_v1$resource.type) 
+
+#explore consumers
+supportR::count(vec = caged_v1$consumer.richness) #so many NAs in consumer richness, this is why we will use the categorical for now but this needs to be fixed
 supportR::count(vec = caged_v1$excluded.group)
 
 supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
@@ -79,15 +84,22 @@ supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff
 #Data Notes that will affect things downstream----
 #I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
 
+#Tidy and Wrangle the DF----
+
+#latitude into numbers. 303 blanks here
+supportR::count(vec = caged_v1$lat) #303 unentered
+caged_v1$lat <- as.numeric(caged_v1$lat)
+
 #get years into number form.
+supportR::count(vec = caged_v1$year.start.exclosure)
+supportR::count(vec = caged_v1$year.end.exclosure)
+supportR::num_check(data = caged_v1, col = "year.start.exclosure") 
 #caged_v1$year.start.exclosure <- year(as.Date(as.character(caged_v1$year.start.exclosure), format = "%Y"))
 #caged_v1$year.end.exclosure <- year(as.Date(as.character(caged_v1$year.end.exclosure), format = "%Y"))
 
 #richness too
 #caged_v1$consumer.richness <- as.numeric(caged_v1$consumer.richness) #some stupid shit like ">10" in here, so this gives NA
 
-#latitude into numbers. 303 blanks here
-caged_v1$lat <- as.numeric(caged_v1$lat)
 
 #Build modeling ready DF----
 glimpse(caged_v1)
@@ -110,7 +122,7 @@ cagedmodel.df = caged_v1 |>
   #Grab the treatments
   filter(cage.treatment_std %in% c('caged', 'uncaged')) #%>% 
 #Do some calculations (SKIPPING BC OF MISSING METADATA)
-#mutate(exp.age = year.end.exclosure - year.start.exclosure) 
+  #mutate(exp.age = year.end.exclosure - year.start.exclosure) 
 
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
@@ -118,7 +130,7 @@ glimpse(cagedmodel.df)
 #supportR::num_check(data = cagedmodel.df, col = "consumer.trophic.level") 
 supportR::count(vec = cagedmodel.df$consumer.trophic.level) 
 
-#DF for modeling ----
+#DF for modeling, B disp ----
 BaeDisp.df = cagedmodel.df %>% 
   #only columns we need and have
   select(
@@ -126,11 +138,24 @@ BaeDisp.df = cagedmodel.df %>%
     lat, climate.zone, aq.or.terr, ecotype1, excluded.group, consumer.richness.category, consumer.native.domestic, consumer.trophic.level, gamma.richness,
     betadisp.sample.size, betadisp.comm.dist)
 
+#DF for modeling, B diff ES ----
+BaeDiff.df = avg.cage_v1 %>% 
+  #only columns we need and have
+  select(source,exp.name, lat, ecotype1, aq.or.terr, climate.zone, 
+    consumer.richness.category, betadisp.sample.size,
+    excluded.group, consumer.trophic.level, gamma.richness,
+    within.cage.treat_betadisp.mean.diff)
+
+
+
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
 
 # Export locally
 write.csv(x = BaeDisp.df, row.names = F, na = '',
           file = file.path("data", "BaeDisp.df.csv"))
+
+write.csv(x = BaeDiff.df, row.names = F, na = '',
+          file = file.path("data", "BaeDiff.df.csv"))
 
 
 #Blue Skies model structure----
