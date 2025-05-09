@@ -23,17 +23,22 @@ rm(list = ls()); gc()
 # Load data
 caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
+caged_v1 = caged_v1 %>% 
+  #huh, who could have predicted that adding something to the beginning of random columns wouldnt be very smooth?? oh thats right...me! rename these columns that got renamed with . not _
+  rename(var_taxonomic.level = var.taxonomic.level, 
+         var_exclosure.area.m2 = var.exclosure.area.m2)
+
 # Check structure
 dplyr::glimpse(caged_v1)
 
 # B Diff Dataset: Make a version where the unit of replication is averages within treatment
 avg.cage_v1 <- caged_v1 %>% 
-  #dplyr::contains(starts_with("var")) %>% 
-  dplyr::select(source:exp.name, lat:long, ecotype1, aq.or.terr, climate.zone, 
-                cage.treatment_std, consumer.richness.category,
+  dplyr::select(source:exp.name, starts_with("var"), 
+                lat:long, cage.treatment_std, 
                 within.cage.treat_betadisp.mean, betadisp.sample.size,
                 excluded.group, consumer.trophic.level, gamma.richness,
                 within.cage.treat_betadisp.mean.diff) %>% 
+ # rename_all(~stringr::str_replace(.,"^var_","")) %>% #this line is the result of a fight between Marc and Jamie. 
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
   dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! 
   tidyr::pivot_wider(names_from = cage.treatment_std,
@@ -69,12 +74,12 @@ supportR::count(vec = caged_v1$cage.treatment_std)
 supportR::count(vec = caged_v1$cage.treatment_std) #deal with this via a filtering
 supportR::count(vec = caged_v1$betadisp.sample.size) 
 supportR::count(vec = caged_v1$exp.name.spatialextent.category) 
-supportR::count(vec = caged_v1$ecotype1) 
+supportR::count(vec = caged_v1$var_ecotype1) 
 
-supportR::count(vec = caged_v1$resource.type) 
+supportR::count(vec = caged_v1$var_resource.type.category) #this column dont exist yet
 
 #explore consumers
-supportR::count(vec = caged_v1$consumer.richness) #so many NAs in consumer richness, this is why we will use the categorical for now but this needs to be fixed
+supportR::count(vec = caged_v1$var_consumer.richness) #so many NAs in consumer richness, this is why we will use the categorical for now but this needs to be fixed
 supportR::count(vec = caged_v1$excluded.group)
 
 supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
@@ -110,14 +115,16 @@ cagedmodel.df = caged_v1 |>
   select(
     #select study ID vars
     source, site, exp.name, 
+    #below is another line of code that is the result of Marc losing a fight with Jamie
+    starts_with("var"), 
     #select important experimental info (PLOT SIZE, EXP AREA GO HERE)
-    cage.treatment_std, exclusion.duration, year.start.exclosure, year.end.exclosure, exp.name.spatialextent.category, natural.vs.artificial.substrate, betadisp.design.level, 
+    cage.treatment_std, year.start.exclosure, year.end.exclosure, exp.name.spatialextent.category, natural.vs.artificial.substrate, betadisp.design.level, # exclusion.duration, 
     #select important habitat info
-    lat, climate.zone, aq.or.terr, ecotype1,
+    lat, #climate.zone, aq.or.terr, ecotype1,
     #select consumer info
-    excluded.group, consumer.richness, consumer.richness.category, consumer.native.domestic, consumer.trophic.level,
+    excluded.group, consumer.trophic.level, #consumer.richness.category, consumer.richness, consumer.native.domestic, 
     #select response info (GAMMA GOES HERE)
-    measured.group, resource.type, gamma.richness, 
+    measured.group, gamma.richness, #resource.type, 
     #select beta RV and beta info
     betadisp.sample.size, betadisp.comm.dist) |> 
   #Grab the treatments
@@ -136,14 +143,13 @@ BaeDisp.df = cagedmodel.df %>%
   #only columns we need and have
   select(
     source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, 
-    lat, climate.zone, aq.or.terr, ecotype1, excluded.group, consumer.richness.category, consumer.native.domestic, consumer.trophic.level, gamma.richness,
+    lat, starts_with("var"), excluded.group, consumer.trophic.level, gamma.richness,
     betadisp.sample.size, betadisp.comm.dist)
 
 #DF for modeling, B diff ES ----
 BaeDiff.df = avg.cage_v1 %>% 
   #only columns we need and have
-  select(source,exp.name, lat, ecotype1, aq.or.terr, climate.zone, 
-    consumer.richness.category, betadisp.sample.size,
+  select(source,exp.name, lat, starts_with("var"), betadisp.sample.size,
     excluded.group, consumer.trophic.level, gamma.richness,
     within.cage.treat_betadisp.mean.diff)
 
@@ -173,8 +179,8 @@ range(BaeDisp.df$betadisp.comm.dist)
 
 #B comm dist, LM----
 #gotta start most simple! 
-BaeDisp.lm <- lm(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                   consumer.richness.category + gamma.richness + abs(lat) + #exp.age + 
+BaeDisp.lm <- lm(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
+                   var_consumer.richness.category + gamma.richness + abs(lat) + #exp.age + 
                    betadisp.sample.size , data = BaeDisp.df)
 
 check_model(BaeDisp.lm, panel = F) %>% plot()
@@ -187,10 +193,9 @@ baecont$contrasts
 
 #B comm dist ME model----
 #Leave best fitting/favorite model up here:
-BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                       consumer.richness.category + 
-                       gamma.richness + 
-                       abs(lat) + 
+BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
+                       var_consumer.richness.category + 
+                       gamma.richness + abs(lat) + 
                        #exp.age + 
                        betadisp.sample.size + 
                        (1|exp.name), data = BaeDisp.df)
@@ -201,14 +206,14 @@ summary(BaeDisp.lmer)
 car::Anova(BaeDisp.lmer, test.statistic = "F")
 performance::r2(BaeDisp.lmer)
 
-emmip(BaeDisp.lmer, ~ cage.treatment_std |ecotype1)
-emmip(BaeDisp.lmer, ~ consumer.richness.category)
+emmip(BaeDisp.lmer, ~ cage.treatment_std |var_ecotype1)
+emmip(BaeDisp.lmer, ~ var_consumer.richness.category)
 
 plot_model(BaeDisp.lmer)
 
 #feedback from the crew
-BaeDisp2Way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                       cage.treatment_std:consumer.richness.category + 
+BaeDisp2Way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
+                       cage.treatment_std:var_consumer.richness.category + 
                        gamma.richness + 
                        abs(lat) + 
                        #exp.age + 
@@ -234,7 +239,7 @@ performance::r2(BaeDispsimp.lmer)
 
 #3way cage eco richness interaction
 #"rank deficient" but bolker says that is ok. 
-BaeDisp3way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
+BaeDisp3way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1*var_consumer.richness.category + gamma.richness + #lat + exp.age + 
                            betadisp.sample.size + 
                            (1|exp.name), data = BaeDisp.df)
 
@@ -254,8 +259,8 @@ AIC(BaeDisp.lmer, BaeDispsimp.lmer, BaeDisp3way.lmer)
 
 #BDisp Nested ME----
 #simple, no interactions
-BaeDispsimp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + 
-                                consumer.richness.category + gamma.richness + #lat + exp.age + 
+BaeDispsimp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + var_ecotype1 + 
+                                var_consumer.richness.category + gamma.richness + #lat + exp.age + 
                                 betadisp.sample.size + 
                                 (1|source/exp.name), data = BaeDisp.df)
 
@@ -266,8 +271,8 @@ car::Anova(BaeDispsimp_nest.lmer, test.statistic = "F")
 performance::r2(BaeDispsimp_nest.lmer)
 
 #2 way int
-BaeDisp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1 + 
-                            consumer.richness.category + gamma.richness + #lat + exp.age + 
+BaeDisp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
+                            var_consumer.richness.category + gamma.richness + #lat + exp.age + 
                             betadisp.sample.size + 
                             (1|source/exp.name), data = BaeDisp.df)
 
@@ -278,7 +283,7 @@ performance::r2(BaeDisp_nest.lmer) #conditional .420, marg = .169
 
 #3way cage eco richness interaction
 #"rank deficient" 
-BaeDisp3way_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
+BaeDisp3way_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1*var_consumer.richness.category + gamma.richness + #lat + exp.age + 
                                 betadisp.sample.size + 
                                 (1|source/exp.name), data = BaeDisp.df)
 
@@ -315,10 +320,10 @@ performance::r2(BaeDisp3way_2ME.lmer)
 glimpse(BaeDiff.df)
 
 BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
-                     ecotype1 + consumer.richness.category + 
+                     var_ecotype1 + var_consumer.richness.category + 
                      abs(lat) + gamma.richness + 
                      betadisp.sample.size + (1|source), 
-                   data = BaeDiff.df %>% filter(consumer.richness.category %in% c("mono", "low", "high")) )
+                   data = BaeDiff.df %>% filter(var_consumer.richness.category %in% c("mono", "low", "high")) )
 
 check_model(BaeES.lmer, panel = F) %>% plot()
 check_collinearity(BaeES.lmer)
@@ -327,25 +332,30 @@ car::Anova(BaeES.lmer, test.statistic = "F")
 performance::r2(BaeES.lmer)
 
 #ES: Lat and Habitat Type Model----
+#New Analysis of interest based on final day discussion
 BaeDiff.df_lat = BaeDiff.df %>% 
   mutate(ablat = abs(lat), abdiff = abs(within.cage.treat_betadisp.mean.diff) )
 
+#simple model to assess consumer diversity shit
+
 LatHabIntES.lmer <- lmer(abdiff ~ 
-                     ablat*aq.or.terr + 
+                     ablat*var_aq.or.terr + 
                        (1|source), 
                    data = BaeDiff.df_lat)
 
 LatHabES.lmer <- lmer(abdiff ~ 
-                        ablat+aq.or.terr + 
+                        ablat+var_aq.or.terr + 
                         (1|source), 
                       data = BaeDiff.df_lat)
 AIC(LatHabIntES.lmer, LatHabES.lmer)
 
-check_model(LatHabES.lmer, panel = F) %>% plot()
-summary(LatHabES.lmer)
-car::Anova(LatHabES.lmer, test.statistic = "F")
+check_model(LatHabIntES.lmer, panel = F) %>% plot()
+summary(LatHabIntES.lmer)
+car::Anova(LatHabIntES.lmer, test.statistic = "F")
 performance::r2(LatHabES.lmer)
 
-emmip(LatHabES.lmer, aq.or.terr ~ ablat, cov.reduce = range)
-emtrends(LatHabES.lmer, "aq.or.terr", var = "ablat")
+emmip(LatHabIntES.lmer, var_aq.or.terr ~ ablat, cov.reduce = range)
+emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 
+# betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
+#REs: (1|expname) or (1| source/expname)

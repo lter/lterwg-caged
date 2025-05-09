@@ -18,15 +18,15 @@ rm(list = ls()); gc()
 
 # Read in data
 
-BaeDisp.df.csv <- read.csv(file.path("data", "BaeDisp.df.csv"))
-BaeDiff.df.csv <- read.csv(file.path("data", "BaeDiff.df.csv"))
+BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
+BaeDiff.df <- read.csv(file.path("data", "BaeDiff.df.csv"))
 
 
 uncagedlat.pointfig = 
   BaeDisp.df %>% 
   dplyr::filter(cage.treatment_std == "uncaged", 
-                aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
-  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = aq.or.terr)) + 
+                var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = var_aq.or.terr)) + 
   geom_point(size = .5, alpha = .3) +
  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
@@ -42,8 +42,8 @@ uncagedlat.pointfig
 cagedlat.pointfig = 
   BaeDisp.df %>% 
   dplyr::filter(cage.treatment_std == "caged") %>%
-  filter(aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
-  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = aq.or.terr)) + 
+  filter(var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = var_aq.or.terr)) + 
   geom_point(size = .5, alpha = .3) +
   # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
   #              size = .6, position = position_dodge(width = .1), alpha = .5) +
@@ -61,9 +61,8 @@ uncagedlat.pointfig + cagedlat.pointfig
 
 lat.Difffig = 
   BaeDiff.df %>% 
-  dplyr::filter(#cage.treatment_std == "uncaged", 
-                aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
-  ggplot(data = ., aes(x = abs(lat), y = within.cage.treat_betadisp.mean.diff, color = aq.or.terr)) + 
+  dplyr::filter(var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = within.cage.treat_betadisp.mean.diff, color = var_aq.or.terr)) + 
   geom_point(size = 2, alpha = .3) +
   # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
   #              size = .6, position = position_dodge(width = .1), alpha = .5) +
@@ -75,22 +74,22 @@ lat.Difffig =
   annotate(geom="text", x=60, y=-.4, label="Consumers Decrease Variability", color="red")+
   theme_bw(base_size=24)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
 
-(uncagedlat.pointfig + cagedlat.pointfig) / lat.Difffig
+(uncagedlat.pointfig + cagedlat.pointfig) 
+lat.Difffig
 
 lat.Diffabs.fig = 
   BaeDiff.df %>% 
-  dplyr::filter(#cage.treatment_std == "uncaged", 
-    aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
-  ggplot(data = ., aes(x = abs(lat), y = abs(within.cage.treat_betadisp.mean.diff), color = aq.or.terr)) + 
+  dplyr::filter(var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = abs(within.cage.treat_betadisp.mean.diff), color = var_aq.or.terr)) + 
   geom_point(size = 2, alpha = .3) +
   # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
   #              size = .6, position = position_dodge(width = .1), alpha = .5) +
   stat_smooth(geom = "smooth", method = "lm") +
   scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
   #geom_hline(yintercept = 0, linetype = 2, color = "orange", linewidth = 1.5) +
-  labs(y = expression("Abs value Beta Eff Size \n(Uncaged - Caged Bdisp) "), x = "absolute value of latitude") +
+  labs(y = expression("[Beta Eff Size] \n(Uncaged - Caged Bdisp) "), x = "absolute value of latitude") +
   annotate(geom="text", x=20, y=.2, label=expression("Larger #s = \n consumers control B div more"), color="black") +
  # annotate(geom="text", x=60, y=-.4, label="Consumers Decrease Variability", color="red")+
   theme_bw(base_size=24)  +
@@ -99,26 +98,25 @@ lat.Diffabs.fig =
 
 lat.Diffabs.fig
 
-View(BaeDiff.df %>% select(source, exp.name, lat, ecotype1, within.cage.treat_betadisp.mean.diff))
-
-cagedlat.pointfig = 
+EcoSys.BDisp.fig = 
   BaeDisp.df %>% 
-  dplyr::filter(cage.treatment_std == "caged") %>%
-  filter(aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
-  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = aq.or.terr)) + 
-  geom_point(size = .5, alpha = .3) +
-  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
-  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
-  stat_smooth(geom = "smooth", method = "lm") +
+  dplyr::filter(var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = cage.treatment_std, y = betadisp.comm.dist)) + 
+  #geom_point(size = 2, alpha = .3) +
+  stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+                size = 1) +
+  stat_summary(geom = "line", method = "lm") +
   scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
-  labs(y = expression("Beta dispersion \n(median distance) IN CAGED"), x = "absolute value of latitude") +
-  theme_bw(base_size=24)  +
+  #geom_hline(yintercept = 0, linetype = 2, color = "orange", linewidth = 1.5) +
+  labs(y = expression("B disp"), x = "") +
+ # annotate(geom="text", x=20, y=.2, label=expression("Larger #s = \n consumers control B div more"), color="black") +
+  theme_bw(base_size=20)  +
   theme(plot.margin = unit(c(1,1,1,1), "cm"), 
-        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank()) +
+  facet_wrap(~var_ecotype1)
 
-cagedlat.pointfig
+EcoSys.BDisp.fig
 
-uncagedlat.pointfig + cagedlat.pointfig
 
 
 
