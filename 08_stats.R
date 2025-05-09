@@ -28,6 +28,7 @@ dplyr::glimpse(caged_v1)
 
 # B Diff Dataset: Make a version where the unit of replication is averages within treatment
 avg.cage_v1 <- caged_v1 %>% 
+  #dplyr::contains(starts_with("var")) %>% 
   dplyr::select(source:exp.name, lat:long, ecotype1, aq.or.terr, climate.zone, 
                 cage.treatment_std, consumer.richness.category,
                 within.cage.treat_betadisp.mean, betadisp.sample.size,
