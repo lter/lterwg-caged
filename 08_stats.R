@@ -179,58 +179,48 @@ glimpse(BaeDisp.df) #10,881 rows
 hist(BaeDisp.df$betadisp.comm.dist)
 range(BaeDisp.df$betadisp.comm.dist)
 
-#start with simple LM
-BaeDisp.lm <- lm(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
-                   var_consumer.richness.category + gamma.richness + abs(lat) + #exp.age + 
-                   betadisp.sample.size , data = BaeDisp.df)
+## ------------------------------------------- ##
+# Models I. Beta Dispersion (raw) ----
+## ------------------------------------------- ##
 
-check_model(BaeDisp.lm, panel = F) %>% plot()
-summary(BaeDisp.lm)
-car::Anova(BaeDisp.lm)
-performance::r2(BaeDisp.lm)
+#I.i LMERs: RE = 1|exp.name ----
+#Cage*Habitat interaction + latitude
+#No interaction detected, main effect of habitat and latitude
+BaeDisp_lat.lmer <- lmer(betadisp.comm.dist ~ 
+                           cage.treatment_std*var_aq.or.terr  +  
+                           abs(lat) + 
+                           (1|exp.name), data = BaeDisp.df)
 
-baecont = emmeans(BaeDisp.lm, specs = ~ cage.treatment_std*var_ecotype1)
-#baecont$contrasts
+check_model(BaeDisp_lat.lmer)
+summary(BaeDisp_lat.lmer)
+car::Anova(BaeDisp_lat.lmer, test.statistic = "F") 
+performance::r2(BaeDisp_lat.lmer)
 
-#B comm dist ME model----
-#Currently favorite model, interaction bt cage treat and ecosystem
-BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_aq.or.terr  + 
+emmip(BaeDisp_lat.lmer, ~ cage.treatment_std |var_ecotype1)
+emmip(BaeDisp_lat.lmer, ~ var_consumer.richness.category)
+
+plot_model(BaeDisp_lat.lmer)
+
+#Cage*Habitat w richness predictors
+#cool interactions here!
+BaeDisp_richsamp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_aq.or.terr  + 
                        var_consumer.richness.category + 
                        gamma.richness + abs(lat) + 
                        #exp.age + 
                        betadisp.sample.size + 
                        (1|exp.name), data = BaeDisp.df)
 
-check_model(BaeDisp.lmer)
-summary(BaeDisp.lmer)
-car::Anova(BaeDisp.lmer, test.statistic = "F") 
-performance::r2(BaeDisp.lmer)
+check_model(BaeDisp_richsamp.lmer)
+summary(BaeDisp_richsamp.lmer)
+car::Anova(BaeDisp_richsamp.lmer, test.statistic = "F") 
 
-emmip(BaeDisp.lmer, ~ cage.treatment_std |var_ecotype1)
-emmip(BaeDisp.lmer, ~ var_consumer.richness.category)
+emmip(BaeDisp_richsamp.lmer, ~ cage.treatment_std |var_aq.or.terr)
+emmip(BaeDisp_richsamp.lmer, ~ var_consumer.richness.category)
 
-plot_model(BaeDisp.lmer)
+plot_model(BaeDisp_richsamp.lmer)
 
-#Different iterations of the above planned model: 
-#look at the sig interaction w ecotype (in contrast to no interaction with aq or terr)
-BaeDisp_ecotype.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1  + 
-                       var_consumer.richness.category + 
-                       gamma.richness + abs(lat) + 
-                       #exp.age + 
-                       betadisp.sample.size + 
-                       (1|exp.name), data = BaeDisp.df)
-
-check_model(BaeDisp_ecotype.lmer)
-summary(BaeDisp_ecotype.lmer)
-car::Anova(BaeDisp_ecotype.lmer, test.statistic = "F") 
-performance::r2(BaeDisp_ecotype.lmer)
-
-emmip(BaeDisp_ecotype.lmer, ~ cage.treatment_std |var_ecotype1)
-
-plot_model(BaeDisp.lmer)
-
-#feedback from the crew
-BaeDisp2Way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
+#Cool double 2 way model with richness and ecotype interactions
+BaeDisp2Way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_aq.or.terr + 
                        cage.treatment_std:var_consumer.richness.category + 
                        gamma.richness + 
                        abs(lat) + 
@@ -244,18 +234,7 @@ summary(BaeDisp2Way.lmer)
 car::Anova(BaeDisp2Way.lmer, test.statistic = "F")
 performance::r2(BaeDisp2Way.lmer)
 
-#simple, no interactions
-BaeDispsimp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + ecotype1 + consumer.richness.category + gamma.richness + #lat + exp.age + 
-                           betadisp.sample.size + 
-                           (1|exp.name), data = BaeDisp.df)
-
-check_model(BaeDispsimp.lmer) #why tf this not working?
-check_model(BaeDispsimp.lmer, panel = F) |> plot() #plot them all 
-summary(BaeDispsimp.lmer)
-car::Anova(BaeDispsimp.lmer, test.statistic = "F")
-performance::r2(BaeDispsimp.lmer)
-
-#3way cage eco richness interaction
+#3way interactions 
 #"rank deficient" but bolker says that is ok. 
 BaeDisp3way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1*var_consumer.richness.category + gamma.richness + #lat + exp.age + 
                            betadisp.sample.size + 
@@ -268,48 +247,27 @@ performance::r2(BaeDisp3way.lmer)
 
 emmip(BaeDisp3way.lmer, ~ cage.treatment_std | consumer.richness.category)
 
-#AIC on the 1|exp.name mods
-#i dont know how to do dredge
-#REexp.dd = dredge(BaeDisp3way.lmer, beta = "sd")
-#plot(dd, labAsExpr = TRUE)
-
 AIC(BaeDisp.lmer, BaeDispsimp.lmer, BaeDisp3way.lmer)
 
-#BDisp Nested ME----
-#simple, no interactions
-BaeDispsimp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std + var_ecotype1 + 
-                                var_consumer.richness.category + gamma.richness + #lat + exp.age + 
-                                betadisp.sample.size + 
-                                (1|source/exp.name), data = BaeDisp.df)
+#LMER: nested RE = 1|source/exp.name ----
+#Cage*Habitat interaction + latitude
+#No interaction detected, main effect of habitat and latitude
+BaeDisp_lat.nestlmer <- lmer(betadisp.comm.dist ~ 
+                           cage.treatment_std*var_aq.or.terr  +  
+                           abs(lat) + 
+                           (1|source/exp.name), data = BaeDisp.df)
 
-check_model(BaeDispsimp_nest.lmer) #why tf this not working?
-check_model(BaeDispsimp_nest.lmer, panel = F) |> plot() #plot them all 
-summary(BaeDispsimp_nest.lmer)
-car::Anova(BaeDispsimp_nest.lmer, test.statistic = "F")
-performance::r2(BaeDispsimp_nest.lmer)
+check_model(BaeDisp_lat.nestlmer, panel = F) |> plot() #plot them all 
+summary(BaeDisp_lat.nestlmer)
+car::Anova(BaeDisp_lat.nestlmer, test.statistic = "F") 
 
-#2 way int
-BaeDisp_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
-                            var_consumer.richness.category + gamma.richness + #lat + exp.age + 
-                            betadisp.sample.size + 
-                            (1|source/exp.name), data = BaeDisp.df)
+emmip(BaeDisp_lat.nestlmer, ~ cage.treatment_std |var_aq.or.terr)
 
-check_model(BaeDisp_nest.lmer, panel = F) %>% plot()
-summary(BaeDisp_nest.lmer)
-car::Anova(BaeDisp_nest.lmer, test.statistic = "F")
-performance::r2(BaeDisp_nest.lmer) #conditional .420, marg = .169
+plot_model(BaeDisp_lat.lmer)
 
-#3way cage eco richness interaction
-#"rank deficient" 
-BaeDisp3way_nest.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1*var_consumer.richness.category + gamma.richness + #lat + exp.age + 
-                                betadisp.sample.size + 
-                                (1|source/exp.name), data = BaeDisp.df)
-
-check_model(BaeDisp3way_nest.lmer, panel = F) |> plot() #plot them all 
-summary(BaeDisp3way_nest.lmer)
-car::Anova(BaeDisp3way_nest.lmer, test.statistic = "F")
-performance::r2(BaeDisp3way_nest.lmer)
-
+#LMER: random slope RE = cage.treatment_std|source/exp.name ----
+#Cage*Habitat interaction + latitude
+#No interaction detected, main effect of habitat and latitude
 
 #Bdisp ME random slope----
 #3way cage eco richness interaction
@@ -323,38 +281,59 @@ performance::r2(BaeDisp3way_nest.lmer)
 #car::Anova(BaeDisp3way_slop.lmer, test.statistic = "F") #takes 1 million minutes to run
 #performance::r2(BaeDisp3way_slop.lmer)
 
-
-BaeDisp3way_2ME.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
-                               betadisp.sample.size + 
-                               (1|source) + (1|exp.name), data = BaeDisp.df)
-
-check_model(BaeDisp3way_2ME.lmer, panel = F) |> plot() #plot them all 
-summary(BaeDisp3way_2ME.lmer)
-car::Anova(BaeDisp3way_2ME.lmer, test.statistic = "F")
-performance::r2(BaeDisp3way_2ME.lmer)
+#I.ii GLMER: Max is going to try some Beta regressions----
 
 
-#Effect Size model----
+
+
+## ------------------------------------------- ##
+# Models II. Consumer Effect Size (Difference in Beta Dispersion) ----
+## ------------------------------------------- ##
+
 glimpse(BaeDiff.df)
+#II.i LMER:  RE = 1|source ----
+#Habitat * latitude... no effects
 
-BaeES.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
-                     var_ecotype1 + var_consumer.richness.category + 
-                     abs(lat) + gamma.richness + 
-                     betadisp.sample.size + (1|source), 
-                   data = BaeDiff.df %>% filter(var_consumer.richness.category %in% c("mono", "low", "high")) )
+BaeES_lat.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
+                     var_aq.or.terr * abs(lat) +
+                     (1|source), data = BaeDiff.df)
 
-check_model(BaeES.lmer, panel = F) %>% plot()
-check_collinearity(BaeES.lmer)
-summary(BaeES.lmer)
-car::Anova(BaeES.lmer, test.statistic = "F")
-performance::r2(BaeES.lmer)
+check_model(BaeES_lat.lmer, panel = F) %>% plot()
+check_collinearity(BaeES_lat.lmer)
+summary(BaeES_lat.lmer)
+car::Anova(BaeES_lat.lmer, test.statistic = "F")
+performance::r2(BaeES_lat.lmer)
 
-#ES: Lat and Habitat Type Model----
-#New Analysis of interest based on final day discussion
+plot_model(BaeES_lat.lmer)
+
+#Lat and Habitat Type
+#cool interactions here!
+BaeES_richsamp.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
+                              var_aq.or.terr  + 
+                              var_consumer.richness.category + 
+                              gamma.richness + 
+                              abs(lat) + 
+                              betadisp.sample.size + 
+                              (1|source), data = BaeDiff.df)
+
+check_model(BaeES_richsamp.lmer)
+summary(BaeES_richsamp.lmer)
+car::Anova(BaeES_richsamp.lmer, test.statistic = "F") 
+
+emmip(BaeES_richsamp.lmer, ~ var_consumer.richness.category)
+
+plot_model(BaeES_richsamp.lmer)
+
+
+
+
+## ------------------------------------------- ##
+# Models III. Absolute Value Consumer Effect Size (Difference in Beta Dispersion) ----
+## ------------------------------------------- ##
+#I dont like this response variable
+
 BaeDiff.df_lat = BaeDiff.df %>% 
   mutate(ablat = abs(lat), abdiff = abs(within.cage.treat_betadisp.mean.diff) )
-
-#simple model to assess consumer diversity shit
 
 LatHabIntES.lmer <- lmer(abdiff ~ 
                      ablat*var_aq.or.terr + 
@@ -375,5 +354,3 @@ performance::r2(LatHabES.lmer)
 emmip(LatHabIntES.lmer, var_aq.or.terr ~ ablat, cov.reduce = range)
 emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 
-# betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
-#REs: (1|expname) or (1| source/expname)
