@@ -16,7 +16,7 @@ librarian::shelf(tidyverse, ltertools, lme4, performance, lubridate, car, njlyon
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
-# Read in data
+# Read in data, BaeDisp and BaeDiff are created in 08_stats
 
 BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
 BaeDiff.df <- read.csv(file.path("data", "BaeDiff.df.csv"))
@@ -97,6 +97,41 @@ lat.Diffabs.fig =
         panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank())
 
 lat.Diffabs.fig
+
+habitatlat.pointfig = 
+  BaeDisp.df %>% 
+  dplyr::filter(var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = cage.treatment_std)) + 
+  geom_point(size = .5, alpha = .3) +
+  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("uncaged", "caged"), values=c("black", "purple")) +
+  labs(y = expression("Beta dispersion \n(median distance)"), x = "absolute value of latitude") +
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank()) +
+  facet_wrap(~var_aq.or.terr)
+
+habitatlat.pointfig
+
+cagelat.pointfig = 
+  BaeDisp.df %>% 
+  dplyr::filter(var_aq.or.terr %in% c("aquatic", "terrestrial")) %>% 
+  ggplot(data = ., aes(x = abs(lat), y = betadisp.comm.dist, color = var_aq.or.terr)) + 
+  geom_point(size = .5, alpha = .3) +
+  # stat_summary(geom = "pointrange", fun.data = "mean_cl_normal", 
+  #              size = .6, position = position_dodge(width = .1), alpha = .5) +
+  stat_smooth(geom = "smooth", method = "lm") +
+  scale_colour_manual(labels = c("Aquatic", "Terrestrial"), values=c("#101ece", "#06952f")) +
+  labs(y = expression("Beta dispersion \n(median distance)"), x = "absolute value of latitude") +
+  theme_bw(base_size=24)  +
+  theme(plot.margin = unit(c(1,1,1,1), "cm"), 
+        panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "bottom", legend.title = element_blank()) +
+  facet_wrap(~cage.treatment_std)
+
+cagelat.pointfig
+
 
 EcoSys.BDisp.fig = 
   BaeDisp.df %>% 
