@@ -25,10 +25,8 @@ rm(list = ls()); gc()
 # Data Download and QC ---- 
 ## ------------------------------------------- ##
 
-caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
-
-caged_v1 = caged_v1 %>% 
-  #huh, who could have predicted that adding something to the beginning of random columns wouldnt be very smooth?? rename these columns that got renamed with . not _
+caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))  %>% 
+  #rename these columns that got var. not var_
   rename(var_taxonomic.level = var.taxonomic.level, 
          var_exclosure.area.m2 = var.exclosure.area.m2)
 
@@ -48,15 +46,16 @@ avg.caged_v1 <- caged_v1 %>%
   dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! This fixed a duplication error within exp.name. If this gets fixed upstream, can delete this line
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = within.cage.treat_betadisp.mean) 
-  # Export locally
-write.csv(x = avg.caged_v1, row.names = F, na = '', file = w.meta_path)
+  # Export locally if you want
+#write.csv(x = avg.caged_v1, row.names = F, na = '', file = file.path("data","avg.caged_v1.csv"))
 
 # Check structure of that
 dplyr::glimpse(avg.cage_v1)
 
 
   # ----explore and QC data----
-#NOTE: A ton of this can be dumped into antoher file once we have a complete dataframe we like
+#NOTE: A ton of this can be dumped into antoher file once we have a complete dataframe we like. 
+#Skip to line 100 "Tidy and Wrangle the DF" if you dont want to look at the structure
 
 #Data QC Comments and Notes.. update with issues you notice
 #5/8: I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
@@ -96,19 +95,12 @@ supportR::count(vec = caged_v1$excluded.group)
 
 
 
-#Tidy and Wrangle the DF----
+#Tidy and Wrangle a modeling ready DF----
 
-#latitude into numbers. 303 blanks here
-
+  #latitude into numbers
 caged_v1$lat <- as.numeric(caged_v1$lat)
 
-#richness too
-#caged_v1$consumer.richness <- as.numeric(caged_v1$consumer.richness) #some stupid shit like ">10" in here, so this gives NA
-
-
-#Build modeling ready DF----
-glimpse(caged_v1)
-
+  #create a big but not huge df for modeling
 cagedmodel.df = caged_v1 |> 
   #First, select the columns we think we need:
   select(
@@ -118,10 +110,10 @@ cagedmodel.df = caged_v1 |>
     starts_with("var"), 
     #select important experimental info (PLOT SIZE, EXP AREA GO HERE)
     cage.treatment_std, year.start.exclosure, year.end.exclosure, exp.name.spatialextent.category, natural.vs.artificial.substrate, betadisp.design.level, # exclusion.duration, 
-    #select important habitat info
-    lat, #climate.zone, aq.or.terr, ecotype1,
+    #select important habitat info that doesnt have "var_" in front
+    lat, 
     #select consumer info
-    excluded.group, consumer.trophic.level, #consumer.richness.category, consumer.richness, consumer.native.domestic, 
+   # excluded.group, consumer.trophic.level, consumer.richness.category, # consumer.native.domestic, 
     #select response info (GAMMA GOES HERE)
     measured.group, gamma.richness, #resource.type, 
     #select beta RV and beta info
@@ -134,24 +126,17 @@ cagedmodel.df = caged_v1 |>
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
 
-#supportR::num_check(data = cagedmodel.df, col = "consumer.trophic.level") 
-supportR::count(vec = cagedmodel.df$consumer.trophic.level) 
 
 #DF for modeling, B disp ----
 BaeDisp.df = cagedmodel.df %>% 
   #only columns we need and have
   select(
-    source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, 
-    lat, starts_with("var"), excluded.group, consumer.trophic.level, gamma.richness,
-    betadisp.sample.size, betadisp.comm.dist)
+    source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, lat, starts_with("var"), gamma.richness, betadisp.sample.size, betadisp.comm.dist)
 
 #DF for modeling, B diff ES ----
-BaeDiff.df = avg.cage_v1 %>% 
+BaeDiff.df = avg.caged_v1 %>% 
   #only columns we need and have
-  select(source,exp.name, lat, starts_with("var"), betadisp.sample.size,
-    excluded.group, consumer.trophic.level, gamma.richness,
-    within.cage.treat_betadisp.mean.diff)
-
+  select(source,exp.name, lat, starts_with("var"), betadisp.sample.size, gamma.richness, within.cage.treat_betadisp.mean.diff)
 
 
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
@@ -165,8 +150,15 @@ write.csv(x = BaeDiff.df, row.names = F, na = '',
 
 
 #Blue Skies model structure----
-#I. B community distance across all experiments, ideal model here. One day we will have this
-
+#RVs
+  #Beta dispersion, per plot, for each experiment (right?? or per-site?) 
+    #betadisp.comm.dist = from BaeDisp.df and caged_v1, average community distance 
+  #Beta dispersion Effect Size (Uncaged - Caged)
+   #within.cage.treat_betadisp.mean.diff = from BaeDisp.df and caged_v1, mean beta difference bt uncaged and caged. negative = consumers decrease B dispersion, positive = consumers increase B dispersion
+  #Beta dispersion ES absolute value
+#IVs
+  #cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
+  #
 # betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
 #REs: (1|expname) or (1| source/expname)
 
