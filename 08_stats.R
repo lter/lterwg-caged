@@ -16,23 +16,28 @@ librarian::shelf(tidyverse, ltertools, lme4, lmerTest,
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
 dir.create(path = file.path("results"), showWarnings = F)
+dir.create(path = file.path("graphs"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
-# Load data
+## ------------------------------------------- ##
+# Data Download and QC ---- 
+## ------------------------------------------- ##
+
 caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 caged_v1 = caged_v1 %>% 
-  #huh, who could have predicted that adding something to the beginning of random columns wouldnt be very smooth?? oh thats right...me! rename these columns that got renamed with . not _
+  #huh, who could have predicted that adding something to the beginning of random columns wouldnt be very smooth?? rename these columns that got renamed with . not _
   rename(var_taxonomic.level = var.taxonomic.level, 
          var_exclosure.area.m2 = var.exclosure.area.m2)
 
 # Check structure
 dplyr::glimpse(caged_v1)
 
-# B Diff Dataset: Make a version where the unit of replication is averages within treatment
-avg.cage_v1 <- caged_v1 %>% 
+# Create B Diff Dataset ----
+  #DF where the unit of replication is averages within treatment. Variable is already created, so just need to select and filter
+avg.caged_v1 <- caged_v1 %>% 
   dplyr::select(source:exp.name, starts_with("var"), 
                 lat:long, cage.treatment_std, 
                 within.cage.treat_betadisp.mean, betadisp.sample.size,
@@ -40,68 +45,62 @@ avg.cage_v1 <- caged_v1 %>%
                 within.cage.treat_betadisp.mean.diff) %>% 
  # rename_all(~stringr::str_replace(.,"^var_","")) %>% #this line is the result of a fight between Marc and Jamie. 
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
-  dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! 
+  dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! This fixed a duplication error within exp.name. If this gets fixed upstream, can delete this line
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = within.cage.treat_betadisp.mean) 
+  # Export locally
+write.csv(x = avg.caged_v1, row.names = F, na = '', file = w.meta_path)
 
 # Check structure of that
 dplyr::glimpse(avg.cage_v1)
 
-## ------------------------------------------- ##
-# Download Data ---- 
-## ------------------------------------------- ##
 
   # ----explore and QC data----
-#A ton of this can be dumped into antoher file once we have a complete dataframe we like
+#NOTE: A ton of this can be dumped into antoher file once we have a complete dataframe we like
+
+#Data QC Comments and Notes.. update with issues you notice
+#5/8: I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
 
 #lets see what we are dealing with
 glimpse(caged_v1)
 
-#check to make sure that we have numbers where we are supposed to have numbers. num_check doesnt count NAs tho if hey are there?
-supportR::num_check(data = caged_v1, col = "exp.name.spatialextent.category")
+#check to make sure that we have numbers where we are supposed to have numbers, NAs, etc:
 
-supportR::num_check(data = caged_v1, col = "year") #UGH why no real years 
+supportR::count(vec = caged_v1$exp.name.spatialextent.category) #6665 blanks
+#Years
+supportR::num_check(data = caged_v1, col = "year") #1139="2017-2019", 1191="year"
+#View(caged_v1 %>% filter(year == "year") %>% select(exp.name, var_ecotype1) %>% unique() %>% as_tibble()) #these are the problem ones
 supportR::count(vec = caged_v1$year) 
-supportR::count(vec = caged_v1$sampling.year) 
+supportR::count(vec = caged_v1$sampling.year) #ranges in here too
+supportR::count(vec = caged_v1$year.start.exclosure) #340 blank, a couple ranges
+supportR::count(vec = caged_v1$year.end.exclosure)
+supportR::num_check(data = caged_v1, col = "year.start.exclosure") 
+supportR::num_check(data = caged_v1, col = "year.end.exclosure") 
 
+#Response Variables
 supportR::num_check(data = caged_v1, col = "betadisp.comm.dist")
-supportR::count(vec = caged_v1$betadisp.comm.dist) 
+supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
+supportR::count(vec = avg.caged_v1$betadisp.comm.dist) 
 
+#Independent Variables
 sort(unique(caged_v1$betadisp.design.level))
-
-supportR::count(vec = caged_v1$cage.treatment_std) 
-
 supportR::count(vec = caged_v1$cage.treatment_std) #deal with this via a filtering
 supportR::count(vec = caged_v1$betadisp.sample.size) 
 supportR::count(vec = caged_v1$exp.name.spatialextent.category) 
 supportR::count(vec = caged_v1$var_ecotype1) 
-
 supportR::count(vec = caged_v1$var_resource.type.category) #this column dont exist yet
-
+supportR::count(vec = caged_v1$lat) #398 NAs
 #explore consumers
-supportR::count(vec = caged_v1$var_consumer.richness) #so many NAs in consumer richness, this is why we will use the categorical for now but this needs to be fixed
+supportR::count(vec = caged_v1$var_consumer.richness.number) #not entered. use var_consumer.richness.category instead
 supportR::count(vec = caged_v1$excluded.group)
 
-supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
 
-#supportR::count_diff(vec1 = alldata_v1$betadisp.median , 
-#                     vec2=alldata_v1$betadisp.comm.dist)
-
-#Data Notes that will affect things downstream----
-#I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
 
 #Tidy and Wrangle the DF----
 
 #latitude into numbers. 303 blanks here
-supportR::count(vec = caged_v1$lat) #303 unentered
-caged_v1$lat <- as.numeric(caged_v1$lat)
 
-#get years into number form.
-supportR::count(vec = caged_v1$year.start.exclosure)
-supportR::count(vec = caged_v1$year.end.exclosure)
-supportR::num_check(data = caged_v1, col = "year.start.exclosure") 
-#caged_v1$year.start.exclosure <- year(as.Date(as.character(caged_v1$year.start.exclosure), format = "%Y"))
-#caged_v1$year.end.exclosure <- year(as.Date(as.character(caged_v1$year.end.exclosure), format = "%Y"))
+caged_v1$lat <- as.numeric(caged_v1$lat)
 
 #richness too
 #caged_v1$consumer.richness <- as.numeric(caged_v1$consumer.richness) #some stupid shit like ">10" in here, so this gives NA
