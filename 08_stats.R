@@ -149,27 +149,37 @@ write.csv(x = BaeDiff.df, row.names = F, na = '',
           file = file.path("data", "BaeDiff.df.csv"))
 
 
-#Blue Skies model structure----
+## ------------------------------------------- ##
+# Modeling ----
+## ------------------------------------------- ##
+
 #RVs
-  #Beta dispersion, per plot, for each experiment (right?? or per-site?) 
+  #1. Beta dispersion, per plot, for each experiment (right?? or per-site?) 
     #betadisp.comm.dist = from BaeDisp.df and caged_v1, average community distance 
-  #Beta dispersion Effect Size (Uncaged - Caged)
+  #2. Beta dispersion Effect Size (Uncaged - Caged)
    #within.cage.treat_betadisp.mean.diff = from BaeDisp.df and caged_v1, mean beta difference bt uncaged and caged. negative = consumers decrease B dispersion, positive = consumers increase B dispersion
-  #Beta dispersion ES absolute value
+  #3. Beta dispersion ES absolute value
+
 #IVs
   #cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
-  #
+  #2way Int IVs: cage.treatment_std*var_ecotype1 OR cage.treatment_std*lat
+  #3way Int IVs: cage.treatment_std*var_ecotype1*lat
 # betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
-#REs: (1|expname) or (1| source/expname)
 
-BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
+#REs
+  #(1|expname) or (1| source/expname)
+
+#1. Beta dispersion (raw) models ----
+  #Leave name of best fitting/most ecological sense model up here for reference (will delete when final models selected)
+  #BaeDisp.lmer
+
+#BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
 
 glimpse(BaeDisp.df) #10,881 rows
 hist(BaeDisp.df$betadisp.comm.dist)
 range(BaeDisp.df$betadisp.comm.dist)
 
-#B comm dist, LM----
-#gotta start most simple! 
+#start with simple LM
 BaeDisp.lm <- lm(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
                    var_consumer.richness.category + gamma.richness + abs(lat) + #exp.age + 
                    betadisp.sample.size , data = BaeDisp.df)
@@ -179,26 +189,43 @@ summary(BaeDisp.lm)
 car::Anova(BaeDisp.lm)
 performance::r2(BaeDisp.lm)
 
-baecont = emmeans(BaeDisp.lm, specs = ~ cage.treatment_std*ecotype1)
-baecont$contrasts
+baecont = emmeans(BaeDisp.lm, specs = ~ cage.treatment_std*var_ecotype1)
+#baecont$contrasts
 
 #B comm dist ME model----
-#Leave best fitting/favorite model up here:
-BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1 + 
+#Currently favorite model, interaction bt cage treat and ecosystem
+BaeDisp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_aq.or.terr  + 
                        var_consumer.richness.category + 
                        gamma.richness + abs(lat) + 
                        #exp.age + 
                        betadisp.sample.size + 
                        (1|exp.name), data = BaeDisp.df)
 
-check_model(BaeDisp.lmer, panel = F) %>% plot()
-check_collinearity(BaeDisp.lmer)
+check_model(BaeDisp.lmer)
 summary(BaeDisp.lmer)
-car::Anova(BaeDisp.lmer, test.statistic = "F")
+car::Anova(BaeDisp.lmer, test.statistic = "F") 
 performance::r2(BaeDisp.lmer)
 
 emmip(BaeDisp.lmer, ~ cage.treatment_std |var_ecotype1)
 emmip(BaeDisp.lmer, ~ var_consumer.richness.category)
+
+plot_model(BaeDisp.lmer)
+
+#Different iterations of the above planned model: 
+#look at the sig interaction w ecotype (in contrast to no interaction with aq or terr)
+BaeDisp_ecotype.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1  + 
+                       var_consumer.richness.category + 
+                       gamma.richness + abs(lat) + 
+                       #exp.age + 
+                       betadisp.sample.size + 
+                       (1|exp.name), data = BaeDisp.df)
+
+check_model(BaeDisp_ecotype.lmer)
+summary(BaeDisp_ecotype.lmer)
+car::Anova(BaeDisp_ecotype.lmer, test.statistic = "F") 
+performance::r2(BaeDisp_ecotype.lmer)
+
+emmip(BaeDisp_ecotype.lmer, ~ cage.treatment_std |var_ecotype1)
 
 plot_model(BaeDisp.lmer)
 
