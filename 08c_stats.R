@@ -35,37 +35,126 @@ BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
 
 
 ## ------------------------------------------- ##
-# Modeling ----
+# Models for Paper 1 ----
 ## ------------------------------------------- ##
-
-#RVs
-  #1. Beta dispersion, per plot, for each experiment (right?? or per-site?) 
-    #betadisp.comm.dist = from BaeDisp.df and caged_v1, average community distance 
-  #2. Beta dispersion Effect Size (Uncaged - Caged)
-   #within.cage.treat_betadisp.mean.diff = from BaeDisp.df and caged_v1, mean beta difference bt uncaged and caged. negative = consumers decrease B dispersion, positive = consumers increase B dispersion
-  #3. Beta dispersion ES absolute value
-
-#IVs
-  #cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
-  #2way Int IVs: cage.treatment_std*var_ecotype1 OR cage.treatment_std*lat
-  #3way Int IVs: cage.treatment_std*var_ecotype1*lat
-# betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
-
-#REs
-  #(1|expname) or (1| source/expname)
-
-#1. Beta dispersion (raw) models ----
-  #Leave name of best fitting/most ecological sense model up here for reference (will delete when final models selected)
-  #BaeDisp.lmer
-
-#BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
 
 glimpse(BaeDisp.df) #10,881 rows
 hist(BaeDisp.df$betadisp.comm.dist)
 range(BaeDisp.df$betadisp.comm.dist)
 
 ## ------------------------------------------- ##
-# Models I. Beta Dispersion (raw) ----
+## Figure 2 ----
+## ------------------------------------------- ##
+# lmer for uncaged only (Figure 2 model)
+uncaged.df <- BaeDisp.df %>%
+  filter(cage.treatment_std == "uncaged") %>%
+  mutate(abs.lat = abs(lat))
+
+uncaged.mod1 <- lmer(betadisp.comm.dist ~ 
+                           var_aq.or.terr*abs.lat + 
+                           (1|exp.name), data = uncaged.df)
+check_model(uncaged.mod1)
+summary(uncaged.mod1)
+car::Anova(uncaged.mod1, test.statistic = "F") 
+# significant interaction!
+performance::r2(uncaged.mod1)
+
+emmip(uncaged.mod1, var_aq.or.terr ~ 
+        abs.lat, cov.reduce= range)
+
+plot_model(uncaged.mod1)
+
+
+# lmer for caged only (Supplement to figure 2)
+caged.df <- BaeDisp.df %>%
+  filter(cage.treatment_std == "caged")%>%
+  mutate(abs.lat = abs(lat))
+
+caged.mod1 <- lmer(betadisp.comm.dist ~ 
+                       var_aq.or.terr*abs.lat + 
+                       (1|exp.name), data = caged.df)
+check_model(caged.mod1)
+summary(caged.mod1)
+car::Anova(caged.mod1, test.statistic = "F") # significant interaction
+performance::r2(caged.mod1)
+
+emmip(caged.mod1, var_aq.or.terr ~ abs.lat, cov.reduce= range)
+
+plot_model(caged.mod1)
+
+
+
+## ------------------------------------------- ##
+## Figure 3 ----
+## ------------------------------------------- ##
+
+# absolute value of difference
+BaeDiff.df_abs <- BaeDiff.df %>% 
+  mutate(ablat = abs(lat), 
+         abdiff = abs(within.cage.treat_betadisp.mean.diff) )
+
+abs.diff.mod1 <- lmer(abdiff ~ 
+                           ablat*var_aq.or.terr + 
+                           (1|source), 
+                         data = BaeDiff.df_abs)
+check_model(abs.diff.mod1)
+summary(abs.diff.mod1)
+car::Anova(abs.diff.mod1, test.statistic = "F") 
+# marginally significant
+performance::r2(abs.diff.mod1)
+
+emmip(abs.diff.mod1, var_aq.or.terr ~ 
+        ablat, cov.reduce= range)
+
+plot_model(abs.diff.mod1)
+
+
+# true difference
+diff.mod1 <- lmer(within.cage.treat_betadisp.mean.diff ~ 
+                        ablat*var_aq.or.terr + 
+                        (1|source), 
+                      data = BaeDiff.df_abs)
+check_model(diff.mod1)
+summary(diff.mod1)
+car::Anova(diff.mod1, test.statistic = "F") 
+# not significant, this is why the absolute value is helpful
+performance::r2(diff.mod1)
+
+
+
+
+
+
+
+## ------------------------------------------- ##
+# Exploratory Models ----
+## ------------------------------------------- ##
+
+#RVs
+#1. Beta dispersion, per plot, for each experiment (right?? or per-site?) 
+#betadisp.comm.dist = from BaeDisp.df and caged_v1, average community distance 
+#2. Beta dispersion Effect Size (Uncaged - Caged)
+#within.cage.treat_betadisp.mean.diff = from BaeDisp.df and caged_v1, mean beta difference bt uncaged and caged. negative = consumers decrease B dispersion, positive = consumers increase B dispersion
+#3. Beta dispersion ES absolute value
+
+#IVs
+#cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
+#2way Int IVs: cage.treatment_std*var_ecotype1 OR cage.treatment_std*lat
+#3way Int IVs: cage.treatment_std*var_ecotype1*lat
+# betadisp.comm.dist ~ cage.treatment_std + ecotype1 + latitude + consumer richness + experiment age + gamma diversity + excl size size + successional stage + max consumer size + B sample size + B design level 
+
+#REs
+#(1|expname) or (1| source/expname)
+
+#1. Beta dispersion (raw) models 
+#Leave name of best fitting/most ecological sense model up here for reference (will delete when final models selected)
+#BaeDisp.lmer
+
+#BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
+
+## ------------------------------------------- ##
+# Models I.  ----
+# Beta Dispersion (raw)
 ## ------------------------------------------- ##
 
 #I.i LMERs: RE = 1|exp.name ----
@@ -238,4 +327,6 @@ performance::r2(LatHabES.lmer)
 
 emmip(LatHabIntES.lmer, var_aq.or.terr ~ ablat, cov.reduce = range)
 emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
+
+
 
