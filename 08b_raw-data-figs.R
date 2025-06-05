@@ -82,3 +82,29 @@ BaeDiff.df %>%
   theme_pubr(base_size=16) +
   scale_color_manual(values= c("grey", "royalblue","darkgreen"))
 # absolute value= doesnt matter which direction, is just showing a big difference betweeen caged and uncaged beta dispersion
+
+
+
+# Gamma richness by latitude
+BaeDiff.df %>%
+  ggplot(aes(x=abs(lat), 
+             y=gamma.richness,
+             col=var_aq.or.terr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+
+
+# Plot size for aquatic vs terrestrial 
+BaeDiff.df %>%
+  # lots of these values are "unknown"
+  filter(!is.na(as.numeric(var_exclosure.area.m2))) %>%
+  ggplot(aes(x=var_aq.or.terr, 
+             # change from character to numeric 
+             y=as.numeric(var_exclosure.area.m2))) +
+  geom_boxplot() +
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+# seems like too big of differences, makes it hard to evaluate? 
+
