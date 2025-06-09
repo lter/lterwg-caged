@@ -235,8 +235,35 @@ uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~
 summary(uncaged.betamod1)    
 car::Anova(uncaged.betamod1, type = "III")
 
-# Summarize model output and statistics
-tidy(Anova(uncaged.betamod1, type = "II"))
+# Summarize model output and statistics - Type II
+anova_table <- Anova(uncaged.betamod1, type = "II") %>%
+  tidy()
+
+# Convert p-values to numeric and format them in decimal notation
+anova_table <- anova_table %>%
+  mutate(
+    p.value = ifelse(p.value < 0.0001,
+                     "< 0.0001",
+                     formatC(p.value, format = "f", digits = 4)),
+    statistic = round(statistic, 1)
+  )
+print("Type II Sums-of-squares")
+anova_table
+
+# Summarize model output and statistics - Type III
+anova_table <- Anova(uncaged.betamod1, type = "III") %>%
+  tidy()
+
+# Convert p-values to numeric and format them in decimal notation
+anova_table <- anova_table %>%
+  mutate(
+    p.value = ifelse(p.value < 0.0001,
+                     "< 0.0001",
+                     formatC(p.value, format = "f", digits = 4)),
+    statistic = round(statistic, 1)
+  )
+print("Type III Sums-of-squares")
+anova_table
 
 ## ------------------------------------------- ##
 ## Validate Beta Regression Models ----
