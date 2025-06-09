@@ -58,7 +58,12 @@ dplyr::glimpse(meta_v1)
 ## ------------------------------------------- ##
 
 # Check current lat/long formats
-sort(unique(meta_v1$lat))
+sort(unique(meta_v1$var_lat))
+
+meta_v1$lat  <- meta_v1$var_lat
+meta_v1$long <- meta_v1$var_long
+
+meta_v1 <- meta_v1 %>% dplyr::select(-var_lat, -var_long)
 
 # Do needed repairs
 meta_v2 <- meta_v1 %>% 
