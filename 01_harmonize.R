@@ -173,7 +173,7 @@ combo_v2 <- combo_v1 %>%
   # Rename treatments more clearly
   dplyr::rename(
     treat.artificial = orig.treat_artificial,
-    treat.exposure = orig.treat_exposure,
+    # treat.exposure = orig.treat_exposure,
     treat.insecticide = orig.treat_insecticide,
     # treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
