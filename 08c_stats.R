@@ -313,14 +313,16 @@ ggplot(BaeDisp.df2, aes(x = lat, y = betadisp.comm.dist_transform)) +
         aspect.ratio = 1) +
   scale_color_manual(values = my_colors) +
   scale_fill_manual(values = my_colors) +
-  scale_shape_manual(values = my_shapes)
+  scale_shape_manual(values = my_shapes) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1,0.2)) +
+  scale_x_continuous(breaks = seq(-60, 100, by = 20))
 ggsave("graphs/beta.reg.output1-raw.data.pdf", height = 8, width = 8)
 
 # Compute study-level means
 study_means <- BaeDisp.df2 %>%
   group_by(source, cage.treatment_std, var_aq.or.terr) %>%
   summarise(
-    lat  = mean(lat),
+    lat  = mean(lat, na.rm = T),
     mean_response = mean(betadisp.comm.dist_transform),
     se_response   = sd(betadisp.comm.dist_transform) / sqrt(n()),
     .groups = "drop"
@@ -351,7 +353,9 @@ ggplot(study_means, aes(x = lat, y = mean_response)) +
   ) +
   scale_color_manual(values = my_colors) +
   scale_fill_manual(values = my_colors) +
-  scale_shape_manual(values = my_shapes)
+  scale_shape_manual(values = my_shapes) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1,0.2)) +
+  scale_x_continuous(breaks = seq(-60, 100, by = 20))
 ggsave("graphs/beta.reg.output2-study.means.pdf", height = 8, width = 8)
 
 ## ------------------------------------------- ##
