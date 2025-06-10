@@ -177,15 +177,15 @@ combo_v2 <- combo_v1 %>%
     treat.insecticide = orig.treat_insecticide,
     # treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
-   # treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
+    # treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
     treat.gap = orig.treat_gap,
-    treat.nitrogen.addition = orig.treat_nitrogen.addition
+    treat.nitrogen.addition = orig.treat_nitrogen.addition,
+    treat.fire = orig.treat_burn
   ) %>% 
   # Combine synonymous-sounding treatments
   dplyr::mutate(
     treat.nutrients = dplyr::coalesce(orig.treat_nut.trt, orig.treat_nutrients, 
                                       orig.treat_nitrogen.treatment),
-    treat.fire = dplyr::coalesce(orig.treat_fire, orig.treat_burn)
   ) %>% 
   # Coalesce cage/cage-related treatments separately
   dplyr::mutate(treat.cage = dplyr::case_when(
@@ -282,7 +282,8 @@ combo_v5 <- combo_v4 %>%
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Remove non-numbers
   dplyr::mutate(abundance = gsub(pattern = "^\\.$", replacement = "", x = abundance)) %>% 
-  dplyr::mutate(abundance = ifelse(test = abundance %in% c("n/a", "—", "na"),
+  dplyr::mutate(abundance = ifelse(test = abundance %in% c("n/a", "—", "na",
+                                                           "#VALUE!"),
                                    yes = "", no = abundance)) %>% 
   # Remove any rows where no metric of abundance is included
   dplyr::filter(is.na(abundance) != T &
