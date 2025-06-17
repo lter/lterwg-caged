@@ -312,7 +312,7 @@ sub_v7 <- sub_v6 %>%
   # Don't want Nitrogen addition
   dplyr::filter(!treat.nitrogen.addition %in% c(16, 50)) %>%
   # Don't want prairie dog disturbance
-  # dplyr::filter(!treat.disturbance %in% c("prairie dog")) %>%
+   dplyr::filter(!treat.disturbance %in% c("prairie dog")) %>%
   # Don't want certain nutrient 
   dplyr::filter(!treat.nutrients %in% c("Nutrient Pollution", "enriched",
                                         "NP", "N", "P", 1:9))

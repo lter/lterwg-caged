@@ -191,9 +191,9 @@ combo_v2 <- combo_v1 %>%
   dplyr::mutate(treat.cage = dplyr::case_when(
     !is.na(orig.treat_cage) ~ orig.treat_cage,
     !is.na(orig.treat_fence) ~ orig.treat_fence,
-    !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
-      paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
-    !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
+  #  !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
+   #   paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
+  #  !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
     !is.na(orig.treat_cage.cattle) ~ orig.treat_cage.cattle,
     ## If all else fails, just use whatever the singualr original treatment column is
     !is.na(orig.treat) ~ orig.treat,
