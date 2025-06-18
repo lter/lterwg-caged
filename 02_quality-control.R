@@ -46,17 +46,17 @@ tidy_v2 <- tidy_v1 %>%
                         "control small fenced", "np small fenced",
                         "small fenced no fertilizer", "full exclosure",
                         "nodeer", "total_excl", "ungrazed", "closed", 
-                        "oui", "in") ~ "caged",
+                        "oui", "in", "caribou and small mammal fence") ~ "caged",
       ### Partial cage
       cage.tmp %in% c("partial", "3.part.cage", 
                         "partial nitex", "partial quarter",
-                        "partial exclosure", "livest_excl") ~ "partial",
+                        "partial exclosure", "livest_excl", "Macropod-grazed") ~ "partial",
       ### No cage
       cage.tmp %in% c("none", "open", "end/control", "control", 
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
                         "deer", "grazed", "non", "out", "open-grazed", 
-                        "nitrogen phosphorus unfenced", "no cage") ~ "uncaged",
+                        "nitrogen phosphorus unfenced", "no cage", "Exclosure control", "no fence") ~ "uncaged",
       ## Organization-dependent changes
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
       organization == "clausing" & cage.tmp == "removal" ~ "caged",
@@ -97,12 +97,24 @@ tidy_v2 <- tidy_v1 %>%
         cage.tmp == "1" ~ "uncaged",
       source == "lter-cdr_cedarcreekecosystem_plantabovegroundbiomass_1991_grasshoppers_vegetation.csv" &
         cage.tmp %in% c(2:8) ~ "caged",
+      organization == "alberti" & cage.tmp == "G" ~ "uncaged",
+      organization == "alberti" & cage.tmp == "NG" ~ "caged",
+      organization == "alberti" & cage.tmp == "1" ~ "caged",
+      organization == "alberti" & cage.tmp == "2" ~ "partial",
+      organization == "alberti" & cage.tmp == "3" ~ "uncaged",
+      organization == "chen" & cage.tmp == "C" ~ "uncaged",
+      organization == "chen" & cage.tmp == "G" ~ "caged",
+      organization == "duran" & cage.tmp == "E" ~ "caged",
+      organization == "duran" & cage.tmp == "H" ~ "uncaged",
       organization == "lter-mcr" & cage.tmp == "cage control" ~ "uncaged",
       organization == "lter-mcr" & stringr::str_detect(string = cage.tmp, pattern = "x") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp %in% c("l", "r") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp == "c" ~ "uncaged",
+      organization == "mclaren" & cage.tmp == "C" ~ "uncaged",
+      organization == "mclaren" & cage.tmp == "E" ~ "caged",
       organization == "nopp-mayer" & cage.tmp == "0" ~ "uncaged",
       organization == "nopp-mayer" & cage.tmp == "1" ~ "caged",
+      organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
       organization == "pelinson" & cage.tmp == "present" ~ "uncaged",
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
       organization == "royo" & cage.tmp == "1" ~ "caged",
@@ -111,6 +123,9 @@ tidy_v2 <- tidy_v1 %>%
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
       organization == "villar" & cage.tmp == "a" ~ "caged",
       organization == "villar" & cage.tmp == "c" ~ "uncaged",
+      organization == "wang" & cage.tmp == "CSG" ~ "uncaged",
+      organization == "wang" & cage.tmp == "NG" ~ "caged",
+      organization == "wang" & cage.tmp == "HG" ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
@@ -129,7 +144,7 @@ tidy_v2 %>%
   dplyr::distinct()
 
 # Should a diagnostic CSV be exported summarizing that information?
-diagnostic_export <- FALSE
+diagnostic_export <- TRUE
 
 # Generate / export a diagnostic if desired
 if(diagnostic_export == TRUE){
