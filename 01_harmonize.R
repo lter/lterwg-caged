@@ -177,7 +177,7 @@ combo_v2 <- combo_v1 %>%
     treat.insecticide = orig.treat_insecticide,
     # treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
-    # treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
+     treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
     treat.gap = orig.treat_gap,
     treat.nitrogen.addition = orig.treat_nitrogen.addition,
     treat.fire = orig.treat_burn
