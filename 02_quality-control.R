@@ -112,6 +112,8 @@ tidy_v2 <- tidy_v1 %>%
       organization == "lter-sevilleta" & cage.tmp == "c" ~ "uncaged",
       organization == "mclaren" & cage.tmp == "C" ~ "uncaged",
       organization == "mclaren" & cage.tmp == "E" ~ "caged",
+      organization == "mclaren" & cage.tmp == "0" ~ "uncaged",
+      organization == "mclaren" & cage.tmp == "1" ~ "caged",
       organization == "nopp-mayer" & cage.tmp == "0" ~ "uncaged",
       organization == "nopp-mayer" & cage.tmp == "1" ~ "caged",
       organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
