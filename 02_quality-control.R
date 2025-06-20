@@ -46,17 +46,19 @@ tidy_v2 <- tidy_v1 %>%
                         "control small fenced", "np small fenced",
                         "small fenced no fertilizer", "full exclosure",
                         "nodeer", "total_excl", "ungrazed", "closed", 
-                        "oui", "in", "caribou and small mammal fence") ~ "caged",
+                        "oui", "in", "caribou and small mammal fence", "caribou fence", 
+                        "livest_excl", "Macropod-grazed") ~ "caged",
       ### Partial cage
       cage.tmp %in% c("partial", "3.part.cage", 
                         "partial nitex", "partial quarter",
-                        "partial exclosure", "livest_excl", "Macropod-grazed") ~ "partial",
+                        "partial exclosure") ~ "partial",
       ### No cage
       cage.tmp %in% c("none", "open", "end/control", "control", 
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
                         "deer", "grazed", "non", "out", "open-grazed", 
-                        "nitrogen phosphorus unfenced", "no cage", "Exclosure control", "no fence") ~ "uncaged",
+                        "nitrogen phosphorus unfenced", "no cage", 
+                        "Exclosure control", "no fence") ~ "uncaged",
       ## Organization-dependent changes
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
       organization == "clausing" & cage.tmp == "removal" ~ "caged",
@@ -81,6 +83,17 @@ tidy_v2 <- tidy_v1 %>%
       organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
       organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
       organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
+      organization == "chen" & cage.tmp %in% c("Hares", "Hares & geese") ~ "uncaged",
+      organization == "chen" & cage.tmp == "Ungrazed" ~ "caged",
+      ### Wang Mongolia datasets slightly vary
+      source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+        cage.tmp %in% c("CG", "SG", "NG") ~ "caged",
+      source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+        cage.tmp == "CSG" ~ "uncaged",
+      source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+        cage.tmp %in% c("MG", "LG", "NG") ~ "caged",
+      source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+        cage.tmp == "HG" ~ "uncaged",
       ## Some variance in CDR number treatments (this is why we don't use ambiguous integers for critical treatment ID!)
       ###  1984-85 'herbivores'
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
@@ -97,11 +110,14 @@ tidy_v2 <- tidy_v1 %>%
         cage.tmp == "1" ~ "uncaged",
       source == "lter-cdr_cedarcreekecosystem_plantabovegroundbiomass_1991_grasshoppers_vegetation.csv" &
         cage.tmp %in% c(2:8) ~ "caged",
+      ### alberti netherlands cattle
+      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+        cage.tmp %in% c(1:2) ~ "caged",
+      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+        cage.tmp == "3" ~ "uncaged",
       organization == "alberti" & cage.tmp == "G" ~ "uncaged",
       organization == "alberti" & cage.tmp == "NG" ~ "caged",
-      organization == "alberti" & cage.tmp == "1" ~ "caged",
-      organization == "alberti" & cage.tmp == "2" ~ "partial",
-      organization == "alberti" & cage.tmp == "3" ~ "uncaged",
+      organization == "alberti" & cage.tmp == "CC" ~ "partial",
       organization == "chen" & cage.tmp == "C" ~ "uncaged",
       organization == "chen" & cage.tmp == "G" ~ "caged",
       organization == "duran" & cage.tmp == "E" ~ "caged",
@@ -116,6 +132,7 @@ tidy_v2 <- tidy_v1 %>%
       organization == "mclaren" & cage.tmp == "1" ~ "caged",
       organization == "nopp-mayer" & cage.tmp == "0" ~ "uncaged",
       organization == "nopp-mayer" & cage.tmp == "1" ~ "caged",
+      organization == "parker" & cage.tmp == "cage control" ~ "partial",
       organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
       organization == "pelinson" & cage.tmp == "present" ~ "uncaged",
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
@@ -125,9 +142,6 @@ tidy_v2 <- tidy_v1 %>%
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
       organization == "villar" & cage.tmp == "a" ~ "caged",
       organization == "villar" & cage.tmp == "c" ~ "uncaged",
-      organization == "wang" & cage.tmp == "CSG" ~ "uncaged",
-      organization == "wang" & cage.tmp == "NG" ~ "caged",
-      organization == "wang" & cage.tmp == "HG" ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
