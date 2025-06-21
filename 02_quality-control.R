@@ -58,9 +58,10 @@ tidy_v2 <- tidy_v1 %>%
                         "control unfenced", "np unfenced",
                         "deer", "grazed", "non", "out", "open-grazed", 
                         "nitrogen phosphorus unfenced", "no cage", 
-                        "Exclosure control", "no fence") ~ "uncaged",
+                        "no fence") ~ "uncaged",
       ## Organization-dependent changes
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
+      organization == "burkepile" & cage.tmp == "Exclosure control" ~ "uncaged",
       organization == "clausing" & cage.tmp == "removal" ~ "caged",
       organization == "clausing" & cage.tmp == "ambient" ~ "uncaged",
       organization == "cper" & cage.tmp == "ah" ~ "uncaged", # AH = all herbivores
@@ -80,10 +81,10 @@ tidy_v2 <- tidy_v1 %>%
                                                    "lfct17", "sfct17", "mfct17") ~ "caged",
       organization == "lter-arc" & cage.tmp %in% c("nfct", "nfnp", "ct", 
                                                    "np", "n", "p") ~ "uncaged",
+      organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
       organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
       organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
       organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
-      organization == "chen" & cage.tmp %in% c("Hares", "Hares & geese") ~ "uncaged",
       organization == "chen" & cage.tmp == "Ungrazed" ~ "caged",
       ### Wang Mongolia datasets slightly vary
       source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
@@ -94,6 +95,31 @@ tidy_v2 <- tidy_v1 %>%
         cage.tmp %in% c("MG", "LG", "NG") ~ "caged",
       source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
         cage.tmp == "HG" ~ "uncaged",
+      ### ALberti datasets
+      source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
+        cage.tmp == "CC" ~ "partial",
+      source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
+        cage.tmp == "G" ~ "uncaged",
+      source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
+        cage.tmp == "NG" ~ "caged",
+      ### Variations in Chen studies
+      source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
+        cage.tmp %in% c("Hares", "Hares & geese") ~ "uncaged",
+      source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
+        cage.tmp == "C" ~ "uncaged",
+      source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
+        cage.tmp == "G" ~ "caged",
+      source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
+        cage.tmp == "E" ~ "caged",
+      source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
+        cage.tmp == "H" ~ "uncaged",
+      source == "gex_queenslandaus1-5_Silcock_2009_grazers_plants.csv" &
+        cage.tmp == "Macropod-grazed" ~ "caged",
+      ### Mclaren Alaska
+      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
+        cage.tmp == "E" ~ "caged",
+      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
+        cage.tmp == "C" ~ "uncaged",
       ## Some variance in CDR number treatments (this is why we don't use ambiguous integers for critical treatment ID!)
       ###  1984-85 'herbivores'
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
@@ -115,25 +141,15 @@ tidy_v2 <- tidy_v1 %>%
         cage.tmp %in% c(1:2) ~ "caged",
       source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
         cage.tmp == "3" ~ "uncaged",
-      organization == "alberti" & cage.tmp == "G" ~ "uncaged",
-      organization == "alberti" & cage.tmp == "NG" ~ "caged",
-      organization == "alberti" & cage.tmp == "CC" ~ "partial",
-      organization == "chen" & cage.tmp == "C" ~ "uncaged",
-      organization == "chen" & cage.tmp == "G" ~ "caged",
-      organization == "duran" & cage.tmp == "E" ~ "caged",
-      organization == "duran" & cage.tmp == "H" ~ "uncaged",
       organization == "lter-mcr" & cage.tmp == "cage control" ~ "uncaged",
       organization == "lter-mcr" & stringr::str_detect(string = cage.tmp, pattern = "x") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp %in% c("l", "r") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp == "c" ~ "uncaged",
-      organization == "mclaren" & cage.tmp == "C" ~ "uncaged",
-      organization == "mclaren" & cage.tmp == "E" ~ "caged",
       organization == "mclaren" & cage.tmp == "0" ~ "uncaged",
       organization == "mclaren" & cage.tmp == "1" ~ "caged",
       organization == "nopp-mayer" & cage.tmp == "0" ~ "uncaged",
       organization == "nopp-mayer" & cage.tmp == "1" ~ "caged",
       organization == "parker" & cage.tmp == "cage control" ~ "partial",
-      organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
       organization == "pelinson" & cage.tmp == "present" ~ "uncaged",
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
       organization == "royo" & cage.tmp == "1" ~ "caged",
@@ -223,10 +239,11 @@ tidy_v3b <- tidy_v3 %>%
 supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.name))
 
 # Then, if there is a fire treatment, we want to add that to the experiment name
-tidy_v4 <- tidy_v3b %>% 
+tidy_v4 <- tidy_v3b %>%
   dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
-                      yes = exp.name, 
+                      yes = exp.name,
                       no = paste(exp.name, treat.fire, sep = "--")) )
+
 
 # Check again
 supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
@@ -409,8 +426,8 @@ tidy_path <- file.path("data", tidy_name)
 # Export locally
 write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 
-# # Upload to Drive
-# googledrive::drive_upload(media = tidy_path, overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+# Upload to Drive
+googledrive::drive_upload(media = tidy_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----
