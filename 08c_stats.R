@@ -404,7 +404,7 @@ uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~
                               abs.lat +
                               var_aq.or.terr*abs.lat +
 
-                              (1|source/exp.name), 
+                              (1|exp.name), 
                             # check if we need this if we use abslat and uncaged only
                             dispformula = ~ var_aq.or.terr + abs.lat,
                             family = beta_family(link = "logit"),
