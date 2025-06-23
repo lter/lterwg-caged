@@ -60,14 +60,13 @@ dplyr::glimpse(meta_v1)
 # Check current lat/long formats
 sort(unique(meta_v1$var_lat))
 
-meta_v1$lat  <- meta_v1$var_lat
-meta_v1$long <- meta_v1$var_long
 
-meta_v1 <- meta_v1 %>% dplyr::select(-var_lat, -var_long)
 
 # Do needed repairs
 meta_v2 <- meta_v1 %>% 
   # Rename & duplicate original lat/long cols
+  dplyr::rename(lat = var_lat,
+                long = var_long) %>%
   dplyr::mutate(lat.orig = lat,
                 long.orig = long) %>% 
   # Replace degree symbol with period
@@ -259,7 +258,7 @@ for(focal_w.meta in w.meta_outs){
     ## No column re-ordering needed (want these at end)
     dplyr::left_join(y = diff_v1, by = c("source", "organization", "site", 
                                          "excluded.group", "measured.group",
-                                         "exp.name", "cage.treatment_std", 
+                                         "exp.name", "cage.treatment_std",
                                          "year", "betadisp.design.level"))
 
   # Add this to the output list
