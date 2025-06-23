@@ -77,16 +77,16 @@ googledrive::drive_upload(media = proj1_name, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Project 2 (______) ----
+# Project 2 (Lamb Galapagos) ----
 ## ------------------------------------------- ##
 # Reason for purgatory status
-## 
+## we need Site, Exposure and Locality all as one column so it can be exp.name
 
 # Identify file(s) name(s)
-proj2_raw_name <- "BAD_FILE.csv"
+proj2_raw_name <- "biomass.csv"
 
 # Identify file(s) in Drive
-proj2_gdrive <- googledrive::drive_ls(googledrive::as_id("raw file GDrive link (in subfolder of 'metadata' folder)")) %>% 
+proj2_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1fgcDOopAeYNWYdUWSFcdMuP1IW1kYeCg")) %>% 
   dplyr::filter(name %in% c(proj2_raw_name))
 
 # Download file(s)
@@ -101,13 +101,20 @@ proj2_raw <- read.csv(file.path("data", "purgatory", proj2_raw_name))
 dplyr::glimpse(proj2_raw)
 
 # Do needed repairs
-proj2 <- proj2_raw
+proj2 <- proj2_raw %>% 
+  # Concatenate experiment context columns
+  tidyr::unite(col = "Experiment", Site, Exposure, Locality, sep = "__", na.rm = T) %>% 
+  # Drop unwanted column(s)
+  dplyr::select(-X)
 
 # Re-check structure
 dplyr::glimpse(proj2)
 
+# Check gained/lost columns
+supportR::diff_check(old = names(proj2_raw), new = names(proj2))
+
 # Create good/new file name
-proj2_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
+proj2_name <- "lamb_galapagos_consumermobility_2017_fish-urchins_algae.csv"
 proj2_path <- file.path("data", "drydock", proj2_name)
 
 # Export locally
