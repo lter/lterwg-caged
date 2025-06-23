@@ -81,45 +81,45 @@ tidy_v2 <- tidy_v1 %>%
                                                    "lfct17", "sfct17", "mfct17") ~ "caged",
       organization == "lter-arc" & cage.tmp %in% c("nfct", "nfnp", "ct", 
                                                    "np", "n", "p") ~ "uncaged",
-      organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
+      organization == "pascual" & cage.tmp == "cage control" ~ "partial",
       organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
       organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
       organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
-      organization == "chen" & cage.tmp == "Ungrazed" ~ "caged",
+      organization == "chen" & cage.tmp == "ungrazed" ~ "caged",
       ### Wang Mongolia datasets slightly vary
       source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
-        cage.tmp %in% c("CG", "SG", "NG") ~ "caged",
+        cage.tmp %in% c("cg", "sg", "ng") ~ "caged",
       source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
-        cage.tmp == "CSG" ~ "uncaged",
+        cage.tmp == "csg" ~ "uncaged",
       source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
-        cage.tmp %in% c("MG", "LG", "NG") ~ "caged",
+        cage.tmp %in% c("mg", "lg", "ng") ~ "caged",
       source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
-        cage.tmp == "HG" ~ "uncaged",
+        cage.tmp == "hg" ~ "uncaged",
       ### ALberti datasets
       source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
-        cage.tmp == "CC" ~ "partial",
+        cage.tmp == "cc" ~ "partial",
       source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
-        cage.tmp == "G" ~ "uncaged",
+        cage.tmp == "g" ~ "uncaged",
       source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
-        cage.tmp == "NG" ~ "caged",
+        cage.tmp == "ng" ~ "caged",
       ### Variations in Chen studies
       source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
-        cage.tmp %in% c("Hares", "Hares & geese") ~ "uncaged",
+        cage.tmp %in% c("hares", "hares & geese") ~ "uncaged",
       source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
-        cage.tmp == "C" ~ "uncaged",
+        cage.tmp == "c" ~ "uncaged",
       source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
-        cage.tmp == "G" ~ "caged",
+        cage.tmp == "g" ~ "caged",
       source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
-        cage.tmp == "E" ~ "caged",
+        cage.tmp == "e" ~ "caged",
       source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
-        cage.tmp == "H" ~ "uncaged",
+        cage.tmp == "h" ~ "uncaged",
       source == "gex_queenslandaus1-5_Silcock_2009_grazers_plants.csv" &
-        cage.tmp == "Macropod-grazed" ~ "caged",
+        cage.tmp == "macropod-grazed" ~ "caged",
       ### Mclaren Alaska
       source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
-        cage.tmp == "E" ~ "caged",
+        cage.tmp == "e" ~ "caged",
       source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
-        cage.tmp == "C" ~ "uncaged",
+        cage.tmp == "c" ~ "uncaged",
       ## Some variance in CDR number treatments (this is why we don't use ambiguous integers for critical treatment ID!)
       ###  1984-85 'herbivores'
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
@@ -427,7 +427,7 @@ tidy_path <- file.path("data", tidy_name)
 write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 
 # Upload to Drive
-googledrive::drive_upload(media = tidy_path, overwrite = T,
-                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+# googledrive::drive_upload(media = tidy_path, overwrite = T,
+#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----
