@@ -83,6 +83,18 @@ sub_v2c <- sub_v2b %>%
     # Keep any datasets with only one sampling event per year
     time.ct == 1 |
       # OR keep the manually-identified last time point for the following datasets
+      ## A
+      (source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv" &
+             year == "year" & sampling.point == "8/14/2011") |
+      ## Alberti argentina
+      (source == "alberti_argentina_saltmarshexclosure_2007-2024_guineapigs_plants.csv" &
+         year == "year" & sampling.point == "2024") |
+      ## Alberti neth
+      (source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+         year == "year" & sampling.point == "14") |
+      ## Alberti patagonia
+      (source == "alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv" &
+         sampling.point %in% c("2024-11-08", "2024-11-09")) |
       ## B
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
          year == "2009" & sampling.point == "Fall 2009") |
@@ -92,6 +104,15 @@ sub_v2c <- sub_v2b %>%
          year == "2011" & sampling.point == "Fall 2011") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
          year == "2012" & sampling.point == "Winter 2012") |
+      ## Chen goose
+      (source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
+         sampling.point == "2016") |
+      ## Chen netherlands
+      (source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
+         sampling.point == "2019") |
+      ## Duran 
+      (source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
+         sampling.point == "June") |
       ## D
       (source == "diaz_longyearbyen_sedimentexclusionexp_2017_epibenthicpredators_benthic.csv" &
          sampling.point == "2017-08-23T00:00") |
@@ -142,9 +163,27 @@ sub_v2c <- sub_v2b %>%
       ## LTER Sevilleta
       (source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" &
          year == "2005" & sampling.point == "11/29/05") |
+      ## LTER ARC DHC tundra
+      (source == "lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv" &
+         sampling.point == "2017") |
+      ## Mclaren canada
+      (source == "mclaren_canada_borealforestexcover_1990-1999_herbivore_plants.csv" &
+         year == "1999" & sampling.point == "2") |
+      ## LTER ARC MAT tundra
+      (source == "lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv" &
+         sampling.point == "2017") |
+      ## Parker
+      (source == "parker_wetlands_chattahoocheeriver_2004_beavers_freshwaterplants.csv" & 
+         sampling.point %in% c("7/20/2004", "7/22/2004") |
       ## P
       (source == "pelinson_brazil_predatorisolationcomm_2017_tilapia_insects.csv" & 
          sampling.point == "3") |
+      ## Samper villareal
+      (source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" & 
+         sampling.point == "13") |
+      ## Shantz
+      (source == "shantz_florida_partialcages_2013-2014_fish_benthic.csv" & 
+         sampling.point == "Sep_14") |
       ## S
       (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
          year == "2017" & sampling.point == "11") |
@@ -156,10 +195,16 @@ sub_v2c <- sub_v2b %>%
       (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
          sampling.point == "105") |
       (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
-         sampling.point == "105")
+         sampling.point == "105") |
+      ## Wang Cattle
+      (source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+          sampling.point %in% c("2018.9.13", "2018.9.7")) |
+      ## Wang Sheep
+      (source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+          sampling.point %in% c("921", "922"))
       # (source == "" &
       #    year == "" & sampling.point == "")
-  )
+  ))
 
 # Check number of lost rows (hopefully few rows but understandable if some/many)
 message(nrow(sub_v2) - nrow(sub_v2c), " rows lost")
