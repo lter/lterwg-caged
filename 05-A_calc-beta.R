@@ -456,7 +456,7 @@ write.csv(x = beta_allscales, na = '', row.names = F,
           file = file.path("data", paste0(beta_name, "_all-scales.csv")))
 
 # # Upload all of these to the Drive
-#purrr::walk(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"),
+# purrr::walk(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"),
 #             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
 #                                             path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
