@@ -406,6 +406,7 @@ uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~
 
                               (1|exp.name), 
                             # check if we need this if we use abslat and uncaged only
+                            # still sig without dispersion formula
                             dispformula = ~ var_aq.or.terr + abs.lat,
                             family = beta_family(link = "logit"),
                             control = glmmTMBControl(optimizer = optim, 
@@ -423,7 +424,7 @@ check_model(uncaged.betamod1)
 # lmer for uncaged only (Figure 2 model)
 uncaged.mod1 <- lmer(betadisp.comm.dist ~ 
                            var_aq.or.terr*abs.lat + 
-                           (1|source/exp.name), 
+                           (1|exp.name), 
                      data = uncaged.df)
 check_model(uncaged.mod1)
 summary(uncaged.mod1)
@@ -469,9 +470,9 @@ hist(BaeDiff.df_abs$abdiff) # try a beta regression?
 Baediff.betamod1 <- glmmTMB(abdiff ~ 
                               var_aq.or.terr +
                               ablat +
-                              var_aq.or.terr*ablat +
+                              var_aq.or.terr*ablat, #+
                               
-                              (1|source), 
+                             # (1|source), 
                         #    dispformula = ~ var_aq.or.terr + abs.lat,
                             family = beta_family(link = "logit"),
                             control = glmmTMBControl(optimizer = optim, 
@@ -485,9 +486,9 @@ car::Anova(Baediff.betamod1, type = "II")
 
 check_model(Baediff.betamod1) # looks like it fits well? 
 
-abs.diff.mod1 <- lmer(abdiff ~ 
-                           ablat*var_aq.or.terr + 
-                           (1|source), 
+abs.diff.mod1 <- lm(abdiff ~ 
+                           ablat*var_aq.or.terr, #+ 
+                        #   (1|source), 
                          data = BaeDiff.df_abs)
 check_model(abs.diff.mod1)
 summary(abs.diff.mod1)
