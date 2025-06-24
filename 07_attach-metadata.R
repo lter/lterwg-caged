@@ -125,12 +125,21 @@ meta_v3 <- meta_v2 %>%
 dplyr::glimpse(meta_v3)
 
 ## ------------------------------------------- ##
-# Remove Unwanted Metadata Columns ----
+# Remove Unwanted Metadata Info ----
 ## ------------------------------------------- ##
 
-# Remove unwanted columns
+# Needed processing
 meta_v4 <- meta_v3 %>% 
-  dplyr::select(-dplyr::contains("notes"), -assigned.to)
+  # Make all empty cells true NAs
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(),
+                              .fns = ~ ifelse(nchar(.) == 0,
+                                              yes = NA, no = .))) %>% 
+  # Drop rows without either a source name or an experiment names
+  dplyr::filter(!is.na(source) | !is.na(exp.name)) %>% 
+  # Remove unwanted columns
+  dplyr::select(-dplyr::contains("notes"), -assigned.to) %>% 
+  # Drop any columns that are entirely empty
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
 
 # Check that only drops desired columns
 supportR::diff_check(old = names(meta_v3), new = names(meta_v4))
