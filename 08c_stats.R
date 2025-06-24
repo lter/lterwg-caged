@@ -400,8 +400,6 @@ ggsave("graphs/beta.reg.output2-study.means.pdf", height = 8, width = 8)
 # Beta regression using Max's code above (but only on uncaged)
 # Fit model 1 on all data
 uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
-                              var_aq.or.terr +
-                              abs.lat +
                               var_aq.or.terr*abs.lat +
 
                               (1|exp.name), 
@@ -420,6 +418,7 @@ car::Anova(uncaged.betamod1, type = "II")
 # need to try with the new data
 
 check_model(uncaged.betamod1)
+
 
 # lmer for uncaged only (Figure 2 model)
 uncaged.mod1 <- lmer(betadisp.comm.dist ~ 
@@ -468,8 +467,6 @@ hist(BaeDiff.df_abs$abdiff) # try a beta regression?
 
 
 Baediff.betamod1 <- glmmTMB(abdiff ~ 
-                              var_aq.or.terr +
-                              ablat +
                               var_aq.or.terr*ablat, #+
                               
                              # (1|source), 
