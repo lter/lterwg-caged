@@ -26,7 +26,7 @@ rm(list = ls()); gc()
 # Identify data files we want to add stuff to
 (w.meta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp_"))
 w.meta_in_list <- purrr::map(.x = w.meta_outs,
-                          .f = ~ read.csv(file = file.path("data", .x)))
+                             .f = ~ read.csv(file = file.path("data", .x)))
 names(w.meta_in_list) <- w.meta_outs
 
 # Check structure of one
@@ -60,15 +60,11 @@ dplyr::glimpse(meta_v1)
 # Check current lat/long formats
 sort(unique(meta_v1$var_lat))
 
-
-
 # Do needed repairs
 meta_v2 <- meta_v1 %>% 
   # Rename & duplicate original lat/long cols
-  dplyr::rename(lat = var_lat,
-                long = var_long) %>%
-  dplyr::mutate(lat.orig = lat,
-                long.orig = long) %>% 
+  dplyr::rename(lat = var_lat, long = var_long) %>%
+  dplyr::mutate(lat.orig = lat, long.orig = long) %>% 
   # Replace degree symbol with period
   dplyr::mutate(dplyr::across(.cols = lat:long,
                               .fns = ~ gsub(pattern = "°|º", replacement = ".", x = .))) %>% 
