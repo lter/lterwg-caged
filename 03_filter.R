@@ -375,12 +375,12 @@ dplyr::glimpse(sub_v7)
 sub_v8 <- sub_v7 %>% 
   # Superseded "original" columns (standardized in QC script)
   dplyr::select(-dplyr::starts_with("treat.")) %>% 
-  # Drop unstandardized cage treatments too
-  #dplyr::select(-cage.treatment_orig) %>% 
   # 'Distance from' column(s)
   dplyr::select(-dplyr::starts_with("distance.from.")) %>% 
   # Exclosure age
-  dplyr::select(-exclosure.age)
+  dplyr::select(-exclosure.age) %>% 
+  # Any columns that are entirely empty
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
 
 # Double check gained/lost columns
 supportR::diff_check(old = names(sub_v7), new = names(sub_v8))
