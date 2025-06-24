@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools)
+librarian::shelf(tidyverse, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
