@@ -111,7 +111,11 @@ BaeDiff.df %>%
   geom_point() +
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen")) +
+  labs(x="Absolute latitude",
+       y="Gamma richness",
+       colour="Biome")
 
 
 # Plot size for aquatic vs terrestrial 
