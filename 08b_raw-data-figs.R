@@ -29,9 +29,10 @@ BaeDiff.df <- read.csv("data/BaeDiff.df.csv")
 BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
 
 
-# View(BaeDiff.df) # 235 rows
-# View(BaeDisp.df) # 10875 rows
-
+# View(BaeDiff.df) 
+# View(BaeDisp.df) 
+dim(BaeDiff.df)# 273 rows
+dim(BaeDisp.df)# 11281 rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
@@ -48,7 +49,12 @@ BaeDisp.df %>%
   geom_point() +
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen")) +
+  labs(x= "Absolute latitude",
+       y= "Beta dispersion",
+       colour = "Biome") +
+  ggtitle("Uncaged data only")
 
 # Beta dispersion (caged only) by latitude
 BaeDisp.df %>%
@@ -59,7 +65,12 @@ BaeDisp.df %>%
   geom_point() +
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "Beta dispersion",
+       colour = "Biome") +
+  ggtitle("Caged data only")
 
 
 # Diff by latitude
@@ -70,7 +81,10 @@ BaeDiff.df %>%
   geom_point() +
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+  scale_color_manual(values= c("royalblue","darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "Effect size\n(uncaged - caged mean)",
+       colour = "Biome")
   
 # Absolute diff by latitude
 BaeDiff.df %>%
@@ -80,7 +94,11 @@ BaeDiff.df %>%
   geom_point() +
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "Absolute value of effect size\n(uncaged - caged mean)",
+       colour = "Biome")
 # absolute value= doesnt matter which direction, is just showing a big difference betweeen caged and uncaged beta dispersion
 
 
@@ -105,6 +123,6 @@ BaeDiff.df %>%
              y=as.numeric(var_exclosure.area.m2))) +
   geom_boxplot() +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("grey", "royalblue","darkgreen"))
+  scale_color_manual(values= c("royalblue","darkgreen"))
 # seems like too big of differences, makes it hard to evaluate? 
 
