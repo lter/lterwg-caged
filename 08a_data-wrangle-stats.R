@@ -26,7 +26,8 @@ rm(list = ls()); gc()
 # Data Download and QC ---- 
 ## ------------------------------------------- ##
 
-caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))  %>% 
+caged_v1 <- read.csv(file.path("data", 
+                               "07_caged_w.meta_finest-scales.csv"))  %>% 
   #rename these columns that got var. not var_
   rename(var_taxonomic.level = var.taxonomic.level, 
          var_exclosure.area.m2 = var.exclosure.area.m2)
@@ -101,9 +102,10 @@ supportR::count(vec = caged_v1$excluded.group)
 
 #latitude into numbers
 caged_v1$lat <- as.numeric(caged_v1$lat)
+avg.caged_v1$lat <- as.numeric(avg.caged_v1$lat)
 
 #create a big but not huge df for modeling
-cagedmodel.df = caged_v1 |> 
+cagedmodel.df <- caged_v1 |> 
   #First, select the columns we think we need:
   select(
     #select study ID vars
@@ -111,7 +113,10 @@ cagedmodel.df = caged_v1 |>
     #below is another line of code that is the result of Marc losing a fight with Jamie
     starts_with("var"), 
     #select important experimental info (PLOT SIZE, EXP AREA GO HERE)
-    cage.treatment_std, year.start.exclosure, year.end.exclosure, exp.name.spatialextent.category, natural.vs.artificial.substrate, betadisp.design.level, # exclusion.duration, 
+    cage.treatment_std, year.start.exclosure, 
+    year.end.exclosure, exp.name.spatialextent.category, 
+    natural.vs.artificial.substrate, 
+    betadisp.design.level, # exclusion.duration, 
     #select important habitat info that doesnt have "var_" in front
     lat, 
     #select consumer info
@@ -130,13 +135,13 @@ glimpse(cagedmodel.df)
 
 
 #DF for modeling, B disp ----
-BaeDisp.df = cagedmodel.df %>% 
+BaeDisp.df <- cagedmodel.df %>% 
   #only columns we need and have
   select(
     source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, lat, starts_with("var"), gamma.richness, betadisp.sample.size, betadisp.comm.dist)
 
 #DF for modeling, B diff ES ----
-BaeDiff.df = avg.caged_v1 %>% 
+BaeDiff.df <- avg.caged_v1 %>% 
   #only columns we need and have
   select(source,exp.name, lat, starts_with("var"), betadisp.sample.size, gamma.richness, within.cage.treat_betadisp.mean.diff)
 
