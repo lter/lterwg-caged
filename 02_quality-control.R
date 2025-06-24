@@ -212,9 +212,12 @@ dplyr::glimpse(tidy_v3)
 
 # Need to fill missing experiment names and attach relevant context
 tidy_v3b <- tidy_v3 %>% 
+  # Make all empty design levels truly empty
+  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with(c("exp.name", "exp.design.")),
+                              .fns = ~ ifelse(nchar(.) == 0,
+                                              yes = NA, no = .))) %>% 
   ## If 'exp.name' is missing, fill with full dataset filename
-  dplyr::mutate(exp.name = ifelse(nchar(exp.name) == 0 | is.na(exp.name),
-                                  yes = source, no = exp.name))
+  dplyr::mutate(exp.name = ifelse(is.na(exp.name), yes = source, no = exp.name))
 
 # Check for 'new' experiment names
 supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.name))
@@ -224,7 +227,6 @@ tidy_v4 <- tidy_v3b %>%
   dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
                       yes = exp.name,
                       no = paste(exp.name, treat.fire, sep = "--")) )
-
 
 # Check again
 supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
@@ -246,14 +248,10 @@ tidy_v4 %>%
 tidy_v5 <- tidy_v4 %>% 
   dplyr::mutate(
     ## Fill any missing design level values with experiment name
-    exp.design.1 = ifelse(nchar(exp.design.1) == 0 | is.na(exp.design.1),
-                          yes = exp.name, no = exp.design.1),
-    exp.design.2 = ifelse(nchar(exp.design.2) == 0 | is.na(exp.design.2),
-                          yes = exp.name, no = exp.design.2),
-    exp.design.3 = ifelse(nchar(exp.design.3) == 0 | is.na(exp.design.3),
-                          yes = exp.name, no = exp.design.3),
-    exp.design.4 = ifelse(nchar(exp.design.4) == 0 | is.na(exp.design.4),
-                          yes = exp.name, no = exp.design.4)
+    exp.design.1 = ifelse(is.na(exp.design.1), yes = exp.name, no = exp.design.1),
+    exp.design.2 = ifelse(is.na(exp.design.2), yes = exp.name, no = exp.design.2),
+    exp.design.3 = ifelse(is.na(exp.design.3), yes = exp.name, no = exp.design.3),
+    exp.design.4 = ifelse(is.na(exp.design.4), yes = exp.name, no = exp.design.4)
   ) %>% 
   # Fix problem with Ashton dataset
   ## Blocks are accidentally uniquely identified by trailing period + number
