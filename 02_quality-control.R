@@ -59,107 +59,116 @@ tidy_v2 <- tidy_v1 %>%
                         "deer", "grazed", "non", "out", "open-grazed", 
                         "nitrogen phosphorus unfenced", "no cage", 
                         "no fence") ~ "uncaged",
-      ## Organization-dependent changes
+      ## Organization/data source-dependent changes
+      ### A
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
-      organization == "burkepile" & cage.tmp == "Exclosure control" ~ "uncaged",
-      organization == "clausing" & cage.tmp == "removal" ~ "caged",
-      organization == "clausing" & cage.tmp == "ambient" ~ "uncaged",
-      organization == "cper" & cage.tmp == "ah" ~ "uncaged", # AH = all herbivores
-      organization == "cper" & cage.tmp %in% c("ce", "cre", "re") ~ "caged", #_E = _ exclosure
-      organization == "diaz" & cage.tmp == "artefact" ~ "partial",
-      organization == "gex" & cage.tmp %in% c("g", "gg") ~ "uncaged", # G = grazed
-      organization == "gex" & cage.tmp %in% c("u", "uu") ~ "caged", # U = ungrazed
-      ## Note gex "GS" differs between datasets!
-      source == "gex_bakker-cedarcreek_bakker-cedarcreek_year_deer_plants.csv" &
-        cage.tmp == "gs" ~ "uncaged",
-      source == "gex_bakker-sgs_bakker-sgs_2001_cattle&lagomorphs_plants.csv" &
-        cage.tmp == "gs" ~ "caged",
-      organization == "gilson" & cage.tmp == "f" ~ "caged",
-      organization == "gilson" & cage.tmp %in% c("h", "c") ~ "uncaged",
-      organization == "lamb" & cage.tmp %in% c("roof", "fence") ~ "caged",
-      organization == "lter-arc" & cage.tmp %in% c("lfct", "lfnp", "sfct", "sfnp", 
-                                                   "lfct17", "sfct17", "mfct17") ~ "caged",
-      organization == "lter-arc" & cage.tmp %in% c("nfct", "nfnp", "ct", 
-                                                   "np", "n", "p") ~ "uncaged",
-      organization == "pascual" & cage.tmp == "cage control" ~ "partial",
-      organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
-      organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
-      organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
-      organization == "chen" & cage.tmp == "ungrazed" ~ "caged",
-      ### Wang Mongolia datasets slightly vary
-      source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
-        cage.tmp %in% c("cg", "sg", "ng") ~ "caged",
-      source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
-        cage.tmp == "csg" ~ "uncaged",
-      source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
-        cage.tmp %in% c("mg", "lg", "ng") ~ "caged",
-      source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
-        cage.tmp == "hg" ~ "uncaged",
-      ### ALberti datasets
       source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
         cage.tmp == "cc" ~ "partial",
       source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
         cage.tmp == "g" ~ "uncaged",
       source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
         cage.tmp == "ng" ~ "caged",
-      ### Variations in Chen studies
+      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+        cage.tmp %in% c(1:2) ~ "caged",
+      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+        cage.tmp == "3" ~ "uncaged",
+      ### B
+      organization == "burkepile" & cage.tmp == "Exclosure control" ~ "uncaged",
+      ### C
+      organization == "chen" & cage.tmp == "ungrazed" ~ "caged",
       source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
         cage.tmp %in% c("hares", "hares & geese") ~ "uncaged",
       source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
         cage.tmp == "c" ~ "uncaged",
       source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
         cage.tmp == "g" ~ "caged",
+      organization == "clausing" & cage.tmp == "removal" ~ "caged",
+      organization == "clausing" & cage.tmp == "ambient" ~ "uncaged",
+      organization == "cper" & cage.tmp == "ah" ~ "uncaged", # AH = all herbivores
+      organization == "cper" & cage.tmp %in% c("ce", "cre", "re") ~ "caged", #_E = _ exclosure
+      
+      ### D
+      organization == "diaz" & cage.tmp == "artefact" ~ "partial",
       source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
         cage.tmp == "e" ~ "caged",
       source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
         cage.tmp == "h" ~ "uncaged",
       source == "gex_queenslandaus1-5_Silcock_2009_grazers_plants.csv" &
         cage.tmp == "macropod-grazed" ~ "caged",
-      ### Mclaren Alaska
-      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
-        cage.tmp == "e" ~ "caged",
-      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
-        cage.tmp == "c" ~ "uncaged",
-      ## Some variance in CDR number treatments (this is why we don't use ambiguous integers for critical treatment ID!)
-      ###  1984-85 'herbivores'
+      ### G
+      organization == "gex" & cage.tmp %in% c("g", "gg") ~ "uncaged", # G = grazed
+      organization == "gex" & cage.tmp %in% c("u", "uu") ~ "caged", # U = ungrazed
+      source == "gex_bakker-cedarcreek_bakker-cedarcreek_year_deer_plants.csv" &
+        cage.tmp == "gs" ~ "uncaged", # Note gex "GS" differs between datasets!
+      source == "gex_bakker-sgs_bakker-sgs_2001_cattle&lagomorphs_plants.csv" &
+        cage.tmp == "gs" ~ "caged",
+      organization == "gilson" & cage.tmp == "f" ~ "caged",
+      organization == "gilson" & cage.tmp %in% c("h", "c") ~ "uncaged",
+      
+      ### L
+      
+      organization == "lamb" & cage.tmp %in% c("roof", "fence") ~ "caged",
+      organization == "lter-arc" & cage.tmp %in% c("lfct", "lfnp", "sfct", "sfnp", 
+                                                   "lfct17", "sfct17", "mfct17") ~ "caged",
+      organization == "lter-arc" & cage.tmp %in% c("nfct", "nfnp", "ct", 
+                                                   "np", "n", "p") ~ "uncaged",
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
         cage.tmp %in% c(1:4, 7) ~ "caged",
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
         cage.tmp %in% c(5, 6, 8) ~ "uncaged",
-      ### 1982-2011 deer
       source == "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" &
         cage.tmp == "1" ~ "caged",
       source == "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" &
         cage.tmp == "0" ~ "uncaged",
-      ### 1991 grasshoppers
       source == "lter-cdr_cedarcreekecosystem_plantabovegroundbiomass_1991_grasshoppers_vegetation.csv" &
         cage.tmp == "1" ~ "uncaged",
       source == "lter-cdr_cedarcreekecosystem_plantabovegroundbiomass_1991_grasshoppers_vegetation.csv" &
         cage.tmp %in% c(2:8) ~ "caged",
-      ### alberti netherlands cattle
-      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
-        cage.tmp %in% c(1:2) ~ "caged",
-      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
-        cage.tmp == "3" ~ "uncaged",
       organization == "lter-mcr" & cage.tmp == "cage control" ~ "uncaged",
       organization == "lter-mcr" & stringr::str_detect(string = cage.tmp, pattern = "x") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp %in% c("l", "r") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp == "c" ~ "uncaged",
+      
+      ### M
+      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
+        cage.tmp == "e" ~ "caged",
+      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
+        cage.tmp == "c" ~ "uncaged",
       organization == "mclaren" & cage.tmp == "0" ~ "uncaged",
       organization == "mclaren" & cage.tmp == "1" ~ "caged",
+      
+      ### N
       organization == "nopp-mayer" & cage.tmp == "0" ~ "uncaged",
       organization == "nopp-mayer" & cage.tmp == "1" ~ "caged",
+      
+      ### P
       organization == "parker" & cage.tmp == "cage control" ~ "partial",
+      organization == "pascual" & cage.tmp == "cage control" ~ "partial",
       organization == "pelinson" & cage.tmp == "present" ~ "uncaged",
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
+      organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
+      organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
+      organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
+      ### R
       organization == "royo" & cage.tmp == "1" ~ "caged",
       organization == "royo" & cage.tmp == "0" ~ "uncaged",
+      ### S
       organization == "spiecker" & cage.tmp %in% c("b", "l", "lu", "u") ~ "caged",
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
+      ### V
       organization == "villar" & cage.tmp == "a" ~ "caged",
-      organization == "villar" & cage.tmp == "c" ~ "uncaged",
+      organization == "villar" & cage.tmp == "c" ~ "uncaged",      
+      ### W
+      source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+        cage.tmp %in% c("cg", "sg", "ng") ~ "caged",
+      source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+        cage.tmp == "csg" ~ "uncaged", # Wang Mongolia datasets slightly vary
+      source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+        cage.tmp %in% c("mg", "lg", "ng") ~ "caged",
+      source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+        cage.tmp == "hg" ~ "uncaged",
       ## If treatment isn't known, leave it that way
-      tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
+      cage.tmp == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
       T ~ "uncertain"), .before = treat.cage) %>% 
   # Drop temporary lowercase cage column
