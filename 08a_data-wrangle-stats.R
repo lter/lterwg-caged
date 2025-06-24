@@ -81,8 +81,6 @@ supportR::num_check(data = caged_v1, col = "year.end.exclosure")
 #Response Variables
 supportR::num_check(data = caged_v1, col = "betadisp.comm.dist")
 supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
-supportR::count(vec = avg.caged_v1$betadisp.comm.dist) 
-# JMI: this isn't working?
 
 #Independent Variables
 sort(unique(caged_v1$betadisp.design.level))
@@ -149,6 +147,7 @@ BaeDiff.df <- avg.caged_v1 %>%
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
 
 # Export locally
+#WARNING: We may need to change this exporting plan? I think this threw Max off and gave him some errors 
 write.csv(x = BaeDisp.df, row.names = F, na = '',
           file = file.path("data", "BaeDisp.df.csv"))
 
