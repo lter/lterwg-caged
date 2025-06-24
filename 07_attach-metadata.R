@@ -181,6 +181,7 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
 ## If any are in metadata but not *data*:
 ### Again, for some reason, no beta dispersion was calculated
 ### Check original data and beta dispersion calculation script to debug
+### _OR_ could be caused by new "exp.name" in data and an outdated entry in the metaadata
 
 # Remove any experiment names not found in data
 meta_v6 <- dplyr::filter(.data = meta_v5, exp.name %in% unique(c(w.meta_in_list[[1]]$exp.name,
