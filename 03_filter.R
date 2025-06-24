@@ -85,7 +85,9 @@ sub_v2c <- sub_v2b %>%
       # OR keep the manually-identified last time point for the following datasets
       ## A
       (source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv" &
-         year == "year" & sampling.point == "8/14/2011") |
+         year == "2010" & sampling.point == "11/23/2010") |
+      (source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv" &
+         year == "2011" & sampling.point == "8/14/2011") |
       (source == "alberti_argentina_saltmarshexclosure_2007-2024_guineapigs_plants.csv" &
          year == "year" & sampling.point == "2024") |
       (source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
