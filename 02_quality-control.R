@@ -340,25 +340,54 @@ sort(unique(tidy_v7$taxa))
 # Standardize Study Years ----
 ## ------------------------------------------- ##
 
+# Identify datasets where 'year' is not provided or isn't a number
+malformed_years <- tidy_v7 %>% 
+  dplyr::filter(is.na(supportR::force_num(.$year))) %>%
+  dplyr::pull(source) %>% unique()
+
 # Check current years
 tidy_v7 %>% 
-  dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
+  dplyr::filter(source %in% malformed_years) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
+                   points = paste(unique(sampling.point), collapse = ", "),
                    .groups = "keep") %>% 
   as.data.frame()
 
 # Fill in missing years as appropriate
 tidy_v8 <- tidy_v7 %>% 
   dplyr::mutate(year = dplyr::case_when(
+    ## If year is a non-NA number
+    !is.na(supportR::force_num(.$year)) ~ as.character(year),
+    ## Nopp-Mayer, 'year' is number of years after 1989
     source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), 
-    !is.na(year) ~ as.character(year),
-    ## sampling point is year
-    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
-    source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ sampling.point,
-    source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
-    ## Date in mm/dd/yy format
-    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
+    ## Sampling point is year
+    source %in% c(
+      "alberti_argentina_saltmarshexclosure_2007-2024_guineapigs_plants.csv",
+      "burkepile_florida_herbvr_2009-2012_fish_benthic.csv",
+      "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv",
+      "lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv",
+      "lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv"
+      ) ~ sampling.point,
+    # Take from file name
+    source %in% c("ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv",
+                  "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv") ~ sampling.years,
+    ## Date in mm/dd/yy format (2-digit year)
+    source %in% c(
+      "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv"
+    )  ~ paste0("20", stringr::str_sub(sampling.point, 
+                                       start = nchar(sampling.point) - 1, 
+                                       end = nchar(sampling.point))),
+    ## Date in mm/dd/yyyy format (4-digit year)
+    source %in% c(
+      "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+    ) ~ stringr::str_sub(sampling.point, 
+                         start = nchar(sampling.point) - 3, 
+                         end = nchar(sampling.point)),
+    ## Date is yyyy/mm/dd format (4-digit year at start)
+    source %in% c(
+      "alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv"
+    ) ~ stringr::str_sub(sampling.point, start = 1, end = 4),
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ "year")) %>% 
@@ -369,10 +398,14 @@ tidy_v8 <- tidy_v7 %>%
 
 # Re-check years
 tidy_v8 %>% 
-  dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
-  dplyr::group_by(source, sampling.years) %>% 
+  dplyr::filter(source %in% malformed_years) %>% 
+  dplyr::mutate(fixed = ifelse(is.na(supportR::force_num(x = .$year)) != T,
+                             yes = T, no = F)) %>% 
+  dplyr::group_by(source, sampling.years, fixed) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   .groups = "keep")
+                   points = paste(unique(sampling.point), collapse = ", "),
+                   .groups = "keep") %>% 
+  dplyr::filter(fixed != T) # %>% view()
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
