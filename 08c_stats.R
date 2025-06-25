@@ -182,7 +182,7 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 # In preliminiary model fitting, DHARMa indicated a bit of problem with dispersion, so adding a dispersion term to model not only the mean response but the variance of the response. Essentially this is allowing the dispersion to differ between aquatic and terrestrial studies, and with latitude. This is pretty apparent from the exploratory plots above, too.
 
 # Fit model 1 on all data
-uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
+caged.uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
                               cage.treatment_std +
                               var_aq.or.terr     +
                               poly(lat, 2)       +
@@ -197,11 +197,11 @@ uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
                             data = BaeDisp.df2) 
-summary(uncaged.betamod1)    
-car::Anova(uncaged.betamod1, type = "II")
+summary(caged.uncaged.betamod1)    
+car::Anova(caged.uncaged.betamod1, type = "II")
 
 # Drop 3-way interaction
-uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
+caged.uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
                               cage.treatment_std +
                               var_aq.or.terr     +
                               poly(lat, 2)       +
@@ -215,11 +215,11 @@ uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
                             data = BaeDisp.df2) 
-summary(uncaged.betamod1)    
-car::Anova(uncaged.betamod1, type = "II")
+summary(caged.uncaged.betamod1)    
+car::Anova(caged.uncaged.betamod1, type = "II")
 
 # Drop 2-way interaction of cage treatment * aquatic/terrestrial
-uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
+caged.uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
                               cage.treatment_std +
                               var_aq.or.terr     +
                               poly(lat, 2)       +
@@ -232,11 +232,11 @@ uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
                             data = BaeDisp.df2) 
-summary(uncaged.betamod1)    
-car::Anova(uncaged.betamod1, type = "III")
+summary(caged.uncaged.betamod1)    
+car::Anova(caged.uncaged.betamod1, type = "III")
 
 # Summarize model output and statistics - Type II
-anova_table <- Anova(uncaged.betamod1, type = "II") %>%
+anova_table <- Anova(caged.uncaged.betamod1, type = "II") %>%
   tidy()
 
 # Convert p-values to numeric and format them in decimal notation
@@ -251,7 +251,7 @@ print("Type II Sums-of-squares")
 anova_table
 
 # Summarize model output and statistics - Type III
-anova_table <- Anova(uncaged.betamod1, type = "III") %>%
+anova_table <- Anova(caged.uncaged.betamod1, type = "III") %>%
   tidy()
 
 # Convert p-values to numeric and format them in decimal notation
@@ -271,7 +271,7 @@ anova_table
 
 # Validate with DHARMa
 dat <- BaeDisp.df2
-fittedModel <- uncaged.betamod1
+fittedModel <- caged.uncaged.betamod1
 
 simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
 
@@ -311,7 +311,7 @@ newdata$source <- NA
 newdata$exp.name <- NA
 
 # Get predictions with SE
-preds <- predict(uncaged.betamod1, newdata = newdata, type = "response", se.fit = TRUE)
+preds <- predict(caged.uncaged.betamod1, newdata = newdata, type = "response", se.fit = TRUE)
 newdata$fit   <- preds$fit
 newdata$se    <- preds$se.fit
 newdata$lower <- newdata$fit - 1.96 * newdata$se
@@ -319,7 +319,7 @@ newdata$upper <- newdata$fit + 1.96 * newdata$se
 
 # Plot: points = raw data; line = prediction; ribbon = 95% CI; facet = two key interactions
 
-y_colors <- c("aquatic" = "#1f78b4",      # blue
+my_colors <- c("aquatic" = "#1f78b4",      # blue
               "terrestrial" = "#33a02c")  # green
 
 my_shapes <- c("caged" = 16,    # solid circle
@@ -387,10 +387,186 @@ ggsave("graphs/beta.reg.output2-study.means.pdf", height = 8, width = 8)
 
 ## ------------------------------------------- ##
 ## ------------------------------------------- ##
-# Max stopped working here 2025-06-09
+# REPEAT ABOVE WORKFLOW FOR ONLY UNCAGED PLOTS
 ## ------------------------------------------- ##
 ## ------------------------------------------- ##
 
+## ------------------------------------------- ##
+## Fit Beta Regression Models ----
+## ------------------------------------------- ## 
+
+# Fit model on only uncaged data
+BaeDisp.df3 <- BaeDisp.df2 %>%
+  dplyr::filter(cage.treatment_std == "uncaged") %>%
+  droplevels()
+ 
+uncaged.betamod1 <- glmmTMB(betadisp.comm.dist_transform ~ 
+                              var_aq.or.terr     +
+                              poly(lat, 2)       +
+                              var_aq.or.terr     * poly(lat, 2)   +
+                              (1|source/exp.name), 
+                            dispformula = ~ var_aq.or.terr + poly(lat, 2),
+                            family = beta_family(link = "logit"),
+                            control = glmmTMBControl(optimizer = optim, 
+                                                     optArgs = list(method = "BFGS")), 
+                            # Or use nlminb, or bobyqa via nloptr
+                            data = BaeDisp.df3) 
+summary(uncaged.betamod1)    
+car::Anova(uncaged.betamod1, type = "II")
+
+# Drop 2-way interaction of latitude * aquatic/terrestrial
+uncaged.betamod2 <- glmmTMB(betadisp.comm.dist_transform ~ 
+                              var_aq.or.terr     +
+                              poly(lat, 2)       +
+                              (1|source/exp.name), 
+                            dispformula = ~ var_aq.or.terr + poly(lat, 2),
+                            family = beta_family(link = "logit"),
+                            control = glmmTMBControl(optimizer = optim, 
+                                                     optArgs = list(method = "BFGS")), 
+                            # Or use nlminb, or bobyqa via nloptr
+                            data = BaeDisp.df3) 
+summary(uncaged.betamod2)    
+car::Anova(uncaged.betamod2)
+
+# Try linear effect of latitude
+uncaged.betamod3 <- glmmTMB(betadisp.comm.dist_transform ~ 
+                              var_aq.or.terr     +
+                              lat       +
+                              (1|source/exp.name), 
+                            dispformula = ~ var_aq.or.terr + lat,
+                            family = beta_family(link = "logit"),
+                            control = glmmTMBControl(optimizer = optim, 
+                                                     optArgs = list(method = "BFGS")), 
+                            # Or use nlminb, or bobyqa via nloptr
+                            data = BaeDisp.df3) 
+summary(uncaged.betamod3)    
+car::Anova(uncaged.betamod3)
+
+# Drop latitude
+uncaged.betamod4 <- glmmTMB(betadisp.comm.dist_transform ~ 
+                              var_aq.or.terr     +
+                              (1|source/exp.name), 
+                            dispformula = ~ var_aq.or.terr,
+                            family = beta_family(link = "logit"),
+                            control = glmmTMBControl(optimizer = optim, 
+                                                     optArgs = list(method = "BFGS")), 
+                            # Or use nlminb, or bobyqa via nloptr
+                            data = BaeDisp.df3) 
+summary(uncaged.betamod4)    
+car::Anova(uncaged.betamod4)
+
+
+# Summarize model output and statistics 
+anova_table <- Anova(uncaged.betamod4) %>%
+  tidy()
+
+# Convert p-values to numeric and format them in decimal notation
+anova_table <- anova_table %>%
+  mutate(
+    p.value = ifelse(p.value < 0.0001,
+                     "< 0.0001",
+                     formatC(p.value, format = "f", digits = 4)),
+    statistic = round(statistic, 1)
+  )
+anova_table
+
+
+## ------------------------------------------- ##
+## Validate Beta Regression Model ----
+## ------------------------------------------- ##
+
+# Validate with DHARMa
+dat <- BaeDisp.df3
+fittedModel <- uncaged.betamod4
+
+simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
+
+plot(simulationOutput)
+# Note that there is "significant" deviation, but it is easy to get because n > 9,000!
+# The deviation does not look troubling in its magnitude
+
+# In addition to plotting the residuals vs. fitted, we must plot residuals vs. individual predictors
+plotResiduals(simulationOutput, form = dat$var_aq.or.terr)
+
+testDispersion(simulationOutput)
+# Dispersion looks fine
+
+## ------------------------------------------- ##
+## Generate Predictions for Beta Regression Model ----
+## ------------------------------------------- ##
+
+ggplot(BaeDisp.df3, aes(x = lat, y = betadisp.comm.dist_transform)) +
+  geom_point(aes(color = var_aq.or.terr), alpha = 0.4) +
+  facet_grid( ~ var_aq.or.terr) +
+  labs(y = "Beta Dispersion Distance (± 95% CI)",
+       x = "Latitude",
+       title = "Raw data of uncaged plots by ecosystem type and latitude") +
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+        aspect.ratio = 1) +
+  scale_color_manual(values = my_colors) +
+  scale_fill_manual(values = my_colors) +
+  scale_shape_manual(values = my_shapes) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1,0.2)) +
+  scale_x_continuous(breaks = seq(-60, 100, by = 20))
+ggsave("graphs/UNCAGED.beta.reg.output1-raw.data.pdf", height = 8, width = 8)
+
+
+ggplot(BaeDisp.df3, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
+  geom_boxplot(aes(fill = var_aq.or.terr)) +
+  labs(y = "Beta Dispersion Distance (± 95% CI)",
+       x = "Ecosystem type",
+       title = "Raw data of uncaged plots by ecosystem type") +
+  theme_classic() +
+  theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+        aspect.ratio = 1) +
+  scale_fill_manual(values = my_colors) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1,0.2)) 
+ggsave("graphs/UNCAGED.beta.reg.output2-raw.data.pdf", height = 8, width = 8)
+
+
+
+# MAX STOPPED HERE 6/25/2025
+
+# Compute study-level means
+study_means <- BaeDisp.df2 %>%
+  group_by(source, cage.treatment_std, var_aq.or.terr) %>%
+  summarise(
+    lat  = mean(lat, na.rm = T),
+    mean_response = mean(betadisp.comm.dist_transform),
+    se_response   = sd(betadisp.comm.dist_transform) / sqrt(n()),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    lower_ci = mean_response - 1.96 * se_response,
+    upper_ci = mean_response + 1.96 * se_response
+  )
+
+# Use study-level points instead of raw experiment-level points
+ggplot(study_means, aes(x = lat, y = mean_response)) +
+  geom_point(aes(color = var_aq.or.terr, shape = cage.treatment_std), size = 2.5, alpha = 0.7) +
+  geom_errorbar(aes(ymin = lower_ci, ymax = upper_ci, color = var_aq.or.terr), width = 0.4) +
+  geom_line(data = newdata,
+            aes(x = lat, y = fit, color = var_aq.or.terr, group = cage.treatment_std), 
+            size = 1) +
+  geom_ribbon(data = newdata, 
+              aes(x = lat, ymin = lower, ymax = upper, fill = var_aq.or.terr), 
+              alpha = 0.2, inherit.aes = FALSE) +
+  facet_grid(cage.treatment_std ~ var_aq.or.terr) +
+  labs(y = "Beta Dispersion Distance (± 95% CI)",
+       x = "Latitude",
+       title = "Study-level mean data with marginal model predictions by treatment and ecosystem type") +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
+    aspect.ratio = 1
+  ) +
+  scale_color_manual(values = my_colors) +
+  scale_fill_manual(values = my_colors) +
+  scale_shape_manual(values = my_shapes) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1,0.2)) +
+  scale_x_continuous(breaks = seq(-60, 100, by = 20))
+ggsave("graphs/beta.reg.output2-study.means.pdf", height = 8, width = 8)
 
 
 
