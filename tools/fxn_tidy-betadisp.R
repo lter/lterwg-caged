@@ -23,7 +23,10 @@ tidy_betadisp <- function(beta = NULL, result_prefix = NULL){
                         names_to = "betadisp.design.level",
                         values_to = "betadisp.sample.size") %>% 
     # Tidy contents of the new design level column
-    dplyr::mutate(betadisp.design.level = gsub("\\.n", "", x = betadisp.design.level)) %>% 
+    dplyr::mutate(betadisp.design.level = ifelse(betadisp.design.level != "exp.name.n",
+                                                 yes = gsub("\\.n", "", x = betadisp.design.level),
+                                                 no = stringr::str_sub(betadisp.design.level,
+                                                                       start = 1, end = 8))) %>% 
     # Rename median and community distance columns
     supportR::safe_rename(data = ., 
                           bad_names = c(paste0(result_prefix, ".betadisp.median"),
