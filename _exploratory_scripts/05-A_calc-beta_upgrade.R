@@ -12,6 +12,7 @@ librarian::shelf(tidyverse, magrittr, vegan, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
+dir.create(path = file.path("data", "dev"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -23,6 +24,11 @@ purrr::walk(.x = dir(path = "tools", pattern = "fxn_"),
 # Define the minimum number of replicates for which we want to calculate beta dispersion
 ## Inclusive of this number (so 5 becomes >= 5)
 min_reps <- 4
+
+# Define maximum number of allowed pseudoreps _without_ averaging across them
+## Necessary for preserving pseudoreps when there are few and averaging across them when there are many
+## Inclusive of this number (so 5 is >= 5)
+max_pseudoreps <- 5
 
 # Read in data
 beta_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
@@ -36,8 +42,13 @@ dplyr::glimpse(beta_v1)
 
 # Perform any needed pre-calculation wrangling
 beta_v2 <- beta_v1 %>% 
-  # Filter to just one test case
-  dplyr::filter(source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv")
+  # Filter to just a few testing datasets
+  dplyr::filter(source %in% c(
+   # Datasets for which we fail to calc beta dispersion under current workflow
+    "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv",
+    # Datasets where we succeed under current workflow (at least one design level)
+    "amundrud_britishcolumbia_eelgrassexclosure_2011_predators_mesograzers.csv"
+    ))
 
 # Re-check structure
 dplyr::glimpse(beta_v2)
@@ -110,7 +121,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 2
       for(focal_des2 in unique(yr_sub$exp.design.2)){
-        # focal_des2 <- "marinepredexcl__ADC.4"
+        # focal_des2 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C"
         
         # Subset yet again
         des2_sub <- yr_sub %>% 
@@ -134,14 +145,21 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 3
       for(focal_des3 in unique(yr_sub$exp.design.3)){
-        # focal_des3 <- "marinepredexcl"
+        # focal_des3 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
         
         # Subset yet again
         des3_sub <- yr_sub %>% 
           dplyr::filter(exp.design.3 == focal_des3)
         
-        # If there is more than one experimental design level 2...
-        if(length(unique(des3_sub$exp.design.2)) > 1){
+        # Identify the number of psuedoreplicates at lower design levels
+        des3_pseudorep_ct <- des3_sub %>% 
+          dplyr::group_by(exp.design.2) %>% 
+          dplyr::summarize(des1.ct = length(unique(exp.design.1)),
+                           .groups = "keep") %>% 
+          dplyr::ungroup()
+        
+        # If there are X pseudoreplicates...
+        if(any(des3_pseudorep_ct$des1.ct >= max_pseudoreps)){
           
           # Average across experimental design 1 (within exp. design 2 levels)
           des3_sub %<>% 
@@ -173,20 +191,27 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 4
       for(focal_des4 in unique(yr_sub$exp.design.4)){
-        # focal_des4 <- "marinepredexcl"
+        # focal_des4 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
         
         # Subset yet again
         des4_sub <- yr_sub %>% 
           dplyr::filter(exp.design.4 == focal_des4)
         
-        # If there is more than one experimental design level 2...
-        if(length(unique(des4_sub$exp.design.2)) > 1){
+        # Identify the number of psuedoreplicates at lower design levels
+        des4_pseudorep_ct <- des4_sub %>% 
+          dplyr::group_by(exp.design.3, exp.design.2) %>% 
+          dplyr::summarize(des1.ct = length(unique(exp.design.1)),
+                           .groups = "keep")  %>% 
+          dplyr::ungroup()
+        
+        # If there are X pseudoreplicates...
+        if(any(des4_pseudorep_ct$des1.ct >= max_pseudoreps)){
           
           # Average across experimental design 1 (within exp. design 2 levels)
           des4_sub %<>% 
             dplyr::group_by(
               dplyr::across(
-                dplyr::all_of(setdiff(x = names(des4_sub), 
+                dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                              .groups = "keep") %>% 
@@ -194,15 +219,22 @@ for(focal_src in unique(beta_v2$source)){
           
         } # Close conditional aggregation
         
-        # If there is more than one experimental design level 3...
-        if(length(unique(des4_sub$exp.design.3)) > 1){
+        # Re-identify the number of psuedoreplicates at design level 2
+        des4_pseudorep_ct <- des4_sub %>% 
+          dplyr::group_by(exp.design.3) %>% 
+          dplyr::summarize(des2.ct = length(unique(exp.design.2)),
+                           .groups = "keep")  %>% 
+          dplyr::ungroup()
+        
+        # If there are X pseudoreplicates...
+        if(any(des4_pseudorep_ct$des2.ct >= max_pseudoreps)){
           
           # Average across experimental design 2 (within exp. design 3 levels)
           des4_sub %<>% 
             dplyr::group_by(
               dplyr::across(
-                dplyr::all_of(setdiff(x = names(des4_sub), 
-                                      y = c("exp.design.2", "abundance"))))) %>% 
+                dplyr::all_of(setdiff(x = names(trt_sub), 
+                                      y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                              .groups = "keep") %>% 
             dplyr::ungroup()
@@ -227,20 +259,27 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 4
       for(focal_name in unique(yr_sub$exp.name)){
-        # focal_name <- "ADC"
+        # focal_name <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
         
         # Subset yet again
         name_sub <- yr_sub %>% 
           dplyr::filter(exp.name == focal_name)
         
-        # If there is more than one experimental design level 2...
-        if(length(unique(name_sub$exp.design.2)) > 1){
+        # Identify the number of psuedoreplicates at lower design levels
+        name_pseudorep_ct <- name_sub %>% 
+          dplyr::group_by(exp.design.4, exp.design.3, exp.design.2) %>% 
+          dplyr::summarize(des1.ct = length(unique(exp.design.1)),
+                           .groups = "keep")  %>% 
+          dplyr::ungroup()
+        
+        # If there are X pseudoreplicates...
+        if(any(name_pseudorep_ct$des1.ct >= max_pseudoreps)){
           
           # Average across experimental design 1 (within exp. design 2 levels)
           name_sub %<>% 
             dplyr::group_by(
               dplyr::across(
-                dplyr::all_of(setdiff(x = names(name_sub), 
+                dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                              .groups = "keep") %>% 
@@ -248,30 +287,45 @@ for(focal_src in unique(beta_v2$source)){
           
         } # Close conditional aggregation
         
-        # If there is more than one experimental design level 3...
-        if(length(unique(name_sub$exp.design.3)) > 1){
+        # Re-identify the number of psuedoreplicates at design level 2
+        name_pseudorep_ct <- name_sub %>% 
+          dplyr::group_by(exp.design.4, exp.design.3) %>% 
+          dplyr::summarize(des2.ct = length(unique(exp.design.2)),
+                           .groups = "keep")  %>% 
+          dplyr::ungroup()
+        
+        # If there are X pseudoreplicates...
+        if(any(name_pseudorep_ct$des2.ct >= max_pseudoreps)){
           
           # Average across experimental design 2 (within exp. design 3 levels)
           name_sub %<>% 
             dplyr::group_by(
               dplyr::across(
-                dplyr::all_of(setdiff(x = names(name_sub), 
-                                      y = c("exp.design.2", "abundance"))))) %>% 
+                dplyr::all_of(setdiff(x = names(trt_sub), 
+                                      y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                              .groups = "keep") %>% 
             dplyr::ungroup()
           
         } # Close conditional aggregation
-
-        # If there is more than one experimental design level 4...
-        if(length(unique(name_sub$exp.design.4)) > 1){
+        
+        # Re-re-identify the number of psuedoreplicates at design level 3
+        name_pseudorep_ct <- name_sub %>% 
+          dplyr::group_by(exp.design.4) %>% 
+          dplyr::summarize(des3.ct = length(unique(exp.design.3)),
+                           .groups = "keep")  %>% 
+          dplyr::ungroup()
+        
+        # If there are X pseudoreplicates...
+        if(any(name_pseudorep_ct$des3.ct >= max_pseudoreps)){
           
-          # Average across experimental design 2 (within exp. design 3 levels)
+          # Average across experimental design 3 (within exp. design 4 levels)
           name_sub %<>% 
             dplyr::group_by(
               dplyr::across(
-                dplyr::all_of(setdiff(x = names(name_sub), 
-                                      y = c("exp.design.3", "abundance"))))) %>% 
+                dplyr::all_of(setdiff(x = names(trt_sub), 
+                                      y = c("exp.design.3", "exp.design.2", 
+                                            "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                              .groups = "keep") %>% 
             dplyr::ungroup()
@@ -299,30 +353,15 @@ for(focal_src in unique(beta_v2$source)){
 
 # Do some minor processing on the output lists and unlist them
 ## Design 1 Betas
-beta_des1 <- beta_des1_list %>% 
-  purrr::map(.x = ., .f = ~ dplyr::relocate(.data = .x, betadisp.median, betadisp.comm.dist,
-                                    .after = betadisp.sample.size)) %>% 
-  purrr::list_rbind(x = .)
+beta_des1 <- purrr::list_rbind(x = beta_des1_list)
 ## Design 2 Betas
-beta_des2 <- beta_des2_list %>% 
-  purrr::map(.x = ., .f = ~ dplyr::relocate(.data = .x, betadisp.median, betadisp.comm.dist,
-                                            .after = betadisp.sample.size)) %>% 
-  purrr::list_rbind(x = .)
+beta_des2 <- purrr::list_rbind(x = beta_des2_list)
 ## Design 3 Betas
-beta_des3 <- beta_des3_list %>% 
-  purrr::map(.x = ., .f = ~ dplyr::relocate(.data = .x, betadisp.median, betadisp.comm.dist,
-                                            .after = betadisp.sample.size)) %>% 
-  purrr::list_rbind(x = .)
+beta_des3 <- purrr::list_rbind(x = beta_des3_list)
 ## Design 4 Betas
-beta_des4 <- beta_des4_list %>% 
-  purrr::map(.x = ., .f = ~ dplyr::relocate(.data = .x, betadisp.median, betadisp.comm.dist,
-                                            .after = betadisp.sample.size)) %>% 
-  purrr::list_rbind(x = .)
+beta_des4 <- purrr::list_rbind(x = beta_des4_list)
 ## Exp Name Betas
-beta_expname <- beta_name_list %>% 
-  purrr::map(.x = ., .f = ~ dplyr::relocate(.data = .x, betadisp.median, betadisp.comm.dist,
-                                            .after = betadisp.sample.size)) %>% 
-  purrr::list_rbind(x = .)
+beta_expname <- purrr::list_rbind(x = beta_name_list)
 
 # Check the structure of one
 dplyr::glimpse(beta_des1)
@@ -395,7 +434,7 @@ beta_v99 <- beta_v7
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
-beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))
+beta_path <- file.path("data", "dev", paste0("DEV_", beta_name, "_finest-scales.csv"))
 
 # Export locally
 write.csv(x = beta_v99, row.names = F, na = '', file = beta_path)
@@ -408,11 +447,6 @@ dplyr::glimpse(beta_allscales)
 
 # Export locally
 write.csv(x = beta_allscales, na = '', row.names = F,
-          file = file.path("data", paste0(beta_name, "_all-scales.csv")))
-
-# # Upload all of these to the Drive
-# purrr::walk(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"),
-#             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
-#                                             path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
+          file = file.path("data", "dev", paste0("DEV_", beta_name, "_all-scales.csv")))
 
 # End ----
