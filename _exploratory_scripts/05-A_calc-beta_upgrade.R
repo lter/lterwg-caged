@@ -8,7 +8,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, ltertools, vegan, supportR)
+librarian::shelf(tidyverse, magrittr, vegan, supportR)
 
 # Create needed folder(s)
 dir.create(path = file.path("data"), showWarnings = F)
@@ -17,7 +17,8 @@ dir.create(path = file.path("data"), showWarnings = F)
 rm(list = ls()); gc()
 
 # Load needed tool(s)
-source(file.path("tools", "fxn_calc-betadisp.R"))
+purrr::walk(.x = dir(path = "tools", pattern = "fxn_"),
+            .f = ~ source(file.path("tools", .x)) )
 
 # Define the minimum number of replicates for which we want to calculate beta dispersion
 ## Inclusive of this number (so 5 becomes >= 5)
@@ -34,8 +35,9 @@ dplyr::glimpse(beta_v1)
 ## ------------------------------------------- ##
 
 # Perform any needed pre-calculation wrangling
-beta_v2 <- beta_v1
-# NO SUCH WRANGLING REQUIRED (CURRENTLY)
+beta_v2 <- beta_v1 %>% 
+  # Filter to just one test case
+  dplyr::filter(source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv")
 
 # Re-check structure
 dplyr::glimpse(beta_v2)
@@ -53,7 +55,7 @@ beta_name_list <- list()
 
 # Loop across original data source
 for(focal_src in unique(beta_v2$source)){
-  # focal_src <- "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv"
+  # focal_src <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
@@ -64,7 +66,7 @@ for(focal_src in unique(beta_v2$source)){
   
   # Loop across treatments
   for(focal_trt in unique(src_sub$cage.treatment_orig)){
-    # focal_trt <- "caged"
+    # focal_trt <- "Exclusion"
     
     # Subset again
     trt_sub <- src_sub %>% 
@@ -72,7 +74,7 @@ for(focal_src in unique(beta_v2$source)){
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
-      # focal_yr <- "2017-2019"
+      # focal_yr <- "2011"
       
       # Subset again
       yr_sub <- trt_sub %>% 
@@ -84,7 +86,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across most granular level of experimental design
       for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "marinepredexcl__ADC.4__13"
+        # focal_des1 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C__1"
         
         # Subset yet again
         des1_sub <- yr_sub %>% 
@@ -93,20 +95,12 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des1_beta <- calc_betadisp(df = des1_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.1")
-        
-        # Do needed post-processing
-        des1_out <- des1_beta %>% 
-          tidyr::pivot_longer(cols = exp.design.1.n,
-                              names_to = "betadisp.design.level",
-                              values_to = "betadisp.sample.size") %>% 
-          dplyr::mutate(betadisp.design.level = gsub("\\.n", "", x = betadisp.design.level)) %>% 
-          dplyr::rename(betadisp.median = exp.design.1.betadisp.median,
-                        betadisp.comm.dist = exp.design.1.betadisp.site.dist) %>% 
-          dplyr::distinct()
+                                   dist_method = "bray", result_prefix = "exp.design.1") %>% 
+          # Wrangle that output slightly
+          tidy_betadisp(beta = ., result_prefix = "exp.design.1")
         
         # Add to list
-        beta_des1_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_out
+        beta_des1_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_beta
         
       } # Close "exp.design.1" loop
 
@@ -125,21 +119,12 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des2_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.2")
-        
-        # Do needed post-processing
-        des2_out <- des2_beta %>% 
-          dplyr::select(-exp.design.1) %>% 
-          tidyr::pivot_longer(cols = exp.design.2.n,
-                              names_to = "betadisp.design.level",
-                              values_to = "betadisp.sample.size") %>% 
-          dplyr::mutate(betadisp.design.level = gsub("\\.n", "", x = betadisp.design.level)) %>% 
-          dplyr::rename(betadisp.median = exp.design.2.betadisp.median,
-                        betadisp.comm.dist = exp.design.2.betadisp.site.dist) %>% 
-          dplyr::distinct()
+                                   dist_method = "bray", result_prefix = "exp.design.2") %>% 
+          # Wrangle that output slightly
+          tidy_betadisp(beta = ., result_prefix = "exp.design.2")
         
         # Add to list
-        beta_des2_list[[paste0(focal_src, focal_trt, focal_des2)]] <- des2_out
+        beta_des2_list[[paste0(focal_src, focal_trt, focal_des2)]] <- des2_beta
         
       } # Close "exp.design.2" loop
       
@@ -173,21 +158,12 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des3_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
                                        taxa_col = "taxa", abun_col = "abundance",
-                                       dist_method = "bray", result_prefix = "exp.design.3")
-        
-        # Do needed post-processing
-        des3_out <- des3_beta %>% 
-          dplyr::select(-dplyr::ends_with(c("exp.design.1", "exp.design.2"))) %>% 
-          tidyr::pivot_longer(cols = exp.design.3.n,
-                              names_to = "betadisp.design.level",
-                              values_to = "betadisp.sample.size") %>% 
-          dplyr::mutate(betadisp.design.level = gsub("\\.n", "", x = betadisp.design.level)) %>% 
-          dplyr::rename(betadisp.median = exp.design.3.betadisp.median,
-                        betadisp.comm.dist = exp.design.3.betadisp.site.dist) %>% 
-          dplyr::distinct()
+                                       dist_method = "bray", result_prefix = "exp.design.3") %>% 
+          # Wrangle that output slightly
+          tidy_betadisp(beta = ., result_prefix = "exp.design.3")
         
         # Add to list
-        beta_des3_list[[paste0(focal_src, focal_trt, focal_des3)]] <- des3_out
+        beta_des3_list[[paste0(focal_src, focal_trt, focal_des3)]] <- des3_beta
         
       } # Close "exp.design.3" loop
       
@@ -236,22 +212,12 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des4_beta <- calc_betadisp(df = des4_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.4")
-        
-        # Do needed post-processing
-        des4_out <- des4_beta %>% 
-          dplyr::select(-dplyr::ends_with(c("exp.design.1", "exp.design.2", 
-                                            "exp.design.3"))) %>%
-          tidyr::pivot_longer(cols = exp.design.4.n,
-                              names_to = "betadisp.design.level",
-                              values_to = "betadisp.sample.size") %>% 
-          dplyr::mutate(betadisp.design.level = gsub("\\.n", "", x = betadisp.design.level)) %>% 
-          dplyr::rename(betadisp.median = exp.design.4.betadisp.median,
-                        betadisp.comm.dist = exp.design.4.betadisp.site.dist) %>% 
-          dplyr::distinct()
+                                   dist_method = "bray", result_prefix = "exp.design.4") %>% 
+          # Wrangle that output slightly
+          tidy_betadisp(beta = ., result_prefix = "exp.design.4")
         
         # Add to list
-        beta_des4_list[[paste0(focal_src, focal_trt, focal_des4)]] <- des4_out
+        beta_des4_list[[paste0(focal_src, focal_trt, focal_des4)]] <- des4_beta
         
       } # Close "exp.design.4" loop
       
@@ -315,23 +281,12 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         name_beta <- calc_betadisp(df = name_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.name")
-        
-        # Do needed post-processing
-        name_out <- name_beta %>% 
-          dplyr::select(-dplyr::ends_with(c("exp.design.1", "exp.design.2", 
-                                            "exp.design.3", "exp.design.4"))) %>%
-          tidyr::pivot_longer(cols = exp.name.n,
-                              names_to = "betadisp.design.level",
-                              values_to = "betadisp.sample.size") %>% 
-          dplyr::mutate(betadisp.design.level = gsub("name\\.n", "name", 
-                                                     x = betadisp.design.level)) %>% 
-          dplyr::rename(betadisp.median = exp.name.betadisp.median,
-                        betadisp.comm.dist = exp.name.betadisp.site.dist) %>% 
-          dplyr::distinct()
+                                   dist_method = "bray", result_prefix = "exp.name") %>% 
+          # Wrangle that output slightly
+          tidy_betadisp(beta = ., result_prefix = "exp.name")
         
         # Add to list
-        beta_name_list[[paste0(focal_src, focal_trt, focal_name)]] <- name_out
+        beta_name_list[[paste0(focal_src, focal_trt, focal_name)]] <- name_beta
         
       } # Close "exp.name" loop
     } # Close year loop
