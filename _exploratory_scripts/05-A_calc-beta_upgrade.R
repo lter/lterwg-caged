@@ -46,7 +46,7 @@ beta_v2 <- beta_v1 %>%
   dplyr::filter(source %in% c(
    # Datasets for which we fail to calc beta dispersion under current workflow
     "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv",
-    # Datasets where we succeed under current workflow (at least one design level)
+    # Datasets where we succeed under current workflow (at least at one design level)
     "amundrud_britishcolumbia_eelgrassexclosure_2011_predators_mesograzers.csv"
     ))
 
@@ -159,7 +159,8 @@ for(focal_src in unique(beta_v2$source)){
           dplyr::ungroup()
         
         # If there are X pseudoreplicates...
-        if(any(des3_pseudorep_ct$des1.ct >= max_pseudoreps)){
+        if(any(des3_pseudorep_ct$des1.ct >= max_pseudoreps) & 
+           length(unique(des3_sub$exp.design.2)) > 1){
           
           # Average across experimental design 1 (within exp. design 2 levels)
           des3_sub %<>% 
@@ -205,7 +206,8 @@ for(focal_src in unique(beta_v2$source)){
           dplyr::ungroup()
         
         # If there are X pseudoreplicates...
-        if(any(des4_pseudorep_ct$des1.ct >= max_pseudoreps)){
+        if(any(des4_pseudorep_ct$des1.ct >= max_pseudoreps) & 
+           length(unique(des4_sub$exp.design.2)) > 1){
           
           # Average across experimental design 1 (within exp. design 2 levels)
           des4_sub %<>% 
@@ -227,7 +229,8 @@ for(focal_src in unique(beta_v2$source)){
           dplyr::ungroup()
         
         # If there are X pseudoreplicates...
-        if(any(des4_pseudorep_ct$des2.ct >= max_pseudoreps)){
+        if(any(des4_pseudorep_ct$des2.ct >= max_pseudoreps) & 
+           length(unique(des4_sub$exp.design.3)) > 1){
           
           # Average across experimental design 2 (within exp. design 3 levels)
           des4_sub %<>% 
@@ -273,8 +276,8 @@ for(focal_src in unique(beta_v2$source)){
           dplyr::ungroup()
         
         # If there are X pseudoreplicates...
-        if(any(name_pseudorep_ct$des1.ct >= max_pseudoreps)){
-          
+        if(any(name_pseudorep_ct$des1.ct >= max_pseudoreps) & 
+           length(unique(name_sub$exp.design.2)) > 1){
           # Average across experimental design 1 (within exp. design 2 levels)
           name_sub %<>% 
             dplyr::group_by(
@@ -295,8 +298,8 @@ for(focal_src in unique(beta_v2$source)){
           dplyr::ungroup()
         
         # If there are X pseudoreplicates...
-        if(any(name_pseudorep_ct$des2.ct >= max_pseudoreps)){
-          
+        if(any(name_pseudorep_ct$des2.ct >= max_pseudoreps) & 
+           length(unique(name_sub$exp.design.3)) > 1){
           # Average across experimental design 2 (within exp. design 3 levels)
           name_sub %<>% 
             dplyr::group_by(
@@ -317,7 +320,8 @@ for(focal_src in unique(beta_v2$source)){
           dplyr::ungroup()
         
         # If there are X pseudoreplicates...
-        if(any(name_pseudorep_ct$des3.ct >= max_pseudoreps)){
+        if(any(name_pseudorep_ct$des3.ct >= max_pseudoreps) & 
+           length(unique(name_sub$exp.design.4)) > 1){
           
           # Average across experimental design 3 (within exp. design 4 levels)
           name_sub %<>% 
