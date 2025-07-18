@@ -10,7 +10,7 @@
 # Load libraries (performance might be within easystats)
 librarian::shelf(tidyverse, ltertools, lme4, lmerTest, glmmTMB, DHARMa,
                  performance, easystats, lubridate, car, broom.mixed,
-                 njlyon0/supportR, MuMIn, visreg, 
+                 njlyon0/supportR, MuMIn, visreg, grid, gridExtra,
                  emmeans, tidymodels, qqplotr, sjPlot) #, update_all= TRUE) 
 
 # Create needed folder(s)
@@ -396,6 +396,52 @@ p1
 ggsave("graphs/model_predictions/uncaged_plots_beta_regression_data.and.model.preds.pdf", height = 4, width = 6)
 ggsave("graphs/model_predictions/uncaged_plots_beta_regression_data.and.model.preds.jpg", height = 4, width = 6)
 
+p2 <- ggplot(dat, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
+  geom_boxplot(aes(fill = var_aq.or.terr)) +
+  labs(y = "",
+       x = "\n\n",
+       title = "\n\n") +
+  theme_classic() +
+  theme(aspect.ratio = 3,
+        axis.text = element_text(color = 'black'),
+        axis.ticks.x = element_blank(),
+        title = element_text(size = 9)) +
+  scale_color_manual(values = my_colors) +
+  scale_fill_manual(values = my_colors) +
+  scale_y_continuous(limits = c(0, 1), breaks = seq(0,1,0.2)) +
+  scale_x_discrete(labels = NULL) +
+  theme(legend.position="none")
+p2
+
+# Combine figures
+
+# Shrink internal margins
+tight_theme <- theme(
+  plot.margin = margin(2, 2, 2, 2),  # top, right, bottom, left
+  panel.spacing = unit(0.2, "lines")  # space between facet panels
+  #strip.text = element_text(margin = margin(0, 0, 0, 0))  # remove facet label padding
+)
+
+# Apply to plots
+p1_tight <- p1 + tight_theme
+p2_tight <- p2 + tight_theme
+
+# Convert to grobs
+g1 <- ggplotGrob(p1_tight)
+g2 <- ggplotGrob(p2_tight)
+
+# Combine via grid.arrange with manual width tuning
+combined_plot <- grid.arrange(
+  g1, g2,
+  ncol = 2,
+  widths = unit.c(unit(3, "null"), unit(0.7, "null"))  # adjust right-side width as needed
+)
+
+# Save
+ggsave("graphs/model_predictions/uncaged_plots_beta_regression_combined.pdf",
+       plot = combined_plot, width = 8, height = 4, device = "pdf")
+ggsave("graphs/model_predictions/uncaged_plots_beta_regression_combined.jpg",
+       plot = combined_plot, width = 8, height = 4, device = "jpeg")
 
 # MAX STOPPED HERE JULY 18, 2025
 
