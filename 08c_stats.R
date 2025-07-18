@@ -267,33 +267,69 @@ print(anova_table)
 ## ------------------------------------------- ##
 
 # Validate with DHARMa
+
+# === Inputs ===
 dat <- BaeDisp.df3
 fittedModel <- uncaged.betamod
+dirloc <- "graphs/model_validation/"
+outfile <- "model_diagnostics_summary.txt"
+prefix <- "uncaged_plots_beta_regression_"
 
-simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
+# === 1. Run simulation ===
+simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = FALSE)
 
+# === 2. Produce and save figures ===
+
+# Plot 1: general residuals
+png(paste0(dirloc, prefix, "residuals_overall.png"), width = 800, height = 600)
 plot(simulationOutput)
+dev.off()
+
 # Note that there is "significant" deviation, but it is easy to get because n > 5,000!
 # The deviation does not look troubling in its magnitude
 
-# In addition to plotting the residuals vs. fitted, we must plot residuals vs. individual predictors
+# Plot 2: residuals vs. var_aq.or.terr
+png(paste0(dirloc, prefix, "residuals_vs_var_aq_or_terr.png"), width = 800, height = 600)
 plotResiduals(simulationOutput, form = dat$var_aq.or.terr)
+dev.off()
+
+# Plot 3: residuals vs. abs.lat
+png(paste0(dirloc, prefix, "residuals_vs_abs_lat.png"), width = 800, height = 600)
 plotResiduals(simulationOutput, form = dat$abs.lat)
+dev.off()
 
-# Check dispersion
-testDispersion(simulationOutput)
-# The model residuals are underdispersed but...
-# The significant underdispersion DHARMa test result from  is probably not a symptom of serious model misfit but rather a statistically detectable but practically minor deviation, amplified by the large sample size. Beta regression residuals are bounded by (0,1), so they can be quite tightly distributed when the model fits well. With a well-fitting model and strong signal, the observed residuals might be slightly less variable than the simulated ones, especially if the residual variance is well captured; the model is regularizing the residuals more than expected under the simulation framework; and/or DHARMa's simulation procedure relies on distributional assumptions, and even subtle mismatches (e.g., from how it simulates dispersion around beta-distributed outcomes) can become statistically significant at N = 5,000.
+# === 3. Run and capture diagnostics ===
+dispersion_test_output <- capture.output(testDispersion(simulationOutput))
+resid_variance <- mean(simulationOutput$scaledResiduals^2)
 
-# Another sanity check on dispersion:
-mean(simulationOutput$scaledResiduals^2)
-# For a well-fitted model, this should be ≈ 1/3 (the theoretical variance of uniform(0,1) scaled residuals).
-# Much lower than 0.33 suggests underdispersion, but again, the magnitude matters.
-# In this case, our value of 0.366 is about 1/3. This supports the idea that the significant DHARMa test result is not practically meaningful, and the model is likely well-behaved.
+# === 4. Compose commentary and write to file ===
+diagnostic_notes <- c(
+  "=== DHARMa Model Validation Summary ===",
+  "",
+  "Note: Due to the large sample size (n > 5,000), statistically significant tests of dispersion",
+  "can arise from very small deviations. This does not necessarily indicate poor model fit.",
+  "",
+  ">>> Output of testDispersion():",
+  dispersion_test_output,
+  "",
+  paste0(">>> Mean of scaled residuals squared: ", round(resid_variance, 6)),
+  "",
+  "Interpretation:",
+  "The DHARMa test reports underdispersion (dispersion < 1), but residual plots show no visible structure,",
+  "and the mean squared scaled residuals (~", round(resid_variance, 6), ") are close to the theoretical expectation of ~0.333.",
+  "This supports the conclusion that any underdispersion is minor and likely not of practical concern.",
+  "",
+  "See saved PNG files for residual plots:",
+  paste0("- ", prefix, "residuals_overall.png"),
+  paste0("- ", prefix, "residuals_vs_var_aq_or_terr.png"),
+  paste0("- ", prefix, "residuals_vs_abs_lat.png")
+)
+
+# === 5. Write everything to TXT file ===
+writeLines(diagnostic_notes, con = paste0(dirloc, outfile))
 
 # FOR METHODS SECTION OF PAPER:
 # We modeled the beta dispersion distance from uncaged (control) replicates/plots using a beta regression with a probit link function, fitted via the glmmTMB package in R. The beta dispersion data had a few values (~1% of data) equal to exactly zero; to conform with the assumptions of beta regression, we applied a minor transform to bring such values slightly above zero: y * (n - 1) + 0.5 (Smithson & Verkuilen, 2006). We selected the probit link based on substantially improved model fit (ΔAIC > 10) and slightly better-behaved residuals. Diagnostic checks using the DHARMa package showed minor underdispersion, with no evidence of residual patterns or misspecification.
-
 
 
 ## ------------------------------------------- ##
@@ -339,7 +375,7 @@ p1 <- ggplot(dat, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   geom_point(aes(color = var_aq.or.terr, shape = var_aq.or.terr), alpha = 0.4) +
   facet_grid( ~ var_aq.or.terr) +
   labs(y = "Beta Dispersion Distance",
-       x = "|Latitude|",
+       x = "| Latitude |",
        title = "Uncaged plots by ecosystem type and latitude: data and model fits") +
   theme_classic() +
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
@@ -352,9 +388,9 @@ p1 <- ggplot(dat, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   scale_x_continuous(breaks = seq(-60, 100, by = 20))+
   theme(legend.position="none")
 p1
-ggsave("graphs/UNCAGED.beta.reg.output1-raw.data.pdf", height = 8, width = 8)
+ggsave("graphs/model_predictions/uncaged_plots_beta_regression_data.and.model.preds.pdf", height = 4, width = 6)
+ggsave("graphs/model_predictions/uncaged_plots_beta_regression_data.and.model.preds.jpg", height = 4, width = 6)
 
-p
 
 # MAX STOPPED HERE JULY 18, 2025
 
