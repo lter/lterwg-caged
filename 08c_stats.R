@@ -298,6 +298,11 @@ png(paste0(dirloc, prefix, "residuals_vs_abs_lat.png"), width = 800, height = 60
 plotResiduals(simulationOutput, form = dat$abs.lat)
 dev.off()
 
+# Plot 4: residuals vs. study
+png(paste0(dirloc, prefix, "residuals_vs_source.png"), width = 2000, height = 600)
+plotResiduals(simulationOutput, form = dat$source)
+dev.off()
+
 # === 3. Run and capture diagnostics ===
 dispersion_test_output <- capture.output(testDispersion(simulationOutput))
 resid_variance <- mean(simulationOutput$scaledResiduals^2)
