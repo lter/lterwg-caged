@@ -214,6 +214,7 @@ uncaged.betamod
 anova_table <- Anova(uncaged.betamod) %>%
   tidy()
 
+# === 1. Format the ANOVA table ===
 # Convert p-values to numeric and format them in decimal notation
 anova_table <- anova_table %>%
   mutate(significance = case_when(
@@ -221,17 +222,44 @@ anova_table <- anova_table %>%
     p.value < 0.001  ~ "***",
     p.value < 0.01   ~ "**",
     p.value < 0.05   ~ "*",
-    p.value < 0.1   ~ ".",
+    p.value < 0.1    ~ ".",
     TRUE             ~ "NA"
-    )
-  ) %>%
+  )) %>%
   mutate(
     p.value = ifelse(p.value < 0.0001,
                      "< 0.0001",
                      formatC(p.value, format = "f", digits = 4)),
     statistic = round(statistic, 1)
   )
-anova_table
+
+# === 2. Define model and file output ===
+# Define output file path
+outfile <- "results/uncaged_plots_beta_regression_anova_table_output.txt"
+
+# Add a custom header with model formula
+model_formula <- "ANOVA Table for Beta Regression Model\n
+                  Probit link function and log-link dispersion parameter varying with Ecosystem Type\n
+                  Beta_dispersion_distance ~ |Latitude| * Ecosystem_Type + (1|Experiment)"
+
+# === 3. Capture model summary ===
+model_summary_text <- capture.output(summary(uncaged.betamod))
+
+# === 4. Capture header and formatted ANOVA table ===
+anova_text <- capture.output({
+  cat("\n")
+  cat("====================================\n")
+  cat(model_formula, "\n")
+  cat("====================================\n")
+  print(anova_table)
+})
+
+# === 5. Write everything to file ===
+writeLines(c(model_summary_text, "", anova_text), con = outfile)
+
+# === 6. Also print to console ===
+cat(paste(model_summary_text, collapse = "\n"))
+cat("\n\n")
+print(anova_table)
 
 
 ## ------------------------------------------- ##
@@ -312,7 +340,7 @@ p1 <- ggplot(dat, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   facet_grid( ~ var_aq.or.terr) +
   labs(y = "Beta Dispersion Distance",
        x = "|Latitude|",
-       title = "Raw data of uncaged plots by ecosystem type and latitude") +
+       title = "Uncaged plots by ecosystem type and latitude: data and model fits") +
   theme_classic() +
   theme(panel.border = element_rect(color = "black", fill = NA, linewidth = 0.8),
         aspect.ratio = 1,
@@ -326,6 +354,7 @@ p1 <- ggplot(dat, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
 p1
 ggsave("graphs/UNCAGED.beta.reg.output1-raw.data.pdf", height = 8, width = 8)
 
+p
 
 # MAX STOPPED HERE JULY 18, 2025
 
