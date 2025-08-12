@@ -429,6 +429,10 @@ supportR::diff_check(old = unique(beta_v2$source), new = unique(beta_v7$source))
 # Create final object name
 beta_v99 <- beta_v7
 
+# How many sources and exp.name got through the pipeline?
+unique(beta_v99$source)
+unique(beta_v99$exp.name)
+
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
 beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))

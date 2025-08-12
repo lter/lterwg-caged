@@ -282,6 +282,11 @@ dplyr::glimpse(w.meta_v3)
 ## After adding summarized beta disp + mean diff
 dplyr::glimpse(w.meta_v4)
 
+
+
+# How many sources and exp.name got through the pipeline?
+unique(w.meta_v4$source)
+unique(w.meta_v4$exp.name)
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
