@@ -34,6 +34,9 @@ caged_v1 <- read.csv(file.path("data",
 
 # Check structure
 dplyr::glimpse(caged_v1)
+unique(caged_v1$source) #113
+unique(caged_v1$exp.name) # 305
+# so we have all the files here
 
 # Create B Diff Dataset ----
 #DF where the unit of replication is averages within treatment. Variable is already created, so just need to select and filter
@@ -44,6 +47,7 @@ avg.caged_v1 <- caged_v1 %>%
                 excluded.group, consumer.trophic.level, gamma.richness,
                 within.cage.treat_betadisp.mean.diff) %>% 
   # rename_all(~stringr::str_replace(.,"^var_","")) %>% #this line is the result of a fight between Marc and Jamie. 
+  # this drops any files that dont have a mean difference calculated 
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
   dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! This fixed a duplication error within exp.name. If this gets fixed upstream, can delete this line
   tidyr::pivot_wider(names_from = cage.treatment_std,
@@ -53,6 +57,8 @@ avg.caged_v1 <- caged_v1 %>%
 
 # Check structure of that
 dplyr::glimpse(avg.caged_v1)
+unique(avg.caged_v1$source) # 99, why are we losing so many here? maybe because of filtering out NA at mean diff column?
+unique(avg.caged_v1$exp.name) #272
 
 
 # ----explore and QC data----
