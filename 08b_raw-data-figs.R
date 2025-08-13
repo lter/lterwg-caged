@@ -49,8 +49,8 @@ BaeDisp.df %>%
   geom_point() +
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("royalblue",
-                               "darkgreen")) +
+  #scale_color_manual(values= c("royalblue",
+  #                             "darkgreen")) +
   labs(x= "Absolute latitude",
        y= "Beta dispersion",
        colour = "Biome") +

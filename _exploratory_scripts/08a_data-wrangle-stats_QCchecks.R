@@ -34,10 +34,11 @@ caged_v1 <- read.csv(file.path("data",
 
 # Check structure
 dplyr::glimpse(caged_v1)
+unique(caged_v1$source) #113
+unique(caged_v1$exp.name) # 305
+# so we have all the files here
 
-## ------------------------------------------- ##
-# Create Beta Dispersion and Difference Dataset ---- 
-## ------------------------------------------- ##
+# Create Beta Difference Dataset ----
 #DF where the unit of replication is averages within treatment. Variable is already created, so just need to select and filter
 avg.caged_v1 <- caged_v1 %>% 
   dplyr::select(source:exp.name, starts_with("var"), 
@@ -55,18 +56,64 @@ avg.caged_v1 <- caged_v1 %>%
 
 # Check structure of that
 dplyr::glimpse(avg.caged_v1)
+unique(avg.caged_v1$source) # 99, why are we losing so many here? maybe because of filtering out NA at mean diff column?
+unique(avg.caged_v1$exp.name) #272
+
+
+# ----explore and QC data----
+
+#Data QC Comments and Notes.. update with issues you notice
+#5/8: I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
+#7/13: Marc deleted all of the QC check code, so now someone can just run this to wrangle the data. NOTE that Bae dfs get written locally, not in the gdrive.
+
+#lets see what we are dealing with
+glimpse(caged_v1)
+
+#check to make sure that we have numbers where we are supposed to have numbers, NAs, etc:
+
+supportR::count(vec = caged_v1$exp.name.spatialextent.category) #6665 blanks
+#Years
+supportR::num_check(data = caged_v1, col = "year") #1139="2017-2019", 1191="year"
+#View(caged_v1 %>% filter(year == "year") %>% select(exp.name, var_ecotype1) %>% unique() %>% as_tibble()) #these are the problem ones
+supportR::count(vec = caged_v1$year) 
+supportR::count(vec = caged_v1$sampling.year) #ranges in here too
+supportR::count(vec = caged_v1$year.start.exclosure) #340 blank, a couple ranges
+supportR::count(vec = caged_v1$year.end.exclosure)
+supportR::num_check(data = caged_v1, col = "year.start.exclosure") 
+supportR::num_check(data = caged_v1, col = "year.end.exclosure") 
+
+#Response Variables
+supportR::num_check(data = caged_v1, col = "betadisp.comm.dist")
+supportR::num_check(data = caged_v1, col = "within.cage.treat_betadisp.mean.diff")
+
+#Independent Variables
+sort(unique(caged_v1$betadisp.design.level))
+supportR::count(vec = caged_v1$cage.treatment_std) #deal with this via a filtering
+supportR::count(vec = caged_v1$betadisp.sample.size) 
+supportR::count(vec = caged_v1$exp.name.spatialextent.category) 
+supportR::count(vec = caged_v1$var_ecotype1) 
+supportR::count(vec = caged_v1$var_resource.type.category) #this column dont exist yet
+supportR::count(vec = caged_v1$lat) #398 NAs
+#explore consumers
+supportR::count(vec = caged_v1$var_consumer.richness.number) #not entered. use var_consumer.richness.category instead
+supportR::count(vec = caged_v1$excluded.group)
+
+
 
 #Tidy and Wrangle a modeling ready DF----
-#convert latitude into numbers
+
+#latitude into numbers
 caged_v1$lat <- as.numeric(caged_v1$lat)
 avg.caged_v1$lat <- as.numeric(avg.caged_v1$lat)
 
-#trim down some columns to create a nicer DF for modeling
+#create a big but not huge df for modeling
 cagedmodel.df <- caged_v1 |> 
   #First, select the columns we think we need:
   select(
     #select study ID vars
-    source, site, exp.name, starts_with("var"), 
+    source, site, exp.name, 
+    #below is another line of code that is the result of Marc losing a fight with Jamie
+    starts_with("var"), 
     #select important experimental info (PLOT SIZE, EXP AREA GO HERE)
     cage.treatment_std, year.start.exclosure, 
     year.end.exclosure, exp.name.spatialextent.category, 
@@ -75,24 +122,27 @@ cagedmodel.df <- caged_v1 |>
     #select important habitat info that doesnt have "var_" in front
     lat, 
     #select consumer info
+    # excluded.group, consumer.trophic.level, consumer.richness.category, # consumer.native.domestic, 
     #select response info (GAMMA GOES HERE)
     measured.group, gamma.richness, #resource.type, 
     #select beta RV and beta info
     betadisp.sample.size, betadisp.comm.dist) |> 
   #Grab the treatments
-  filter(cage.treatment_std %in% c('caged', 'uncaged')) 
+  filter(cage.treatment_std %in% c('caged', 'uncaged')) #%>% 
+#Do some calculations (SKIPPING BC OF MISSING METADATA)
+#mutate(exp.age = year.end.exclosure - year.start.exclosure) 
 
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
 
 
-#DF for modeling Beta dispersion ----
+#DF for modeling, B disp ----
 BaeDisp.df <- cagedmodel.df %>% 
   #only columns we need and have
   select(
     source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, lat, starts_with("var"), gamma.richness, betadisp.sample.size, betadisp.comm.dist)
 
-#DF for modeling, Beta Difference Effect Size ----
+#DF for modeling, B diff ES ----
 BaeDiff.df <- avg.caged_v1 %>% 
   #only columns we need and have
   select(source,exp.name, lat, starts_with("var"), betadisp.sample.size, gamma.richness, within.cage.treat_betadisp.mean.diff)
@@ -101,6 +151,7 @@ BaeDiff.df <- avg.caged_v1 %>%
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
 
 # Export locally
+#WARNING: We may need to change this exporting plan? I think this threw Max off and gave him some errors 
 write.csv(x = BaeDisp.df, row.names = F, na = '',
           file = file.path("data", "BaeDisp.df.csv"))
 
