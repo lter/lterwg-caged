@@ -35,6 +35,10 @@ caged_v1 <- read.csv(file.path("data",
 # Check structure
 dplyr::glimpse(caged_v1)
 
+# Check number of sources
+unique(caged_v1$source) # 113
+unique(caged_v1$exp.name) # 305
+
 ## ------------------------------------------- ##
 # Create Beta Dispersion and Difference Dataset ---- 
 ## ------------------------------------------- ##
@@ -56,7 +60,16 @@ avg.caged_v1 <- caged_v1 %>%
 # Check structure of that
 dplyr::glimpse(avg.caged_v1)
 
-#Tidy and Wrangle a modeling ready DF----
+
+# Check number of sources
+unique(avg.caged_v1$source) # 99 (so 14 sources dont have a mean diff calculated?)
+unique(avg.caged_v1$exp.name) # 272
+# why does this decrease so much?
+# seems like lines 53 and 54 are doing this
+
+
+
+#Tidy and Wrangle a exp.name#Tidy and Wrangle a modeling ready DF----
 #convert latitude into numbers
 caged_v1$lat <- as.numeric(caged_v1$lat)
 avg.caged_v1$lat <- as.numeric(avg.caged_v1$lat)
