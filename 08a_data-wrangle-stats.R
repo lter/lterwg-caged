@@ -59,7 +59,9 @@ avg.caged_v1 <- caged_v1 %>%
   # this is necessary because there are duplicates of the mean as its replicated for each sample
   dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! This fixed a duplication error within exp.name. If this gets fixed upstream, can delete this line
   tidyr::pivot_wider(names_from = cage.treatment_std,
-                     values_from = within.cage.treat_betadisp.mean) 
+                     values_from = within.cage.treat_betadisp.mean) %>%
+  # get rid of the caged/uncaged beta disp avg values since we are interested in mean diff only
+  select(-caged, -uncaged)
 # Export locally if you want
 #write.csv(x = avg.caged_v1, row.names = F, na = '', file = file.path("data","avg.caged_v1.csv"))
 
@@ -70,8 +72,20 @@ dplyr::glimpse(avg.caged_v1)
 # Check number of sources
 unique(avg.caged_v1$source) # 99 (so 14 sources dont have a mean diff calculated?)
 unique(avg.caged_v1$exp.name) # 272
-# why does this decrease so much?
-# seems like lines 53 and 54 are doing this
+# why does this decrease so much? the NAs already existed in caged_v1 but we just filter them out here
+
+
+# Look at the NA mean diff data
+test <- caged_v1 %>%
+  filter(is.na(within.cage.treat_betadisp.mean.diff)) %>%
+  select(source, exp.name, cage.treatment_std, cage.treatment_orig,
+         betadisp.comm.dist:within.cage.treat_betadisp.mean.diff)
+
+unique(test$cage.treatment_std) # all four types are there
+#View(test)
+
+
+
 
 
 
