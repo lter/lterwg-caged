@@ -42,15 +42,21 @@ unique(caged_v1$exp.name) # 305
 ## ------------------------------------------- ##
 # Create Beta Dispersion and Difference Dataset ---- 
 ## ------------------------------------------- ##
-#DF where the unit of replication is averages within treatment. Variable is already created, so just need to select and filter
+# DF where the unit of replication is averages within treatment. 
+# Variable is already created in script 06, so just need to select and filter
 avg.caged_v1 <- caged_v1 %>% 
   dplyr::select(source:exp.name, starts_with("var"), 
                 lat:long, cage.treatment_std, 
-                within.cage.treat_betadisp.mean, betadisp.sample.size,
+                # this is the average beta dispersion for each caging treatment in an exp.name
+                within.cage.treat_betadisp.mean,
+                betadisp.sample.size,
                 excluded.group, consumer.trophic.level, gamma.richness,
+                # this is the average uncaged - average caged for each caging treatment in exp.name
                 within.cage.treat_betadisp.mean.diff) %>% 
   # this drops any files that dont have a mean difference calculated 
+  # this could be from uncertain - uncaged, etc. (see github issue 28)
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
+  # this is necessary because there are duplicates of the mean as its replicated for each sample
   dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! This fixed a duplication error within exp.name. If this gets fixed upstream, can delete this line
   tidyr::pivot_wider(names_from = cage.treatment_std,
                      values_from = within.cage.treat_betadisp.mean) 
