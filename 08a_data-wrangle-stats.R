@@ -70,10 +70,9 @@ dplyr::glimpse(avg.caged_v1)
 
 
 # Check number of sources
-unique(avg.caged_v1$source) # 99 (so 14 sources dont have a mean diff calculated?)
-unique(avg.caged_v1$exp.name) # 272
-# why does this decrease so much? the NAs already existed in caged_v1 but we just filter them out here
-
+unique(avg.caged_v1$source) # 107 
+unique(avg.caged_v1$exp.name) # 290
+# much better!
 
 # Look at the NA mean diff data
 test <- caged_v1 %>%
