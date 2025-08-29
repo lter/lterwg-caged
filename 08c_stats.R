@@ -17,6 +17,7 @@ librarian::shelf(tidyverse, ltertools, lme4, lmerTest, glmmTMB, DHARMa,
 dir.create(path = file.path("data"), showWarnings = F)
 dir.create(path = file.path("results"), showWarnings = F)
 dir.create(path = file.path("graphs"), showWarnings = F)
+dir.create(path = file.path("graphs/model_predictions"), showWarnings = F)
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
