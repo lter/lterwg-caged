@@ -569,8 +569,55 @@ car::Anova(diff.mod1, test.statistic = "F")
 performance::r2(diff.mod1)
 
 
+# - Following code is from Kelly -----------------------------------------------
 
+# fitting and validating 3 models from our Data Analysis Team meeting on 8/14/25
 
+## - Model 1: ------------------------------------------------------------------
+#Three way interaction: beta.disp ~ caging * abs(latitude) * ecosystem type
+# beta regression
+
+# use dataframe BaeDisp.df2
+# has beta dispersion data from caged and uncaged 
+
+three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                             var_aq.or.terr * abs.lat* cage.treatment_std  +
+                             (1|exp.name), 
+                           dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                           family = beta_family(link = "probit"),
+                           control = glmmTMBControl(optimizer = optim, 
+                                                    optArgs = list(method = "BFGS")), 
+                           # Or use nlminb, or bobyqa via nloptr
+                           data = BaeDisp.df2) 
+AIC(three.way.betamod)
+summary(three.way.betamod)    
+car::Anova(three.way.betamod, type = "II")
+
+library(effects)
+plot(allEffects(three.way.betamod))
+
+check_model(three.way.betamod)
+
+# Validate with DHARMa
+dat <- BaeDisp.df2
+fittedModel <- three.way.betamod
+ 
+simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
+
+plot(simulationOutput)
+# # Note that there is "significant" deviation, 
+
+# In addition to plotting the residuals vs. fitted, we must plot residuals vs. individual predictors
+plotResiduals(simulationOutput, form = dat$cage.treatment_std)
+plotResiduals(simulationOutput, form = dat$var_aq.or.terr)
+plotResiduals(simulationOutput, form = dat$abs.lat)
+
+testDispersion(simulationOutput)
+
+# plot raw data and model predictions
+
+three.way.pred<-data.frame(emmeans(three.way.betamod, ~ var_aq.or.terr *cage.treatment_std | abs.lat,
+                                    at = list(abs.lat = c(0,10,20,30,40,50,60,70)), type = "response"))
 
 
 
