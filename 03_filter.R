@@ -29,8 +29,25 @@ dplyr::glimpse(sub_v1)
 # Check structure
 dplyr::glimpse(sub_v1)
 
-# Remove 'exp.design.1' levels without any abundance
+# Identify total abundance at design 1
 sub_v2 <- sub_v1 %>% 
+  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
+                  exp.design.2, exp.design.1) %>% 
+  dplyr::mutate(tot_abundance = sum(abundance, na.rm = T)) %>% 
+  dplyr::ungroup()
+
+# Check structure
+dplyr::glimpse(sub_v2)
+
+# Any zero-abundance design levels?
+zero_abun <- sub_v2 %>% 
+  dplyr::filter(tot_abundance == 0)
+
+# Check structure
+dplyr::glimpse(zero_abun)
+
+# Remove 'exp.design.1' levels without any abundance
+sub_v3 <- sub_v2 %>% 
   # Average abundance withing experimental design level 1
   dplyr::group_by(
     dplyr::across(dplyr::all_of(setdiff(x = names(.),
@@ -44,23 +61,29 @@ sub_v2 <- sub_v1 %>%
   dplyr::select(-avg.abun)
 
 # Check number of lost rows
-message(nrow(sub_v1) - nrow(sub_v2), " rows lost")
+message(nrow(sub_v2) - nrow(sub_v3), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
-setdiff(x = unique(sub_v1$source), y = unique(sub_v2$source))
+setdiff(x = unique(sub_v2$source), y = unique(sub_v3$source))
 
 # Re-check structure
-dplyr::glimpse(sub_v2)
+dplyr::glimpse(sub_v3)
+
+# Re-attach zero-abundance rows (if any)
+sub_v4 <- dplyr::bind_rows(sub_v3, zero_abun)
+
+# Re-check structure
+dplyr::glimpse(sub_v4)
 
 ## ------------------------------------------- ##
 # Handle Sub-Annual Sampling ----
 ## ------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(sub_v2)
+dplyr::glimpse(sub_v4)
 
 # Do needed processing
-sub_v2b <- sub_v2 %>% 
+sub_v5 <- sub_v4 %>% 
   # Identify cases with more than one sampling point within dataset/year
   dplyr::group_by(source, year) %>% 
   dplyr::mutate(time.ct = length(unique(sampling.point)),
@@ -68,7 +91,7 @@ sub_v2b <- sub_v2 %>%
   dplyr::ungroup()
 
 # Identify any sources with more than one time point
-multi.times <- sub_v2b %>% 
+multi.times <- sub_v5 %>% 
   dplyr::filter(time.ct != 1) %>% 
   dplyr::select(source, year, time.ct, times) %>% 
   dplyr::distinct()
@@ -78,7 +101,7 @@ as.data.frame(multi.times)
 ## View(multi.times)
 
 # Do desired subsetting
-sub_v2c <- sub_v2b %>% 
+sub_v6 <- sub_v5 %>% 
   dplyr::filter(
     # Keep any datasets with only one sampling event per year
     time.ct == 1 |
@@ -199,14 +222,14 @@ sub_v2c <- sub_v2b %>%
   )
 
 # Check number of lost rows (hopefully few rows but understandable if some/many)
-message(nrow(sub_v2) - nrow(sub_v2c), " rows lost")
+message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
-setdiff(x = unique(sub_v2$source), y = unique(sub_v2c$source))
+setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
 
 # Re-check sampling point for same datasets that previously had more than 1
-multi.times_v2 <- sub_v2c %>% 
-  dplyr::bind_rows(dplyr::filter(sub_v2b, !source %in% sub_v2c$source)) %>% 
+multi.times_v2 <- sub_v6 %>% 
+  dplyr::bind_rows(dplyr::filter(sub_v5, !source %in% sub_v6$source)) %>% 
   dplyr::filter(source %in% multi.times$source) %>% 
   dplyr::select(source, year, sampling.point) %>% 
   dplyr::distinct()
@@ -216,19 +239,19 @@ dplyr::glimpse(multi.times_v2)
 ## View(multi.times_v2)
 
 # Drop the temp columns once everything looks good
-sub_v3 <- sub_v2c %>% 
+sub_v7 <- sub_v6 %>% 
   # Drop "sampling.point" column plus any temporary columns
   dplyr::select(-sampling.point, -time.ct, -times)
 
 # Re-check structure
-dplyr::glimpse(sub_v3)
+dplyr::glimpse(sub_v7)
 
 ## ------------------------------------------- ##
 # Handle Multi-Annual Sampling ----
 ## ------------------------------------------- ##
 
 # How many datasets have more than one year of data?
-sub_v3 %>% 
+sub_v7 %>% 
   dplyr::group_by(source) %>% 
   dplyr::summarize(yr_ct = length(unique(year))) %>% 
   dplyr::filter(yr_ct > 1) %>% 
@@ -238,13 +261,13 @@ sub_v3 %>%
 sub_list <- list()
 
 # Iterate across datasets
-for(focal_src in sort(unique(sub_v3$source))){
+for(focal_src in sort(unique(sub_v7$source))){
   
   # Progress message
   message("Working on file ", focal_src)
   
   # Subset data
-  focal_df <- dplyr::filter(.data = sub_v3, source == focal_src)
+  focal_df <- dplyr::filter(.data = sub_v7, source == focal_src)
   
   # Count number of years of data within that dataset
   yr_ct <- length(unique(focal_df$year))
@@ -273,47 +296,47 @@ for(focal_src in sort(unique(sub_v3$source))){
 }
 
 # Unlist outputs
-sub_v4 <- purrr::list_rbind(x = sub_list)
+sub_v8 <- purrr::list_rbind(x = sub_list)
 
 # Any full datasets lost?
-supportR::diff_check(old = unique(sub_v3$source), new = unique(sub_v4$source))
+supportR::diff_check(old = unique(sub_v7$source), new = unique(sub_v8$source))
 
 # Re-check multi-annual data
-sub_v4 %>% 
+sub_v8 %>% 
   dplyr::group_by(source) %>% 
   dplyr::summarize(yr_ct = length(unique(year))) %>% 
   dplyr::filter(yr_ct > 1) %>% 
   as.data.frame()
 
 # Re-check structure more generally
-dplyr::glimpse(sub_v4)
+dplyr::glimpse(sub_v8)
 
 ## ------------------------------------------- ##
 # Remove Particular Datasets ----
 ## ------------------------------------------- ##
 
 # Remove any unwanted datasets by hand
-sub_v5 <- sub_v4 %>% 
+sub_v9 <- sub_v8 %>% 
   # Jamie says this dataset is really the last year of a different dataset so should be removed
   dplyr::filter(source != "mcdevittirwin_palmyra_palmyratiles_2014_fish_benthic.csv") %>% 
   # Jamie says this dataset is the 4 month version while another dataset is the same but 12-month
   dplyr::filter(source != "lter-mcr_moorea_grazingintensity_2010_fish_benthic.csv")
 
 # Double check only unwanted data are lost
-supportR::diff_check(old = unique(sub_v4$source), new = unique(sub_v5$source))
+supportR::diff_check(old = unique(sub_v8$source), new = unique(sub_v9$source))
 
 # Check structure
-dplyr::glimpse(sub_v5)
+dplyr::glimpse(sub_v9)
 
 ## ------------------------------------------- ##
 # Remove Non-Living Taxa ----
 ## ------------------------------------------- ##
 
 # Check current taxa
-sort(unique(sub_v5$taxa))
+sort(unique(sub_v9$taxa))
 
 # Remove non-living ones
-sub_v6 <- sub_v5 %>%
+sub_v10 <- sub_v9 %>%
   dplyr::filter(!taxa %in% c("LITT", "Bare", "Dead Barnacle", "Amphipod tube", "bare", 
                              "Mud Tube", "Jingle shell", "Sand tube", "Little Black tubes", 
                              "Mud tube", "Branch", "rock", "BARE", "Litter", 
@@ -331,20 +354,20 @@ sub_v6 <- sub_v5 %>%
 
 
 # Check for lost files
-supportR::diff_check(old = unique(sub_v5$taxa), new = unique(sub_v6$taxa))
+supportR::diff_check(old = unique(sub_v9$taxa), new = unique(sub_v10$taxa))
 
 # How many lost rows?
-message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
+message(nrow(sub_v9) - nrow(sub_v10), " rows lost")
 
 # Full structure check
-dplyr::glimpse(sub_v6)
+dplyr::glimpse(sub_v10)
 
 ## ------------------------------------------- ##
 # Remove Confounding Treatments ----
 ## ------------------------------------------- ##
 
 # For this paper, some treatments are likely confounding the effect of exclosures
-sub_v7 <- sub_v6 %>% 
+sub_v11 <- sub_v10 %>% 
   # Don't want insecticided plots
   dplyr::filter(!treat.insecticide %in% c("Sprayed")) %>%
   # Don't want Nitrogen addition
@@ -356,23 +379,23 @@ sub_v7 <- sub_v6 %>%
                                         "NP", "N", "P", 1:9))
 
 # How many rows lost?
-message(nrow(sub_v6) - nrow(sub_v7), " rows lost")
+message(nrow(sub_v10) - nrow(sub_v11), " rows lost")
 
 # Lose any full datasets (we shouldn't)?
-supportR::diff_check(old = unique(sub_v6$source), new = unique(sub_v7$source))
+supportR::diff_check(old = unique(sub_v10$source), new = unique(sub_v11$source))
 
 # Check structure
-dplyr::glimpse(sub_v7)
+dplyr::glimpse(sub_v11)
 
 ## ------------------------------------------- ##
 # Drop Unwanted Columns ----
 ## ------------------------------------------- ##
 
 # Check structure
-dplyr::glimpse(sub_v7)
+dplyr::glimpse(sub_v11)
 
 # Drop any columns we know we don't want at the outset
-sub_v8 <- sub_v7 %>% 
+sub_v12 <- sub_v11 %>% 
   # Superseded "original" columns (standardized in QC script)
   dplyr::select(-dplyr::starts_with("treat.")) %>% 
   # 'Distance from' column(s)
@@ -383,17 +406,17 @@ sub_v8 <- sub_v7 %>%
   dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
 
 # Double check gained/lost columns
-supportR::diff_check(old = names(sub_v7), new = names(sub_v8))
+supportR::diff_check(old = names(sub_v11), new = names(sub_v12))
 
 # Re-check structure
-dplyr::glimpse(sub_v8)
+dplyr::glimpse(sub_v12)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-sub_v99 <- sub_v8
+sub_v99 <- sub_v12
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
