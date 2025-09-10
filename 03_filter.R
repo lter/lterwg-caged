@@ -29,10 +29,10 @@ dplyr::glimpse(sub_v1)
 # Check structure
 dplyr::glimpse(sub_v1)
 
-# Identify total abundance at design 1
+# Identify total abundance at design 1 and within cage treatment
 sub_v2 <- sub_v1 %>% 
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-                  exp.design.2, exp.design.1) %>% 
+                  exp.design.2, exp.design.1, cage.treatment_std) %>% 
   dplyr::mutate(tot_abundance = sum(abundance, na.rm = T)) %>% 
   dplyr::ungroup()
 
@@ -396,6 +396,8 @@ dplyr::glimpse(sub_v11)
 
 # Drop any columns we know we don't want at the outset
 sub_v12 <- sub_v11 %>% 
+  # total abundance column used for filter double-checking at start of this script
+  dplyr::select(-tot_abundance) %>% 
   # Superseded "original" columns (standardized in QC script)
   dplyr::select(-dplyr::starts_with("treat.")) %>% 
   # 'Distance from' column(s)
