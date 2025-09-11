@@ -425,13 +425,14 @@ dplyr::glimpse(beta_v7)
 
 # Check for data sources in starting data but not output
 supportR::diff_check(old = unique(beta_v2$source), new = unique(beta_v7$source))
+# lose burkepile, duran, lter harvard, and villar here
 
 # Create final object name
 beta_v99 <- beta_v7
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source)
-unique(beta_v99$exp.name)
+unique(beta_v99$source) # 113
+unique(beta_v99$exp.name) # 305
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
