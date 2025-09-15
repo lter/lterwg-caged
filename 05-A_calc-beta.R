@@ -366,73 +366,124 @@ dplyr::glimpse(beta_des1)
 # Add these to a list (useful later)
 beta_deslists <- list(beta_des1, beta_des2, beta_des3, beta_des4, beta_expname)
 
+# Unlist them to create an 'all scales' table
+beta_allscales <- purrr::list_rbind(x = beta_deslists)
+
+# Check structure
+dplyr::glimpse(beta_allscales)
+
 ## ------------------------------------------- ##
-# Coalesce Across Design Levels ----
+# Identify 'Finest Scale' of Beta Dispersion ----
 ## ------------------------------------------- ##
 
 # Ultimately we want only the best dispersion available in a given dataset
-## Regardless of the "level" for that site
+## Regardless of which design level that is for that experiment
 
-# Start with design level 1 (minus any NA dispersion values)
-beta_v3 <- beta_des1 %>% 
-  dplyr::filter(!is.na(betadisp.comm.dist))
+# Make a list for storing outputs
+beta_finelist <- list()
 
-# Check structure 
-dplyr::glimpse(beta_v3)
+# Pare down the 'all scales' output slightly (to only instances with beta dispersion
+beta_fine_v1 <- beta_allscales %>% 
+  dplyr::filter(is.na(betadisp.comm.dist) != T)
 
-# Drop NAs from level 2 output and drop data for which a finer level already exists
-beta_des2_v2 <- beta_des2 %>% 
-  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-  dplyr::filter(!exp.design.2 %in% beta_v3$exp.design.2 &
-                  !source %in% beta_v3$source)
+# To do this, we'll loop across sources and experiments
+for(finest_src in sort(unique(beta_allscales$source))){
+  
+  # Subset to that source
+  beta_fine_src <- beta_fine_v1 %>% 
+    dplyr::filter(source == finest_src)
+  
+  for(finest_name in sort(unique(beta_fine_src$exp.name))){
+    # finest_name <- "Palmas_Exposed-Cool"
+    
+    # Progress message
+    message("Identifying finest scale for '", finest_name, "'")
+    
+    # Subset the beta dispersion table to only this source
+    beta_fine_sub <- beta_fine_src %>% 
+      dplyr::filter(exp.name == finest_name)
+    
+    # Make another subset for each design level
+    beta_fine_sub_des1 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.1")
+    beta_fine_sub_des2 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.2")
+    beta_fine_sub_des3 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.3")
+    beta_fine_sub_des4 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.4")
+    beta_fine_sub_name <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.name")
+    
+    # Work through the design levels sequentially (lowest to highest)
+    ## And add the lowest one with beta dispersion for both standardized cage treatments to the output list
+    if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des1$cage.treatment_std))){
+      
+      # Add to list
+      beta_finelist[[finest_name]] <- beta_fine_sub_des1
+      
+      # Print a message too
+      message("For '", finest_name, "' exp.design.1 was the finest level with beta dispersion for both treatments") }
+    
+    # Do the same for design 2
+    if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des2$cage.treatment_std))){
+      beta_finelist[[finest_name]] <- beta_fine_sub_des2
+      message("For '", finest_name, "' exp.design.2 was the finest level with beta dispersion for both treatments") }
+    
+    # And design 3
+    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des3$cage.treatment_std))){
+      beta_finelist[[finest_name]] <- beta_fine_sub_des3
+      message("For '", finest_name, "' exp.design.3 was the finest level with beta dispersion for both treatments") }
+    
+    # And design 4
+    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des4$cage.treatment_std))){
+      beta_finelist[[finest_name]] <- beta_fine_sub_des4
+      message("For '", finest_name, "' exp.design.4 was the finest level with beta dispersion for both treatments") }
+    
+    # And the experiment name
+    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_name$cage.treatment_std))){
+      beta_finelist[[finest_name]] <- beta_fine_sub_name
+      message("For '", finest_name, "' exp.name was the finest level with beta dispersion for both treatments") }
+    
+  } # Close 'exp.name' loop
+} # Close 'source' loop
 
-# Add this to the output object
-beta_v4 <- dplyr::bind_rows(beta_v3, beta_des2_v2)
-
-# Do the same for the next design level
-beta_des3_v2 <- beta_des3 %>% 
-  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-  dplyr::filter(!exp.design.3 %in% beta_v4$exp.design.3 &
-                  !source %in% beta_v4$source)
-
-# Add this to the output object
-beta_v5 <- dplyr::bind_rows(beta_v4, beta_des3_v2)
-
-# Do the same for the next design level
-beta_des4_v2 <- beta_des4 %>% 
-  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-  dplyr::filter(!exp.design.4 %in% beta_v5$exp.design.4 &
-                  !source %in% beta_v5$source)
-
-# Add this to the output object
-beta_v6 <- dplyr::bind_rows(beta_v5, beta_des4_v2)
-
-# Finally, do the same for exp.name too
-beta_name_v2 <- beta_expname %>% 
-  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-  dplyr::filter(!exp.name %in% beta_v6$exp.name &
-                  !source %in% beta_v6$source)
-
-# Add *this* to the output object
-beta_v7 <- dplyr::bind_rows(beta_v6, beta_name_v2)
+# Unlist the list that we just created
+beta_fine_v2 <- purrr::list_rbind(beta_finelist)
 
 # Check structure
-dplyr::glimpse(beta_v7)
+dplyr::glimpse(beta_fine_v2)
+
+# Did we lose any sources?
+supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine_v2$source))
+
+# Or experiments?
+supportR::diff_check(old = unique(beta_allscales$exp.name), new = unique(beta_fine_v2$exp.name))
+
+## ------------------------------------------- ##
+# Diagnose Lost Sources ----
+## ------------------------------------------- ##
+
+# Create a nice diagnostic output for sources that we do lose in this process
+for(lost_src in setdiff(x = unique(beta_allscales$source), y = unique(beta_fine_v2$source))){
+  
+  # Subset the 'all scales' output to just this source
+  beta_lost <- dplyr::filter(beta_allscales, source == lost_src)
+  
+  # Generate a file name
+  lost_name <- paste0("beta-disp-calc-failure-diagnostic_", lost_src)
+  
+  # Export locally
+  write.csv(x = beta_lost, na = '', row.names = F,
+            file = file.path("data", "diagnostic", lost_name))
+  
+} # Close loop
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
-# Check for data sources in starting data but not output
-supportR::diff_check(old = unique(beta_v2$source), new = unique(beta_v7$source))
-# lose burkepile, duran, lter harvard, and villar here
-
 # Create final object name
-beta_v99 <- beta_v7
+beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source) # 113
-unique(beta_v99$exp.name) # 305
+unique(beta_v99$source) # 108
+unique(beta_v99$exp.name) # 291
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
@@ -441,10 +492,7 @@ beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))
 # Export locally
 write.csv(x = beta_v99, row.names = F, na = '', file = beta_path)
 
-# And, generate an 'all scales' output too
-beta_allscales <- purrr::list_rbind(x = beta_deslists)
-
-# Check structure
+# Re-check 'all scales' structure
 dplyr::glimpse(beta_allscales)
 
 # Export locally
