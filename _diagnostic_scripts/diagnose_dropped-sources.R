@@ -10,8 +10,8 @@
 # Load libraries
 librarian::shelf(tidyverse, ltertools)
 
-# Create needed folder(s)
-dir.create(path = file.path("data", "diagnostic"), showWarnings = F, recursive = T)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
