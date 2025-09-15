@@ -10,8 +10,8 @@
 # Load libraries
 librarian::shelf(tidyverse, magrittr, vegan, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
