@@ -1,7 +1,10 @@
 ## --------------------------------------------------------------- ##
-                  # CAGED Harmonization Workflow
+# CAGED Harmonization Workflow
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+
+# Purpose:
+## Use a data key to standardize the column names of all input files
+## And combine all standardized tables into one large table
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -10,9 +13,8 @@
 # Load libraries
 librarian::shelf(tidyverse, ltertools, googledrive, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("data", "raw"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -21,7 +23,7 @@ rm(list = ls()); gc()
 # Download Data ----
 ## ------------------------------------------- ##
 
-# NOTE
+# Note: 
 ## This script assumes (1) access to the "LTER-WG_CAGED" Shared Drive (2) authentication with R
 ## For more information on authentication, see the following tutorial:
 ### https://lter.github.io/scicomp/tutorial_googledrive-pkg.html
@@ -129,7 +131,7 @@ for(focal_src in sort(intersect(x = key$source, y = names(list_raw)))){
                           names_to = "orig.taxa",
                           values_to = "abundance") %>% 
       dplyr::mutate(orig.taxa = gsub(pattern = "orig.taxa_", replacement = "", x = orig.taxa))
-      
+    
   } else { focal_v3 <- focal_v2 }
   
   # Also process wide-format spatial information (if any is found)
@@ -177,7 +179,7 @@ combo_v2 <- combo_v1 %>%
     treat.insecticide = orig.treat_insecticide,
     # treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
-     treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
+    treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
     treat.gap = orig.treat_gap,
     treat.nitrogen.addition = orig.treat_nitrogen.addition,
     treat.fire = orig.treat_burn
@@ -191,9 +193,9 @@ combo_v2 <- combo_v1 %>%
   dplyr::mutate(treat.cage = dplyr::case_when(
     !is.na(orig.treat_cage) ~ orig.treat_cage,
     !is.na(orig.treat_fence) ~ orig.treat_fence,
-  #  !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
-   #   paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
-  #  !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
+    #  !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
+    #   paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
+    #  !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
     !is.na(orig.treat_cage.cattle) ~ orig.treat_cage.cattle,
     ## If all else fails, just use whatever the singualr original treatment column is
     !is.na(orig.treat) ~ orig.treat,
@@ -307,7 +309,7 @@ combo_v99 <- combo_v5
 
 # Check structure
 dplyr::glimpse(combo_v99)
-  
+
 # Export locally
 write.csv(x = combo_v99, row.names = F, na = '',
           file = file.path("data", "01_caged_harmonized.csv"))
