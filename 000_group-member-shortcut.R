@@ -1,25 +1,29 @@
 ## --------------------------------------------------------------- ##
-# CAGED Setup for Group Members
+# CAGED Shortcut
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
 
 # Purpose:
 ## Group members may want a "shortcut" so they don't need to run the full workflow
-## This script generates needed local folders and downloads the outputs of core scripts from Drive
+## This script downloads the outputs of core scripts from Drive
+## Allowing a user to skip numbered workflow scripts before the one that they are interested in
 
 # Note:
-## This script assumes you (the person running the script):
+## This script assumes that you (the person running the script):
 ### 1. Have access to the group's Shared Drive
 ### 2. Have adopted GitHub (so that you have the right working directory)
+
+# Load libraries
+librarian::shelf(tidyverse, googledrive)
+
+# Clear environment
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Create Local Folders ----
 ## ------------------------------------------- ##
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("data", "raw"), showWarnings = F)
-dir.create(path = file.path("graphs"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 ## ------------------------------------------- ##
 # Download Core Outputs ----
