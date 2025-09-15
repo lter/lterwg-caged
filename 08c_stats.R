@@ -537,6 +537,8 @@ summary(Baediff.betamod1)
 car::Anova(Baediff.betamod1, type = "II")
 # not significant when you use a beta regression
 
+plot(allEffects(Baediff.betamod1))
+
 check_model(Baediff.betamod1) # looks like it fits well? 
 
 abs.diff.mod1 <- lm(abdiff ~ 
@@ -618,7 +620,61 @@ testDispersion(simulationOutput)
 
 three.way.pred<-data.frame(emmeans(three.way.betamod, ~ var_aq.or.terr *cage.treatment_std | abs.lat,
                                     at = list(abs.lat = c(0,10,20,30,40,50,60,70)), type = "response"))
+## - Model 2: ------------------------------------------------------------------
+#Two way interaction: abs(diff(beta.disp)) ~ abs(latitude) * ecosystem type
+# beta regression
+# directly copied max's code to put all 3 models in one place
+# Fit model on only uncaged data
+BaeDisp.df3 <- BaeDisp.df2 %>%
+  dplyr::filter(cage.treatment_std == "uncaged") %>%
+  droplevels()
 
+uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                             var_aq.or.terr * abs.lat  +
+                             (1|exp.name), 
+                           dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                           family = beta_family(link = "probit"),
+                           control = glmmTMBControl(optimizer = optim, 
+                                                    optArgs = list(method = "BFGS")), 
+                           # Or use nlminb, or bobyqa via nloptr
+                           data = BaeDisp.df3) 
+AIC(uncaged.betamod)
+summary(uncaged.betamod)    
+car::Anova(uncaged.betamod, type = "II")
+
+plot(allEffects(uncaged.betamod))
+
+## - Model 3: ------------------------------------------------------------------
+#Two way interaction: abs(diff(beta.disp)) ~ abs(latitude) * ecosystem type
+# beta regression
+
+# absolute value of difference
+BaeDiff.df_abs <- BaeDiff.df %>% 
+  mutate(ablat = abs(lat), 
+         abdiff = abs(within.cage.treat_betadisp.mean.diff) )
+
+range(BaeDiff.df_abs$abdiff) #  0.0002819578 0.4272029784
+hist(BaeDiff.df_abs$abdiff) # try a beta regression?
+
+
+Baediff.betamod1 <- glmmTMB(abdiff ~ 
+                              var_aq.or.terr*ablat, #+
+                            
+                            # (1|source), 
+                            #    dispformula = ~ var_aq.or.terr + abs.lat,
+                            family = beta_family(link = "logit"),
+                            control = glmmTMBControl(optimizer = optim, 
+                                                     optArgs = list(method = "BFGS")), 
+                            # Or use nlminb, or bobyqa via nloptr
+                            data = BaeDiff.df_abs) 
+
+summary(Baediff.betamod1)    
+car::Anova(Baediff.betamod1, type = "II")
+# not significant when you use a beta regression
+
+plot(allEffects(Baediff.betamod1))
+
+check_model(Baediff.betamod1) # looks like it fits well? 
 
 
 
