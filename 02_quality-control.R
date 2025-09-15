@@ -1,7 +1,6 @@
 ## --------------------------------------------------------------- ##
-                # CAGED Wrangling & Quality Control
+# CAGED Wrangling & Quality Control
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -10,8 +9,8 @@
 # Load libraries
 librarian::shelf(tidyverse, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -41,24 +40,24 @@ tidy_v2 <- tidy_v1 %>%
       ## Confident changes
       ### Cage Present
       cage.tmp %in% c("full", "exclosure", "exclusion", 
-                        "fenced", "caged", "2.full.cage",
-                        "full nitex", "full quarter", "cage",
-                        "control small fenced", "np small fenced",
-                        "small fenced no fertilizer", "full exclosure",
-                        "nodeer", "total_excl", "ungrazed", "closed", 
-                        "oui", "in", "caribou and small mammal fence", "caribou fence", 
-                        "livest_excl", "Macropod-grazed") ~ "caged",
+                      "fenced", "caged", "2.full.cage",
+                      "full nitex", "full quarter", "cage",
+                      "control small fenced", "np small fenced",
+                      "small fenced no fertilizer", "full exclosure",
+                      "nodeer", "total_excl", "ungrazed", "closed", 
+                      "oui", "in", "caribou and small mammal fence", "caribou fence", 
+                      "livest_excl", "Macropod-grazed") ~ "caged",
       ### Partial cage
       cage.tmp %in% c("partial", "3.part.cage", 
-                        "partial nitex", "partial quarter",
-                        "partial exclosure") ~ "partial",
+                      "partial nitex", "partial quarter",
+                      "partial exclosure") ~ "partial",
       ### No cage
       cage.tmp %in% c("none", "open", "end/control", "control", 
-                        "unfenced", "uncaged", "1.open.ctrl",
-                        "control unfenced", "np unfenced",
-                        "deer", "grazed", "non", "out", "open-grazed", 
-                        "nitrogen phosphorus unfenced", "no cage", 
-                        "no fence") ~ "uncaged",
+                      "unfenced", "uncaged", "1.open.ctrl",
+                      "control unfenced", "np unfenced",
+                      "deer", "grazed", "non", "out", "open-grazed", 
+                      "nitrogen phosphorus unfenced", "no cage", 
+                      "no fence") ~ "uncaged",
       ## Organization/data source-dependent changes
       ### A
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
@@ -173,7 +172,7 @@ if(diagnostic_export == TRUE){
   
   # Export
   write.csv(x = diagnose_treats, na = '', row.names = F,
-            file = file.path("data", "cage-treatment-standardization.csv"))
+            file = file.path("data", "diagnostic", "cage-treatment-standardization.csv"))
   
 }
 
@@ -196,12 +195,12 @@ tidy_v3 <- tidy_v2 %>%
     cage.treatment_orig == "N" ~ "N",
     stringr::str_detect(string = cage.treatment_orig, pattern = "CT") ~ "none",
     T ~ treat.nutrients)) # %>% 
-  # # Handle composite cage + shading treatment from Spiecker
-  # dplyr::mutate(treat.canopy = dplyr::case_when(
-  #   source != "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" ~ treat.canopy,
-  #   stringr::str_detect(string = cage.treatment_orig, pattern = "L") == T ~ "not shaded",
-  #   stringr::str_detect(string = cage.treatment_orig, pattern = "L") != T ~ "shaded",
-  #   T ~ treat.canopy))
+# # Handle composite cage + shading treatment from Spiecker
+# dplyr::mutate(treat.canopy = dplyr::case_when(
+#   source != "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" ~ treat.canopy,
+#   stringr::str_detect(string = cage.treatment_orig, pattern = "L") == T ~ "not shaded",
+#   stringr::str_detect(string = cage.treatment_orig, pattern = "L") != T ~ "shaded",
+#   T ~ treat.canopy))
 
 # Check structure
 dplyr::glimpse(tidy_v3)
@@ -225,8 +224,8 @@ supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.n
 # Then, if there is a fire treatment, we want to add that to the experiment name
 tidy_v4 <- tidy_v3b %>%
   dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
-                      yes = exp.name,
-                      no = paste(exp.name, treat.fire, sep = "--")) )
+                                  yes = exp.name,
+                                  no = paste(exp.name, treat.fire, sep = "--")) )
 
 # Check again
 supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
@@ -368,7 +367,7 @@ tidy_v8 <- tidy_v7 %>%
       "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv",
       "lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv",
       "lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv"
-      ) ~ sampling.point,
+    ) ~ sampling.point,
     # Take from file name
     source %in% c("ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv",
                   "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv") ~ sampling.years,
@@ -400,7 +399,7 @@ tidy_v8 <- tidy_v7 %>%
 tidy_v8 %>% 
   dplyr::filter(source %in% malformed_years) %>% 
   dplyr::mutate(fixed = ifelse(is.na(supportR::force_num(x = .$year)) != T,
-                             yes = T, no = F)) %>% 
+                               yes = T, no = F)) %>% 
   dplyr::group_by(source, sampling.years, fixed) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    points = paste(unique(sampling.point), collapse = ", "),
