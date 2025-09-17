@@ -43,4 +43,18 @@ purrr::walk(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp")
             .f = ~ googledrive::drive_upload(media = file.path("data", .x), 
                                              overwrite = T, path = drive_tidy))
 
+# Upload gamma richness data
+googledrive::drive_upload(media = file.path("data", "05-B_caged_gamma-rich.csv"),
+                          overwrite = T, path = drive_tidy)
+
+# Upload 'all scales' and 'finest scales' beta dispersion mean differences
+purrr::walk(.x = dir(path = file.path("data"), pattern = "06_caged_mean-beta-diff"),
+            .f = ~ googledrive::drive_upload(media = file.path("data", .x), 
+                                             overwrite = T, path = drive_tidy))
+
+# Upload 'all scales' and 'finest scales' full data with metadata
+purrr::walk(.x = dir(path = file.path("data"), pattern = "07_caged_w.meta"),
+            .f = ~ googledrive::drive_upload(media = file.path("data", .x), 
+                                             overwrite = T, path = drive_tidy))
+
 # End ----
