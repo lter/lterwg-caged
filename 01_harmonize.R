@@ -292,10 +292,7 @@ combo_v5 <- combo_v4 %>%
                   nchar(abundance) != 0 &
                   abundance != "NaN") %>% 
   # Make abundance truly a number
-  dplyr::mutate(abundance = as.numeric(abundance)) %>% 
-  # Remove any rows with zero abundace
-  ## (We'll zero fill later but fewer rows means faster computing in the meantime)
-  dplyr::filter(abundance > 0)
+  dplyr::mutate(abundance = as.numeric(abundance))
 
 # Check structure
 dplyr::glimpse(combo_v5)
