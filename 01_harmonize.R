@@ -307,12 +307,11 @@ combo_v99 <- combo_v5
 # Check structure
 dplyr::glimpse(combo_v99)
 
-# Export locally
-write.csv(x = combo_v99, row.names = F, na = '',
-          file = file.path("data", "01_caged_harmonized.csv"))
+# Identify tidy file name / path
+combo_name <- "01_caged_harmonized.csv"
+combo_path <- file.path("data", combo_name)
 
-# # Upload to Drive
-# googledrive::drive_upload(media = file.path("data", "01_caged_harmonized.csv"), overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+# Export locally
+write.csv(x = combo_v99, row.names = F, na = '', file = combo_path)
 
 # End ----
