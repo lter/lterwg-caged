@@ -320,7 +320,9 @@ sub_v9 <- sub_v8 %>%
   # Jamie says this dataset is really the last year of a different dataset so should be removed
   dplyr::filter(source != "mcdevittirwin_palmyra_palmyratiles_2014_fish_benthic.csv") %>% 
   # Jamie says this dataset is the 4 month version while another dataset is the same but 12-month
-  dplyr::filter(source != "lter-mcr_moorea_grazingintensity_2010_fish_benthic.csv")
+  dplyr::filter(source != "lter-mcr_moorea_grazingintensity_2010_fish_benthic.csv") %>% 
+  # Jamie says this dataset has only one replicate per treatment
+  dplyr::filter(source != "lter-harvard_newengland_plantcover_2008-2019_moose_treeseedling.csv")
 
 # Double check only unwanted data are lost
 supportR::diff_check(old = unique(sub_v8$source), new = unique(sub_v9$source))
