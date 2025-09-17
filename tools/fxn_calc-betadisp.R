@@ -32,19 +32,38 @@ calc_betadisp <- function(df = NULL, floor = 4,
   # Identify all column names other than the taxon/abundance columns
   misc_cols <- setdiff(x = names(df), y = c(taxa_col, abun_col))
   
+  # Get a wide format variant of the community data
+  comm_wide_v1 <- df %>% 
+    tidyr::pivot_wider(names_from = {{taxa_col}},
+                       values_from = {{abun_col}},
+                       values_fill = 0)
+    
+  # Identify rows without any abundance
+  zero_abun <- comm_wide_v1 %>% 
+    dplyr::mutate(
+      x____totabun = rowSums(x = .[(length(misc_cols) + 1):ncol(.)], 
+                             na.rm = T)) %>% 
+    dplyr::filter(x____totabun <= 0) %>% 
+    dplyr::select(-x____totabun)
+    
+  # Drop zero abundance values from the data
+  ## Both the full input data...
+  df_v2 <- df %>% 
+    dplyr::anti_join(x = ., y = zero_abun, 
+                     by = misc_cols)
+  
+  ## ...And the community data
+  comm_wide <- comm_wide_v1 %>% 
+    dplyr::anti_join(x = ., y = zero_abun, 
+                     by = misc_cols) %>% 
+    dplyr::select(-dplyr::all_of(misc_cols))
+  
   # Create the first bit of the output data object
-  beta_out <- df %>% 
+  beta_out <- df_v2 %>% 
     # Keep all non-vital columns
     dplyr::select(dplyr::all_of(misc_cols)) %>% 
     # Drop non-unique rows (likely as many as there were species IDs)
     dplyr::distinct()
-  
-  # Get a wide format variant of the community data
-  comm_wide <- df %>% 
-    tidyr::pivot_wider(names_from = {{taxa_col}},
-                       values_from = {{abun_col}},
-                       values_fill = 0) %>% 
-    dplyr::select(-dplyr::all_of(misc_cols))
   
   # Identify number of replicates
   reps <- nrow(comm_wide)
