@@ -29,6 +29,9 @@ min_reps <- 4
 ## Inclusive of this number (so 5 is >= 5)
 max_pseudoreps <- 5
 
+# What distance method do we want to use?
+pref_dist_method <- "euclidean"
+
 # Read in data
 beta_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
 
@@ -58,8 +61,8 @@ beta_des4_list <- list()
 beta_name_list <- list()
 
 # Loop across original data source
-for(focal_src in unique(beta_v2$source)){
-  # focal_src <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+for(focal_src in sort(unique(beta_v2$source))){
+  # focal_src <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
@@ -70,7 +73,7 @@ for(focal_src in unique(beta_v2$source)){
   
   # Loop across treatments
   for(focal_trt in unique(src_sub$cage.treatment_orig)){
-    # focal_trt <- "Exclusion"
+    # focal_trt <- "F"
     
     # Subset again
     trt_sub <- src_sub %>% 
@@ -78,7 +81,7 @@ for(focal_src in unique(beta_v2$source)){
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
-      # focal_yr <- "2011"
+      # focal_yr <- "2021"
       
       # Subset again
       yr_sub <- trt_sub %>% 
@@ -90,7 +93,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across most granular level of experimental design
       for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C__1"
+        # focal_des1 <- "CSF__1"
         
         # Subset yet again
         des1_sub <- yr_sub %>% 
@@ -99,7 +102,7 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des1_beta <- calc_betadisp(df = des1_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.1") %>% 
+                                   dist_method = pref_dist_method, result_prefix = "exp.design.1") %>% 
           # Wrangle that output slightly
           tidy_betadisp(beta = ., result_prefix = "exp.design.1")
         
@@ -114,7 +117,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 2
       for(focal_des2 in unique(yr_sub$exp.design.2)){
-        # focal_des2 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C"
+        # focal_des2 <- "CSF"
         
         # Subset yet again
         des2_sub <- yr_sub %>% 
@@ -123,7 +126,7 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des2_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.2") %>% 
+                                   dist_method = pref_dist_method, result_prefix = "exp.design.2") %>% 
           # Wrangle that output slightly
           tidy_betadisp(beta = ., result_prefix = "exp.design.2")
         
@@ -138,7 +141,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 3
       for(focal_des3 in unique(yr_sub$exp.design.3)){
-        # focal_des3 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+        # focal_des3 <- "CSF"
         
         # Subset yet again
         des3_sub <- yr_sub %>% 
@@ -170,7 +173,7 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des3_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.3") %>% 
+                                   dist_method = pref_dist_method, result_prefix = "exp.design.3") %>% 
           # Wrangle that output slightly
           tidy_betadisp(beta = ., result_prefix = "exp.design.3")
         
@@ -185,7 +188,7 @@ for(focal_src in unique(beta_v2$source)){
       
       # Loop across experimental design level 4
       for(focal_des4 in unique(yr_sub$exp.design.4)){
-        # focal_des4 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+        # focal_des4 <- "CSF"
         
         # Subset yet again
         des4_sub <- yr_sub %>% 
@@ -240,7 +243,7 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         des4_beta <- calc_betadisp(df = des4_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.design.4") %>% 
+                                   dist_method = pref_dist_method, result_prefix = "exp.design.4") %>% 
           # Wrangle that output slightly
           tidy_betadisp(beta = ., result_prefix = "exp.design.4")
         
@@ -332,7 +335,7 @@ for(focal_src in unique(beta_v2$source)){
         # Calculate beta dispersion
         name_beta <- calc_betadisp(df = name_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = "bray", result_prefix = "exp.name") %>% 
+                                   dist_method = pref_dist_method, result_prefix = "exp.name") %>% 
           # Wrangle that output slightly
           tidy_betadisp(beta = ., result_prefix = "exp.name")
         
@@ -459,8 +462,11 @@ supportR::diff_check(old = unique(beta_allscales$exp.name), new = unique(beta_fi
 # Diagnose Lost Sources ----
 ## ------------------------------------------- ##
 
+# Identify lost sources
+dropped_sources <- setdiff(x = unique(beta_allscales$source), y = unique(beta_fine_v2$source))
+
 # Create a nice diagnostic output for sources that we do lose in this process
-for(lost_src in setdiff(x = unique(beta_allscales$source), y = unique(beta_fine_v2$source))){
+for(lost_src in dropped_sources){
   
   # Subset the 'all scales' output to just this source
   beta_lost <- dplyr::filter(beta_allscales, source == lost_src)
@@ -473,6 +479,15 @@ for(lost_src in setdiff(x = unique(beta_allscales$source), y = unique(beta_fine_
             file = file.path("data", "diagnostic", lost_name))
   
 } # Close loop
+
+## ------------------------------------------- ##
+# Diagnose Lost Experiment Names ----
+## ------------------------------------------- ##
+
+# Possible that we lose some experiment names within sources that we don't lose
+
+
+
 
 ## ------------------------------------------- ##
 # Export ----
@@ -498,10 +513,5 @@ dplyr::glimpse(beta_allscales)
 # Export locally
 write.csv(x = beta_allscales, na = '', row.names = F,
           file = file.path("data", paste0(beta_name, "_all-scales.csv")))
-
-# # Upload all of these to the Drive
-# purrr::walk(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"),
-#             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
-#                                             path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
 # End ----
