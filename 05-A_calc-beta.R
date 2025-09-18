@@ -30,7 +30,7 @@ min_reps <- 4
 max_pseudoreps <- 5
 
 # What distance method do we want to use?
-pref_dist_method <- "euclidean"
+pref_dist_method <- "bray"
 
 # Read in data
 beta_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
@@ -61,7 +61,18 @@ beta_des4_list <- list()
 beta_name_list <- list()
 
 # Loop across original data source
-for(focal_src in sort(unique(beta_v2$source))){
+for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
+                         # Manually (temporarily) removing datasets that fail with BC dist
+                         ## Caused by more than one replicate of 0 total abundance
+                         y = c("gex_augustine-cper_cpergraze_2011_cattle_plants.csv", 
+                               "gex_augustine-kenya-mpala_mpala_1999&2002_africanungulates_plants.csv",
+                               "gex_baur-nevada_baurnevadaexclosures_2014_horses_plants.csv",
+                               "gex_beevermojave_mojave_2002_burrows&cattle_plants.csv",
+                               "gex_pringle-kenya_klee_2008-2013_grazers_plants.csv",
+                               "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv",
+                               "lter-harvard_simestract_hemlockremoval_2012-2013_ungulates_shrubherb.csv",
+                               "parker_wetlands_carpgrass_2005_crayfish_plants.csv"
+                               ))){
   # focal_src <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv"
   
   # Progress message
