@@ -42,12 +42,84 @@ dplyr::glimpse(beta_v1)
 # Data Preparation ----
 ## ------------------------------------------- ##
 
-# Perform any needed pre-calculation wrangling
-beta_v2 <- beta_v1
-# NO SUCH WRANGLING REQUIRED (CURRENTLY)
+# Bray-Curtis doesn't work for 2 or more replicates with a total abundance of zero
+## For datasets with that problem then, we need to pick one (at random) and drop the other
+zero_abun_v1 <- beta_v1 %>% 
+  # Calculate total abundance within design 1
+  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
+                  exp.design.2, exp.design.1, cage.treatment_std) %>% 
+  dplyr::summarize(tot_abundance = sum(abundance, na.rm = T),
+                   .groups = "keep") %>% 
+  dplyr::ungroup() %>% 
+  # Filter to only rows with a total abundance of zero
+  dplyr::filter(tot_abundance == 0) %>% 
+  # Identify datasets with more than one of these zero abundance replicates
+  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
+                  exp.design.2, cage.treatment_std) %>% 
+  dplyr::mutate(rep_ct = seq_along(along.with = unique(exp.design.1))) %>% 
+  dplyr::ungroup()
+
+# Check structure
+dplyr::glimpse(zero_abun_v1)
+
+# List for storing outputs
+zero_list <- list()
+
+# Loop across design level 2s with this problem
+for(zero_des2 in sort(unique(zero_abun_v1$exp.design.2))){
+  # zero_des2 <- "gex_augustine-kenya-mpala_mpala_1999&2002_africanungulates_plants.csv__bushland2"
+  
+  # Subset to just the relevant group
+  zero_sub <- dplyr::filter(zero_abun_v1, exp.design.2 == zero_des2)
+  
+  # Loop across treatments too
+  for(zero_trt in sort(unique(zero_sub$cage.treatment_std))){
+    # zero_trt <- "caged" 
+    
+    # Subset again
+    zero_subtrt <- dplyr::filter(zero_sub, cage.treatment_std == zero_trt)
+    
+    # If there's only one zero abundance rep, skip it
+    if(nrow(zero_subtrt) == 1){
+      message("For '", zero_des2, "' only ", max(zero_subtrt$rep_ct), " zero-abundance replicate identified in the '", zero_trt, "' treatment.")
+      print("Retaining that single replicate")
+      
+      # If there's more than one...
+    } else {
+      
+      # Identify a random replicate
+      rand_rep <- sample(x = zero_subtrt$rep_ct, size = 1, replace = F)
+      
+      # Subset to all replicates except that replicate and add to the list
+      zero_list[[paste0(zero_des2, "__", zero_trt)]] <- zero_subtrt %>% 
+        dplyr::filter(rep_ct != rand_rep)
+      
+      # Conclusion message
+      message("For '", zero_des2, "' ", max(zero_subtrt$rep_ct), " zero-abundance replicates identified in the '", zero_trt, "' treatment. Choosing replicate number: ")
+      print(rand_rep)
+    } # Close conditional
+  } # Close treatment loop
+} # Close design 2 loop
+
+# Unlist & wrangle the list that we just created
+zero_abun_v2 <- purrr::list_rbind(x = zero_list) %>% 
+  dplyr::select(-tot_abundance, -rep_ct)
 
 # Re-check structure
+dplyr::glimpse(zero_abun_v2)
+
+# Anti join the unwanted data to the original data to remove the 'extra' zero abundance replicates
+beta_v2 <- beta_v1 %>% 
+  anti_join(y = zero_abun_v2, by = c("source", "exp.name", "exp.design.4", 
+                                     "exp.design.3", "exp.design.2",
+                                     "exp.design.1", "cage.treatment_std"))
+# Re-check structure
 dplyr::glimpse(beta_v2)
+
+# Check how many design 1-by-treatment reps were dropped via this operation
+message(length(unique(paste0(beta_v1$exp.design.1, beta_v1$cage.treatment_std))) - 
+          length(unique(paste0(beta_v2$exp.design.1, beta_v2$cage.treatment_std))),
+        " zero abundance replicates were dropped")
 
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
@@ -62,17 +134,8 @@ beta_name_list <- list()
 
 # Loop across original data source
 for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
-                         # Manually (temporarily) removing datasets that fail with BC dist
-                         ## Caused by more than one replicate of 0 total abundance
-                         y = c("gex_augustine-cper_cpergraze_2011_cattle_plants.csv", 
-                               "gex_augustine-kenya-mpala_mpala_1999&2002_africanungulates_plants.csv",
-                               "gex_baur-nevada_baurnevadaexclosures_2014_horses_plants.csv",
-                               "gex_beevermojave_mojave_2002_burrows&cattle_plants.csv",
-                               "gex_pringle-kenya_klee_2008-2013_grazers_plants.csv",
-                               "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv",
-                               "lter-harvard_simestract_hemlockremoval_2012-2013_ungulates_shrubherb.csv",
-                               "parker_wetlands_carpgrass_2005_crayfish_plants.csv"
-                               ))){
+                         # Manually (temporarily) removing datasets as/if needed
+                         y = c(""))){
   # focal_src <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv"
   
   # Progress message
@@ -466,8 +529,10 @@ dplyr::glimpse(beta_fine_v2)
 # Did we lose any sources?
 supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine_v2$source))
 
-# Or experiments?
-supportR::diff_check(old = unique(beta_allscales$exp.name), new = unique(beta_fine_v2$exp.name))
+# Did we lose any experiments?
+## From sources that were not dropped
+beta_test <- dplyr::filter(beta_allscales, source %in% beta_fine_v2$source)
+supportR::diff_check(old = unique(beta_test$exp.name), new = unique(beta_fine_v2$exp.name))
 
 ## ------------------------------------------- ##
 # Diagnose Lost Sources ----
@@ -499,8 +564,8 @@ for(lost_src in dropped_sources){
 beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source) # 108
-unique(beta_v99$exp.name) # 291
+unique(beta_v99$source) # 109
+unique(beta_v99$exp.name) # 293
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
