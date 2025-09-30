@@ -36,15 +36,17 @@ caged_v1 <- read.csv(file.path("data",
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 113
-unique(caged_v1$exp.name) # 305
+unique(caged_v1$source) # 109
+unique(caged_v1$exp.name) # 293
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion and Difference Dataset ---- 
 ## ------------------------------------------- ##
+# Create a Clean Effect Size Dataframe
 # DF where the unit of replication is averages within treatment. 
 # Variable is already created in script 06, so just need to select and filter
 avg.caged_v1 <- caged_v1 %>% 
+  # select the variables we want
   dplyr::select(source:exp.name, starts_with("var"), 
                 lat:long, cage.treatment_std, 
                 # this is the average beta dispersion for each caging treatment in an exp.name
@@ -70,9 +72,8 @@ dplyr::glimpse(avg.caged_v1)
 
 
 # Check number of sources
-unique(avg.caged_v1$source) # 107 
-unique(avg.caged_v1$exp.name) # 290
-# much better!
+unique(avg.caged_v1$source) # 108
+unique(avg.caged_v1$exp.name) # 291
 
 # Look at the NA mean diff data
 test <- caged_v1 %>%
@@ -85,14 +86,13 @@ unique(test$cage.treatment_std) # all four types are there
 
 
 
-
-
-
-#Tidy and Wrangle a exp.name#Tidy and Wrangle a modeling ready DF----
 #convert latitude into numbers
 caged_v1$lat <- as.numeric(caged_v1$lat)
 avg.caged_v1$lat <- as.numeric(avg.caged_v1$lat)
 
+
+
+# Crete a Clean Beta Dispersion Dataframe
 #trim down some columns to create a nicer DF for modeling
 cagedmodel.df <- caged_v1 |> 
   #First, select the columns we think we need:
@@ -117,25 +117,28 @@ cagedmodel.df <- caged_v1 |>
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
 
-
-#DF for modeling Beta dispersion ----
-BaeDisp.df <- cagedmodel.df %>% 
+# DF for modeling Beta dispersion ----
+betadispersion_df <- cagedmodel.df %>% 
   #only columns we need and have
-  select(
-    source, exp.name, cage.treatment_std, exp.name.spatialextent.category, betadisp.design.level, lat, starts_with("var"), gamma.richness, betadisp.sample.size, betadisp.comm.dist)
+  select(source, exp.name, cage.treatment_std, 
+         exp.name.spatialextent.category, betadisp.design.level, 
+         lat, starts_with("var"), gamma.richness,
+         betadisp.sample.size, betadisp.comm.dist)
 
 #DF for modeling, Beta Difference Effect Size ----
-BaeDiff.df <- avg.caged_v1 %>% 
+effectsize_df <- avg.caged_v1 %>% 
   #only columns we need and have
-  select(source,exp.name, lat, starts_with("var"), betadisp.sample.size, gamma.richness, within.cage.treat_betadisp.mean.diff)
+  select(source,exp.name, lat, starts_with("var"), 
+         betadisp.sample.size, gamma.richness,
+         within.cage.treat_betadisp.mean.diff)
 
 
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
 
 # Export locally
-write.csv(x = BaeDisp.df, row.names = F, na = '',
-          file = file.path("data", "BaeDisp.df.csv"))
+write.csv(x = betadispersion_df, row.names = F, na = '',
+          file = file.path("data", "betadispersion_df.csv"))
 
-write.csv(x = BaeDiff.df, row.names = F, na = '',
-          file = file.path("data", "BaeDiff.df.csv"))
+write.csv(x = effectsize_df, row.names = F, na = '',
+          file = file.path("data", "effectsize_df.csv"))
 
