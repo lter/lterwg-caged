@@ -123,8 +123,10 @@ tidy_v2 <- tidy_v1 %>%
       organization == "pascual" & cage.tmp == "cage control" ~ "partial",
       organization == "pelinson" & cage.tmp == "present" ~ "uncaged",
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
-      organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
-      organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
+      organization == "porensky" & 
+        cage.tmp %in% c("y__livestock ex", "y__ungulate ex",
+                        "livestock ex", "ungulate ex") ~ "caged",
+      organization == "porensky" & cage.tmp %in% c("n__out", "y__out", "out") ~ "uncaged",
       organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
       ### R
       organization == "royo" & cage.tmp == "1" ~ "caged",
