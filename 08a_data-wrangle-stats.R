@@ -123,7 +123,12 @@ betadispersion_df <- cagedmodel.df %>%
   select(source, exp.name, cage.treatment_std, 
          exp.name.spatialextent.category, betadisp.design.level, 
          lat, starts_with("var"), gamma.richness,
-         betadisp.sample.size, betadisp.comm.dist)
+         betadisp.sample.size, betadisp.comm.dist) %>%
+  # filter out sources that dont have both caged and uncaged
+  dplyr::group_by(source, exp.name) %>%
+  dplyr::mutate(has_both = all(c("caged", "uncaged") %in% cage.treatment_std)) %>%
+                  dplyr::ungroup() %>%
+                  dplyr::filter(has_both == TRUE) 
 
 
 # Check number of sources
