@@ -36,8 +36,8 @@ caged_v1 <- read.csv(file.path("data",
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 109
-unique(caged_v1$exp.name) # 293
+unique(caged_v1$source) # 110
+unique(caged_v1$exp.name) # 297
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion and Difference Dataset ---- 
@@ -73,7 +73,7 @@ dplyr::glimpse(avg.caged_v1)
 
 # Check number of sources
 unique(avg.caged_v1$source) # 108
-unique(avg.caged_v1$exp.name) # 291
+unique(avg.caged_v1$exp.name) # 290
 
 # Look at the NA mean diff data
 test <- caged_v1 %>%
@@ -125,12 +125,22 @@ betadispersion_df <- cagedmodel.df %>%
          lat, starts_with("var"), gamma.richness,
          betadisp.sample.size, betadisp.comm.dist)
 
+
+# Check number of sources
+unique(betadispersion_df$source) # 110
+unique(betadispersion_df$exp.name) # 297
+
+
 #DF for modeling, Beta Difference Effect Size ----
 effectsize_df <- avg.caged_v1 %>% 
   #only columns we need and have
   select(source,exp.name, lat, starts_with("var"), 
          betadisp.sample.size, gamma.richness,
          within.cage.treat_betadisp.mean.diff)
+
+# Check number of sources
+unique(effectsize_df$source) # 108
+unique(effectsize_df$exp.name) # 290
 
 
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
