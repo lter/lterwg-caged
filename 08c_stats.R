@@ -1,7 +1,8 @@
 ## --------------------------------------------------------------- ##
 # CAGED Stats and Analyses 
 ## --------------------------------------------------------------- ##
-# Written by: Marc J S Hensel, Nick J Lyon, Max Castorani, Jamie McDevitt-Irwin ...
+# Written by: Marc J S Hensel, Nick J Lyon, Max Castorani, 
+# Jamie McDevitt-Irwin, Kelly E Speare ...
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -27,19 +28,21 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08a script
 ## ------------------------------------------- ##
-BaeDiff.df <- read.csv("data/BaeDiff.df.csv")
-BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
+#BaeDiff.df <- read.csv("data/BaeDiff.df.csv")
+BaeDiff.df <- read.csv("data/effectsize_df.csv") #changed to new file name
+#BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
+BaeDisp.df <- read.csv("data/betadispersion_df.csv") # changed to new file name
 
 
-# View(BaeDiff.df) # 235 rows
-# View(BaeDisp.df) # 10875 rows
+ View(BaeDiff.df) # 290 rows
+ View(BaeDisp.df) # 12195 rows
 
 
 ## ------------------------------------------- ##
 # Models for Paper 1 ----
 ## ------------------------------------------- ##
 
-glimpse(BaeDisp.df) #10,881 rows
+glimpse(BaeDisp.df) #12,195 rows
 
 # Check distribution of values in response variable, betadisp.comm.dist
 hist(BaeDisp.df$betadisp.comm.dist)  
