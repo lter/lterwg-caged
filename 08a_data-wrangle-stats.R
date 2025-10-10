@@ -114,6 +114,11 @@ cagedmodel.df <- caged_v1 |>
   #Grab the treatments
   filter(cage.treatment_std %in% c('caged', 'uncaged')) 
 
+
+# Check number of sources
+unique(cagedmodel.df$source) # 110
+unique(cagedmodel.df$exp.name) # 297
+
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
 
