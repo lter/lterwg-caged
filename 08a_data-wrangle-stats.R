@@ -129,6 +129,15 @@ betadispersion_df <- cagedmodel.df %>%
   dplyr::mutate(has_both = all(c("caged", "uncaged") %in% cage.treatment_std)) %>%
                   dplyr::ungroup() %>%
                   dplyr::filter(has_both == TRUE) 
+# this ended up keeping all of them? 
+
+caged_df <- dplyr::filter(cagedmodel.df, cage.treatment_std == "caged")
+uncaged_df <- dplyr::filter(cagedmodel.df, cage.treatment_std == "uncaged")
+
+both_df <- dplyr::filter(cagedmodel.df, exp.name %in% unique(caged_df$exp.name) & exp.name %in% unique(uncage_df$exp.name)) 
+
+dropped_df <- dplyr::filter(cagedmodel.df, exp.name %in% unique(both_df$exp.name) != TRUE)
+# still says zero rows
 
 
 # Check number of sources
