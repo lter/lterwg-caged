@@ -39,8 +39,8 @@ caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 110
-unique(caged_v1$exp.name) # 297
+unique(caged_v1$source) # 109
+unique(caged_v1$exp.name) # 296
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion & Difference Data ---- 
@@ -108,7 +108,7 @@ dplyr::glimpse(na.diff)
 
 # Data for modeling beta dispersion effect size
 caged_effectsize <- caged_mean %>% 
-  #only columns we need and have
+  # Only columns we need and have
   dplyr::select(source, exp.name, lat, starts_with("var"), 
                 betadisp.sample.size, gamma.richness,
                 within.cage.treat_betadisp.mean.diff)
@@ -171,8 +171,8 @@ caged_beta <- caged_model %>%
 supportR::diff_check(old = names(caged_model), new = names(caged_beta))
 
 # Check number of sources
-unique(betadispersion_df$source) # 110
-unique(betadispersion_df$exp.name) # 297
+unique(caged_beta$source) # 110
+unique(caged_beta$exp.name) # 297
 
 # Check structure
 dplyr::glimpse(caged_beta)
