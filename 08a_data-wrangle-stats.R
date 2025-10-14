@@ -81,7 +81,7 @@ supportR::diff_check(old = unique(caged_v1$exp.name), new = unique(caged_mean$ex
 
 # Export locally (if you want)
 # write.csv(x = caged_mean, row.names = F, na = '',
-#           file = file.path("data","08a_caged_mean-difference-slim-data.csv"))
+#           file = file.path("data","08a_caged_prepped-mean-difference.csv"))
 
 # Check structure of that
 dplyr::glimpse(caged_mean)
@@ -183,11 +183,11 @@ dplyr::glimpse(caged_beta)
 # Export some of these products locally
 ## Prepped for beta dispersion modeling
 write.csv(x = caged_beta, row.names = F, na = '',
-          file = file.path("data", "08a_caged_beta-dispersion-prep.csv"))
+          file = file.path("data", "08a_caged_prepped-beta-dispersion.csv"))
 
 ## Prepped for effect size modeling
 write.csv(x = caged_effectsize, row.names = F, na = '',
-          file = file.path("data", "08a_caged_effect-size-prep.csv"))
+          file = file.path("data", "08a_caged_prepped-effect-size.csv"))
 
 # End ----
 
