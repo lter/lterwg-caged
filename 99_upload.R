@@ -61,4 +61,8 @@ purrr::walk(.x = dir(path = file.path("data"), pattern = "07_caged_w.meta"),
             .f = ~ googledrive::drive_upload(media = file.path("data", .x), 
                                              overwrite = T, path = drive_tidy))
 
+# Upload data tables prepared for statistics
+purrr::walk(.x = dir(path = file.path("data"), pattern = "08a_caged_prepped-"),
+            .f = ~ googledrive::drive_upload(media = file.path("data", .x), 
+                                             overwrite = T, path = drive_tidy))
 # End ----
