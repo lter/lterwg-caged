@@ -57,55 +57,21 @@ dplyr::glimpse(meta_v1)
 # Standardize Lat/Long Format ----
 ## ------------------------------------------- ##
 
-# Check current lat/long formats
-sort(unique(meta_v1$var_lat))
+# Look for non-numbers in the current lat/long columns
+supportR::num_check(data = meta_v1, col = "var_lat")
+supportR::num_check(data = meta_v1, col = "var_long")
 
 # Do needed repairs
 meta_v2 <- meta_v1 %>% 
-  # Rename & duplicate original lat/long cols
+  # Rename relevant lat/long columns
   dplyr::rename(lat = var_lat, long = var_long) %>%
-  dplyr::mutate(lat.orig = lat, long.orig = long) %>% 
-  # Replace degree symbol with period
+  # Replace M-dashes with hyphens
   dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "°|º", replacement = ".", x = .))) %>% 
-  # Remove unwanted characters
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "’|'|′|\\\"", replacement = "", x = .))) %>% 
-  # Replace N/S and E/W with negative symbols as needed
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ ifelse(stringr::str_detect(string = ., pattern = "S"),
-                                              yes = paste0("-", .), no = .))) %>% 
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ ifelse(stringr::str_detect(string = ., pattern = "W"),
-                                              yes = paste0("-", .), no = .))) %>% 
-  # Then remove superseded cardinal direction letters
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "N|S|E|W", replacement = "", x = .))) %>% 
-  # Remove spaces after periods
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "\\. ", replacement = "\\.", x = .))) %>% 
-  # Split based on periods
-  tidyr::separate_wider_delim(cols = lat, delim = ".", names = c("tmp__lat", "tmp__lat2"),
-                              too_many = "merge", too_few = "align_start") %>% 
-  tidyr::separate_wider_delim(cols = long, delim = ".", names = c("tmp__long", "tmp__long2"),
-                              too_many = "merge", too_few = "align_start") %>% 
-  # Remove periods from all four temp columns
-  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("tmp__"),
-                              .fns = ~ gsub(pattern = "\\.", replacement = "", x = .))) %>% 
-  # Recombine temp columns with period between first and second
-  dplyr::mutate(lat = ifelse(!is.na(tmp__lat) & !is.na(tmp__lat2),
-                             yes = paste0(tmp__lat, ".", tmp__lat2),
-                             no = "")) %>% 
-  dplyr::mutate(long = ifelse(!is.na(tmp__long) & !is.na(tmp__long2),
-                              yes = paste0(tmp__long, ".", tmp__long2),
-                              no = "")) %>% 
-  # Remove temp columns
-  dplyr::select(-dplyr::starts_with("tmp__")) %>% 
-  # Reorder some other columns
-  dplyr::relocate(lat.orig:long, .after = exp.name)
+                              .fns = ~ gsub(pattern = "−", replacement = "-", x = .)))
 
-# Re-check formats
-sort(unique(meta_v2$lat))
+# Re-check for non-numbers
+supportR::num_check(data = meta_v2, col = "lat")
+supportR::num_check(data = meta_v2, col = "long")
 
 # Check structure more generally
 dplyr::glimpse(meta_v2)
@@ -283,11 +249,10 @@ dplyr::glimpse(w.meta_v3)
 ## After adding summarized beta disp + mean diff
 dplyr::glimpse(w.meta_v4)
 
-
-
 # How many sources and exp.name got through the pipeline?
 unique(w.meta_v4$source) # 110
 unique(w.meta_v4$exp.name) #297
+
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
