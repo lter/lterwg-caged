@@ -28,7 +28,7 @@ rm(list = ls()); gc()
 #BaeDiff.df <- read.csv("data/BaeDiff.df.csv")
 BaeDiff.df <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 #BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
-BaeDisp.df <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
+BaeDisp.df <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
 #View(BaeDiff.df) # 290 rows
