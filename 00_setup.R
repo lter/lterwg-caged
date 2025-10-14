@@ -15,7 +15,7 @@ dir.create(path = file.path("data", "raw"), showWarnings = F, recursive = T)
 dir.create(path = file.path("data", "diagnostic"), showWarnings = F)
 
 ## 'graphs/' folder for exploratory graphs
-dir.create(path = file.path("graphs"), showWarnings = F)
+dir.create(path = file.path("graphs", "model_predictions"), showWarnings = F, recursive = T)
 
 ## 'results/' folder for statistical results
 dir.create(path = file.path("results"), showWarnings = F)
