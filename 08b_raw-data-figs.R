@@ -52,6 +52,11 @@ BaeDisp.df %>%
        colour = "Biome") +
   ggtitle("Uncaged data only")
 
+# Remove rows for which we have no biome classification
+BaeDisp.df <- BaeDisp.df %>%
+  filter(var_aq.or.terr != "") %>%
+  droplevels()
+
 # Beta dispersion (caged only) by latitude
 BaeDisp.df %>%
   filter(cage.treatment_std == "caged") %>%
