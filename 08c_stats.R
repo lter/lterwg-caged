@@ -31,8 +31,8 @@ BaeDiff.df <- read.csv("data/effectsize_df.csv") #changed to new file name
 BaeDisp.df <- read.csv("data/betadispersion_df.csv") # changed to new file name
 
 
- View(BaeDiff.df) # 290 rows
- View(BaeDisp.df) # 12195 rows
+#View(BaeDiff.df) # 290 rows
+#View(BaeDisp.df) # 12195 rows
 
 
 ## ------------------------------------------- ##
@@ -50,7 +50,10 @@ range(BaeDisp.df$betadisp.comm.dist)
 
 # Check relative frequencies of true ones
 table(BaeDisp.df$betadisp.comm.dist == 1)
-
+paste0("Frequency of true ones is ",
+       round(100 * table(BaeDisp.df$betadisp.comm.dist == 1)[2] / nrow(BaeDisp.df), 2), 
+       "%"
+)
 # Check relative frequencies of true zeroes
 table(BaeDisp.df$betadisp.comm.dist == 0) 
 paste0("Frequency of true zeroes is ",
@@ -95,21 +98,21 @@ BaeDisp.df2 <- BaeDisp.df %>%
   dplyr::filter(var_aq.or.terr != "") %>% 
   droplevels()
 
-table(BaeDisp.df2$var_aq.or.terr)
+table(BaeDisp.df2$var_aq.or.terr) #Good!
 
 # Drop rows for which latitude is missing
 table(is.na(BaeDisp.df2$lat))
 
 BaeDisp.df2 <- BaeDisp.df2[!is.na(BaeDisp.df2$lat), ]
 
-table(is.na(BaeDisp.df2$lat))
+table(is.na(BaeDisp.df2$lat)) #Good!
 
 # Create a column for absolute value of latitude
 BaeDisp.df2 <- BaeDisp.df2 %>%
   mutate(abs.lat = abs(lat))
 
 # Make sure there are no NAs for the experiment name
-table(is.na(BaeDisp.df2$exp.name))
+table(is.na(BaeDisp.df2$exp.name)) #Good!
 
 # Make aquatic/terrestrial a factor
 BaeDisp.df2$var_aq.or.terr <- factor(BaeDisp.df2$var_aq.or.terr)
@@ -129,6 +132,8 @@ ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
 
 ggplot(data = caged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
   geom_boxplot()
+
+# Note that terrestrial locations are higher in latitude than aquatic ones, on average, by about 10-20 degrees
 
 # Check data: General relationships between y and x1 or x2
 ggplot(data = BaeDisp.df2, aes(x = lat, y = betadisp.comm.dist_transform)) +
@@ -301,7 +306,7 @@ dev.off()
 
 # Plot 4: residuals vs. study
 png(paste0(dirloc, prefix, "residuals_vs_source.png"), width = 2000, height = 600)
-plotResiduals(simulationOutput, form = dat$source)
+plotResiduals(simulationOutput, form = factor(dat$source))
 dev.off()
 
 # === 3. Run and capture diagnostics ===
@@ -444,7 +449,6 @@ ggsave("graphs/model_predictions/uncaged_plots_beta_regression_combined.pdf",
 ggsave("graphs/model_predictions/uncaged_plots_beta_regression_combined.jpg",
        plot = combined_plot, width = 8, height = 4, device = "jpeg")
 
-# MAX STOPPED HERE JULY 18, 2025
 
 # ------------------------------------------------------------------------------------------------------
 
@@ -474,7 +478,6 @@ car::Anova(uncaged.betamod1, type = "II")
 # need to try with the new data
 
 check_model(uncaged.betamod1)
-
 
 # lmer for uncaged only (Figure 2 model)
 uncaged.mod1 <- lmer(betadisp.comm.dist ~ 
@@ -579,6 +582,8 @@ performance::r2(diff.mod1)
 #Three way interaction: beta.disp ~ caging * abs(latitude) * ecosystem type
 # beta regression
 
+require(effects)
+
 # use dataframe BaeDisp.df2
 # has beta dispersion data from caged and uncaged 
 
@@ -598,7 +603,7 @@ car::Anova(three.way.betamod, type = "II")
 library(effects)
 plot(allEffects(three.way.betamod))
 
-check_model(three.way.betamod)
+check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
 
 # Validate with DHARMa
 dat <- BaeDisp.df2
@@ -607,7 +612,7 @@ fittedModel <- three.way.betamod
 simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
 
 plot(simulationOutput)
-# # Note that there is "significant" deviation, 
+# # Note that there is "significant" deviation, but there are so many observations that this may not be meaningful
 
 # In addition to plotting the residuals vs. fitted, we must plot residuals vs. individual predictors
 plotResiduals(simulationOutput, form = dat$cage.treatment_std)
@@ -677,6 +682,9 @@ plot(allEffects(Baediff.betamod1))
 check_model(Baediff.betamod1) # looks like it fits well? 
 
 
+
+# Max stopped checking code here 10/14/2025
+# All code seems to be running well, more or less, except "check_model(three.way.betamod)"
 
 
 ## ------------------------------------------- ##
