@@ -23,14 +23,11 @@ source(file = file.path("00_setup.R"))
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Data Download and QC ---- 
+# Load Data ---- 
 ## ------------------------------------------- ##
 
-caged_v1 <- read.csv(file.path("data", 
-                               "07_caged_w.meta_finest-scales.csv"))  %>% 
-  #rename these columns that got var. not var_
-  rename(var_taxonomic.level = var.taxonomic.level, 
-         var_exclosure.area.m2 = var.exclosure.area.m2)
+# Read in relevant data file
+caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 
 # Check structure
 dplyr::glimpse(caged_v1)
