@@ -29,15 +29,15 @@ rm(list = ls()); gc()
 caged_v1 <- read.csv(file.path("data", 
                                "07_caged_w.meta_finest-scales.csv"))  %>% 
   #rename these columns that got var. not var_
-  rename(var_taxonomic.level = var.taxonomic.level, 
-         var_exclosure.area.m2 = var.exclosure.area.m2)
+  rename(var.taxonomic.level  = var_taxonomic.level,    # Format is "new.column.name" = "old_column_name"
+         var.exclosure.area.m2 = var_exclosure.area.m2) # Format is "new.column.name" = "old_column_name"
 
 # Check structure
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 110
-unique(caged_v1$exp.name) # 297
+unique(caged_v1$source) # 109
+unique(caged_v1$exp.name) # 296
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion and Difference Dataset ---- 
@@ -72,8 +72,8 @@ dplyr::glimpse(avg.caged_v1)
 
 
 # Check number of sources
-unique(avg.caged_v1$source) # 108
-unique(avg.caged_v1$exp.name) # 290
+unique(avg.caged_v1$source) # 100
+unique(avg.caged_v1$exp.name) # 283
 
 # Look at the NA mean diff data
 test <- caged_v1 %>%
@@ -116,8 +116,8 @@ cagedmodel.df <- caged_v1 |>
 
 
 # Check number of sources
-unique(cagedmodel.df$source) # 110
-unique(cagedmodel.df$exp.name) # 297
+unique(cagedmodel.df$source) # 109
+unique(cagedmodel.df$exp.name) # 296
 
 #data QC to make sure its ready to model
 glimpse(cagedmodel.df)
@@ -139,15 +139,15 @@ betadispersion_df <- cagedmodel.df %>%
 caged_df <- dplyr::filter(cagedmodel.df, cage.treatment_std == "caged")
 uncaged_df <- dplyr::filter(cagedmodel.df, cage.treatment_std == "uncaged")
 
-both_df <- dplyr::filter(cagedmodel.df, exp.name %in% unique(caged_df$exp.name) & exp.name %in% unique(uncage_df$exp.name)) 
+both_df <- dplyr::filter(cagedmodel.df, exp.name %in% unique(caged_df$exp.name) & exp.name %in% unique(uncaged_df$exp.name)) 
 
 dropped_df <- dplyr::filter(cagedmodel.df, exp.name %in% unique(both_df$exp.name) != TRUE)
 # still says zero rows
 
 
 # Check number of sources
-unique(betadispersion_df$source) # 110
-unique(betadispersion_df$exp.name) # 297
+unique(betadispersion_df$source) # 109
+unique(betadispersion_df$exp.name) # 296
 
 
 #DF for modeling, Beta Difference Effect Size ----
@@ -158,8 +158,8 @@ effectsize_df <- avg.caged_v1 %>%
          within.cage.treat_betadisp.mean.diff)
 
 # Check number of sources
-unique(effectsize_df$source) # 108
-unique(effectsize_df$exp.name) # 290
+unique(effectsize_df$source) # 100
+unique(effectsize_df$exp.name) # 283
 
 
 #supportR::count(vec = marc.modeldata_v1$exp.age) 
