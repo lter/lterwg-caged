@@ -21,8 +21,8 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08a script
 ## ------------------------------------------- ##
-BaeDiff.df <- read.csv("data/BaeDiff.df.csv")
-BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
+BaeDiff.df <- read.csv(file.path("data", "08a_caged_prepped-effect-size.csv"))
+BaeDisp.df <- read.csv(file.path("data", "08a_caged_prepped-beta-dispersion.csv"))
 
 
 # View(BaeDiff.df) 
