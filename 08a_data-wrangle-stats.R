@@ -1,6 +1,5 @@
 ## --------------------------------------------------------------- ##
 # CAGED Data Wrangling for Stats 
-# this makes the dfs for models and raw data figures
 ## --------------------------------------------------------------- ##
 # Written by: Marc J S Hensel, Nick J Lyon, Jamie McDevitt-Irwin
 
@@ -39,8 +38,8 @@ caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 109
-unique(caged_v1$exp.name) # 296
+unique(caged_v1$source) # 110
+unique(caged_v1$exp.name) # 297
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion & Difference Data ---- 
@@ -184,11 +183,11 @@ dplyr::glimpse(caged_beta)
 # Export some of these products locally
 ## Prepped for beta dispersion modeling
 write.csv(x = caged_beta, row.names = F, na = '',
-          file = file.path("data", "08a_beta-dispersion-prep.csv"))
+          file = file.path("data", "08a_caged_beta-dispersion-prep.csv"))
 
 ## Prepped for effect size modeling
 write.csv(x = caged_effectsize, row.names = F, na = '',
-          file = file.path("data", "08a_effect-size-prep.csv"))
+          file = file.path("data", "08a_caged_effect-size-prep.csv"))
 
 # End ----
 
