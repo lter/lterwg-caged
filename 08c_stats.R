@@ -14,11 +14,8 @@ librarian::shelf(tidyverse, ltertools, lme4, lmerTest, glmmTMB, DHARMa,
                  njlyon0/supportR, MuMIn, visreg, grid, gridExtra,
                  emmeans, tidymodels, qqplotr, sjPlot) #, update_all= TRUE) 
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("results"), showWarnings = F)
-dir.create(path = file.path("graphs"), showWarnings = F)
-dir.create(path = file.path("graphs/model_predictions"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
