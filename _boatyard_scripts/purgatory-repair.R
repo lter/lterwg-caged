@@ -1587,6 +1587,202 @@ googledrive::drive_upload(media = proj22_path, overwrite = T,
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
+## ------------------------------------------- ##
+# Project 23 (Duran et al. Coral) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Data are malformed (bizarre headers, empty columns, merged cells)
+## Also, data are found in several separate sheets
+
+# Identify file(s) name(s)
+proj23_raw_name <- "Raw-Data_2016_PeerJ_paper_For_Kelly.xlsx"
+
+# Identify file(s) in Drive
+proj23_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/17K1NWtD5mVVY1BNXFeFiXvz6ssuWfyr7")) %>% 
+  dplyr::filter(name %in% c(proj23_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj23_gdrive$id, .y = proj23_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify sheets in the data
+(proj23_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj23_raw_name)))
+
+# Read in each sheet
+## First sheet ("A")
+proj23_a_raw <- readxl::read_excel(file.path("data", "purgatory", proj23_raw_name),
+                                   sheet = proj23_sheets[1])
+## Second sheet ("B")
+proj23_b_raw <- readxl::read_excel(file.path("data", "purgatory", proj23_raw_name),
+                                   sheet = proj23_sheets[2])
+## Third sheet ("C")
+proj23_c_raw <- readxl::read_excel(file.path("data", "purgatory", proj23_raw_name),
+                                   sheet = proj23_sheets[3])
+
+# Check structure of first sheet
+dplyr::glimpse(proj23_a_raw)
+
+# Do needed repairs
+proj23_a <- proj23_a_raw %>% 
+  # Manually rename columns correctly
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = c("season", "algal_groups",
+                          paste0(
+                            sort(rep(x = c("site1", "site2", "site3", "site4"), 
+                                     times = 8)), "___",
+                            rep(c(rep("NE", 2), rep("CE", 2), 
+                                  rep("CO", 2), rep("NO", 2)),
+                                times = 4), "___",
+                            rep(c("a", "b"), times = 16))) ) %>% 
+  # Filter bad heders rows
+  dplyr::filter(season %in% c("January", "June")) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("site"),
+                      values_to = "percent_cover") %>% 
+  # Slip site information into useable components
+  tidyr::separate_wider_delim(cols = name, delim = "___",
+                              names = c("site", "treatment", "tile")) %>% 
+  # Clarify 'treatment' abbreviations
+  dplyr::mutate(
+    treatment_cage = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "E"),
+                            yes = "exclosure", no = "uncaged"),
+    treatment_nutrient = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "N"),
+                            yes = "enriched", no = "ambient")) %>% 
+  # Reorder columns (implicitly dropping ones we don't want)
+  dplyr::select(site, dplyr::starts_with("treatment_"), season, tile,
+                algal_groups, percent_cover) %>% 
+  # Ditch empty rows
+  dplyr::mutate(percent_cover = as.numeric(percent_cover)) %>% 
+  dplyr::filter(!is.na(percent_cover)) %>% 
+  # Add a column for experiment and for year
+  dplyr::mutate(experiment = "succession", .before = dplyr::everything()) %>% 
+  dplyr::mutate(year = 2012, .before = season)
+
+# Check structure
+dplyr::glimpse(proj23_a)
+
+# Check structure of second sheet
+dplyr::glimpse(proj23_b_raw)
+
+# Do needed repairs (essentially same structure/problems as "A")
+proj23_b <- proj23_b_raw %>% 
+  # Manually rename columns correctly
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = c("season", "algal_groups",
+                                       paste0(
+                                         sort(rep(x = c("site1", "site2", "site3", "site4"), 
+                                                  times = 8)), "___",
+                                         rep(c(rep("NE", 2), rep("CE", 2), 
+                                               rep("CO", 2), rep("NO", 2)),
+                                             times = 4), "___",
+                                         rep(c("a", "b"), times = 16))) ) %>% 
+  # Filter bad heders rows
+  dplyr::filter(season %in% c("January", "June")) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("site"),
+                      values_to = "percent_cover") %>% 
+  # Slip site information into useable components
+  tidyr::separate_wider_delim(cols = name, delim = "___",
+                              names = c("site", "treatment", "tile")) %>% 
+  # Clarify 'treatment' abbreviations
+  dplyr::mutate(
+    treatment_cage = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "E"),
+                            yes = "exclosure", no = "uncaged"),
+    treatment_nutrient = ifelse(stringr::str_detect(string = treatment,
+                                                    pattern = "N"),
+                                yes = "enriched", no = "ambient")) %>% 
+  # Reorder columns (implicitly dropping ones we don't want)
+  dplyr::select(site, dplyr::starts_with("treatment_"), season, tile,
+                algal_groups, percent_cover) %>% 
+  # Ditch empty rows
+  dplyr::mutate(percent_cover = as.numeric(percent_cover)) %>% 
+  dplyr::filter(!is.na(percent_cover)) %>% 
+  # Add a column for experiment
+  dplyr::mutate(experiment = "established communities", .before = dplyr::everything()) %>% 
+  dplyr::mutate(year = 2012, .before = season)
+
+# Check structure
+dplyr::glimpse(proj23_b)
+
+# Check structure of third sheet
+dplyr::glimpse(proj23_c_raw)
+
+# Do needed repairs (same rough fixes but different specifics because structure is diff)
+proj23_c <- proj23_c_raw %>% 
+  # Manually rename columns correctly
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = c("species",
+                                       paste0(
+                                         sort(rep(c("set1", "set2", "set3"), times = 15)), "___",
+                                         rep(c(paste0("site1", "___", c("NE", "CE", "CO", "NO")),
+                                               paste0("site2", "___", c("NE", "CE", "CO", "NO")),
+                                               # note not all treatments are included for this site (vvv)!
+                                               paste0("site3", "___", c("NE", "CO", "NO")), 
+                                               paste0("site4", "___", c("NE", "CE", "CO", "NO"))
+                                         ), times = 3))) ) %>% 
+  # Filter bad heders rows
+  dplyr::filter(species != "Species" & !is.na(species)) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("set"),
+                      values_to = "percent_cover") %>% 
+  # Slip site information into useable components
+  tidyr::separate_wider_delim(cols = name, delim = "___",
+                              names = c("set", "site", "treatment")) %>% 
+  # Clarify 'treatment' abbreviations
+  dplyr::mutate(
+    treatment_cage = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "E"),
+                            yes = "exclosure", no = "uncaged"),
+    treatment_nutrient = ifelse(stringr::str_detect(string = treatment,
+                                                    pattern = "N"),
+                                yes = "enriched", no = "ambient")) %>% 
+  # Reorder columns (implicitly dropping ones we don't want)
+  dplyr::select(site, dplyr::starts_with("treatment_"), set, 
+                species, percent_cover) %>% 
+  # Ditch empty rows
+  dplyr::mutate(percent_cover = as.numeric(percent_cover)) %>% 
+  dplyr::filter(!is.na(percent_cover)) %>% 
+  # Identify year information from ambiguous "sets"
+  dplyr::mutate(year = dplyr::case_when(
+   set == "set1" ~ 2011, 
+   set == "set2" ~ 2012, # technically includes December 2011 but that feels pretty close to 2012
+   set == "set3" ~ 2012),
+   .before = species) %>% 
+  # Rename 'set' information too
+  dplyr::rename(tile_deployment = set) %>% 
+  # Add a column for experiment
+  dplyr::mutate(experiment = "recruitment", .before = dplyr::everything())
+
+# Check structure
+dplyr::glimpse(proj23_c)
+
+# Create good/new file name for each sheet
+proj23_name_a <- "duran_florida-keys_succession_2012_fishes_algae.csv"
+proj23_name_b <- "duran_florida-keys_established_2012_fishes_algae.csv"
+proj23_name_c <- "duran_florida-keys_recruitment_2011-2012_fishes_algae.csv"
+
+# Create file paths using these
+proj23_path_a <- file.path("data", "drydock", proj23_name_a)
+proj23_path_b <- file.path("data", "drydock", proj23_name_b)
+proj23_path_c <- file.path("data", "drydock", proj23_name_c)
+
+# Export locally
+write.csv(x = proj23_a, file = proj23_path_a, na = '', row.names = F)
+write.csv(x = proj23_b, file = proj23_path_b, na = '', row.names = F)
+write.csv(x = proj23_c, file = proj23_path_c, na = '', row.names = F)
+
+# Export to Drive
+purrr::walk(.x = dir(path = file.path("data", "drydock"), pattern = "duran_florida-keys_"),
+            .f = ~ googledrive::drive_upload(media = file.path("data", "drydock", .x),
+                                      overwrite = T,
+                                      path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX")))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
