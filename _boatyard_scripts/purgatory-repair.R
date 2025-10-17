@@ -1785,6 +1785,99 @@ purrr::walk(.x = dir(path = file.path("data", "drydock"), pattern = "duran_flori
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 24 (Doherty & Sale Coral) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Separate sampling time points occupy different sheets
+## Data are also in spatial wide format and we want that in long
+
+# Identify file(s) name(s)
+proj24_raw_name <- "Cage experiment data from first season.xlsx"
+
+# Identify file(s) in Drive
+proj24_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1TnYtqecznI9SdbHGbI_EqgJO6izvciYZ")) %>% 
+  dplyr::filter(name %in% c(proj24_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj24_gdrive$id, .y = proj24_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify sheets in the Excel file
+(proj24_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj24_raw_name)))
+
+# Make an empty list to store the raw data
+proj24_raw <- list()
+
+# Loop across the sheets
+for(proj24_tab in proj24_sheets){
+  
+  # Read in that sheet
+  proj24_raw[[proj24_tab]] <- readxl::read_excel(path = file.path("data", "purgatory",
+                                                                  proj24_raw_name),
+                                                 sheet = proj24_tab) %>% 
+    # Add a column for the sheet name
+    dplyr::mutate(tab_name = proj24_tab)
+}
+
+# Check structure
+dplyr::glimpse(proj24_raw[[1]])
+
+# Do needed repairs
+proj24 <- proj24_raw %>% 
+  # Collapse to dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Ditch empty columns
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
+  # Ditch bad header rows
+  dplyr::filter(!is.na(Sites) & Sites != "Species") %>% 
+  # Rename species column correctly
+  dplyr::rename(species = Sites) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::contains("..."),
+                      names_to = "treat_rep", values_to = "fish_count") %>% 
+  # Separate treatment from replicate number
+  tidyr::separate_wider_delim(cols = treat_rep, delim = "...",
+                              names = c("cage_treatment", "replicate")) %>% 
+  # Fix replicate numbering
+  dplyr::mutate(replicate = as.numeric(replicate)) %>% 
+  dplyr::mutate(replicate = dplyr::case_when(
+    cage_treatment == "Cage" ~ (replicate - 1),
+    cage_treatment == "Partial" ~ (replicate - 10),
+    cage_treatment == "Open" ~ (replicate - 19))) %>% 
+  dplyr::mutate(replicate = paste(cage_treatment, replicate)) %>% 
+  # Extract date from tab names
+  dplyr::mutate(tab_name = gsub(pattern = "7Feb", replacement = "07Feb",
+                                x = tab_name)) %>% 
+  dplyr::mutate(date = as.Date(
+    paste(stringr::str_sub(string = tab_name, start = 1, end = 2),
+          ifelse(stringr::str_detect(string = tab_name, pattern = "Jan"),
+                 yes = "01", no = "02"),
+          "1981", sep = "-"), format = "%d-%m-%Y"), 
+    .after = replicate) %>% 
+  # Reorder columns more intuitively
+  dplyr::select(date, cage_treatment, replicate, species, fish_count) %>% 
+  # Add a 'year' column
+  dplyr::mutate(year = 1981, .before = date)
+
+# Re-check structure
+dplyr::glimpse(proj24)
+
+# Create good/new file name
+proj24_name <- "doherty-sale_great-barrier-reef_juvenile-fish-predation_1981_fish_fish.csv"
+proj24_path <- file.path("data", "drydock", proj24_name)
+
+# Export locally
+write.csv(x = proj24, file = proj24_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj24_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
