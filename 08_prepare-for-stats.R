@@ -4,10 +4,7 @@
 # Written by: Marc J S Hensel, Nick J Lyon, Jamie McDevitt-Irwin
 
 # Purpose:
-## Create a clean effect size dataframe
-## Where the unit of replication is averages within treatment
-## Upstream scripts already create and QA/QC the needed columns,
-### so this script mostly just needs to select and filter those
+## Create clean dataframes for beta dispersion and effect size (average - average)
 
 ## ------------------------------------------- ##
 # Housekeeping ----
