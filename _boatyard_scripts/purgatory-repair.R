@@ -984,9 +984,9 @@ proj14 <- proj14_raw %>%
 
 # How many plot reps within 'subblock'?
 proj14 %>% 
-  group_by(block, subblock) %>%
-  summarize(plots = paste(unique(plot), collapse = "; "),
-            plot_ct = length(unique(plot)))
+  dplyr::group_by(block, subblock) %>%
+  dplyr::summarize(plots = paste(unique(plot), collapse = "; "),
+                   plot_ct = length(unique(plot)))
 
 # Re-check structure
 dplyr::glimpse(proj14)
