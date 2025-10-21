@@ -15,7 +15,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, googledrive, supportR)
+librarian::shelf(tidyverse, supportR)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -33,21 +33,10 @@ names(w.meta_in_list) <- w.meta_outs
 dplyr::glimpse(w.meta_in_list[[1]])
 
 ## ------------------------------------------- ##
-# Download Metadata ----
+# Load Metadata ----
 ## ------------------------------------------- ##
 
-# Identify the relevant GoogleSheet
-meta_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/0AFR2XIdw_sKbUk9PVA")) %>% 
-  dplyr::filter(name == "sitelevel-metadata")
-
-# Check that worked
-meta_drive
-
-# Download it
-googledrive::drive_download(file = meta_drive$id, type = "csv", overwrite = T,
-                            path = file.path("data", meta_drive$name))
-
-# Read it in
+# Read in the metadata
 meta_v1 <- read.csv(file = file.path("data", "sitelevel-metadata.csv"))
 
 # Check structure
@@ -163,24 +152,7 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                   new = unique(meta_v6$exp.name))
 
 ## ------------------------------------------- ##
-# Download Other Relevant 'Metadata' Info ----
-## ------------------------------------------- ##
-
-# We want everything after beta dispersion calculation
-## **As of 5/8/2025**, outputs of that script are (05-A_)
-other_meta <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
-  dplyr::filter(stringr::str_detect(string = name, pattern = "05-B_|06_"))
-
-# Look like the right files?
-other_meta
-
-# Download 'em
-purrr::walk2(.x = other_meta$id, .y = other_meta$name,
-             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
-                                                path = file.path("data", .y)))
-
-## ------------------------------------------- ##
-# Check 'Other Metadata' Files ----
+# Load Gamma Richness Data ----
 ## ------------------------------------------- ##
 
 # Read in gamma richness
@@ -188,6 +160,10 @@ gamma_v1 <- read.csv(file = file.path("data", "05-B_caged_gamma-rich.csv"))
 
 # Check structure
 dplyr::glimpse(gamma_v1)
+
+## ------------------------------------------- ##
+# Load Mean Difference Data ----
+## ------------------------------------------- ##
 
 # Read in the mean difference files too
 diff_v1 <- read.csv(file = file.path("data", "06_caged_mean-beta-diff_all-scales.csv"))
