@@ -50,6 +50,9 @@ diag_v1 <- diag_v0 %>%
     .data = .x, dplyr::contains("source"), exp.name, 
                 dplyr::starts_with(c("exp.design.", "cage.treatment_std"))
   )) %>% 
+  # Filter to only the data that we're interested in
+  purrr::map(.x = ., .f = ~ dplyr::filter(
+    .data = .x, source %in% want_src)) %>%
   # Drop some columns specifically
   purrr::map(.x = ., .f = ~ dplyr::select(
     .data = .x, -dplyr::contains("spatialextent.category"))) %>% 
