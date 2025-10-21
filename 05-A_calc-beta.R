@@ -1,7 +1,8 @@
 ## --------------------------------------------------------------- ##
 # CAGED Beta Dispersion Calculation
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+# Purpose:
+## Calculate beta dispersion within experiment and within caging treatment
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -44,7 +45,7 @@ dplyr::glimpse(beta_v1)
 
 # Bray-Curtis doesn't work for 2 or more replicates with a total abundance of zero
 ## For datasets with that problem then, we need to pick one (at random) and drop the other
-zero_abun_v1 <- beta_v1 %>% 
+zero_abun <- beta_v1 %>% 
   # Calculate total abundance within design 1
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
                   exp.design.2, exp.design.1, cage.treatment_std) %>% 
@@ -57,69 +58,38 @@ zero_abun_v1 <- beta_v1 %>%
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
                   exp.design.2, cage.treatment_std) %>% 
   dplyr::mutate(rep_ct = seq_along(along.with = unique(exp.design.1))) %>% 
-  dplyr::ungroup()
+  dplyr::ungroup() %>%
+  # Filter to only instances with more than one replicate with a total abundance of 0
+  dplyr::filter(rep_ct > 1)
 
 # Check structure
-dplyr::glimpse(zero_abun_v1)
+dplyr::glimpse(zero_abun)
 
-# List for storing outputs
-zero_list <- list()
+# Create a dataframe of fake abundances for those replicates
+fake_abun <- beta_v1 %>%
+  # Filter to only reps flagged in above pipe
+  dplyr::filter(source %in% c(zero_abun$source) & exp.name %in% c(zero_abun$exp.name)) %>%
+  # Overwrite the taxa and abundance columns with hard-coded values
+  dplyr::mutate(taxa = "FAKE.SPECIES_added.to.solve.BC.algebra.problem",
+                abundance = 0.01) %>%
+  # Drop non-unique rows
+  dplyr::distinct()
 
-# Loop across design level 2s with this problem
-for(zero_des2 in sort(unique(zero_abun_v1$exp.design.2))){
-  # zero_des2 <- "gex_augustine-kenya-mpala_mpala_1999&2002_africanungulates_plants.csv__bushland2"
-  
-  # Subset to just the relevant group
-  zero_sub <- dplyr::filter(zero_abun_v1, exp.design.2 == zero_des2)
-  
-  # Loop across treatments too
-  for(zero_trt in sort(unique(zero_sub$cage.treatment_std))){
-    # zero_trt <- "caged" 
-    
-    # Subset again
-    zero_subtrt <- dplyr::filter(zero_sub, cage.treatment_std == zero_trt)
-    
-    # If there's only one zero abundance rep, skip it
-    if(nrow(zero_subtrt) == 1){
-      message("For '", zero_des2, "' only ", max(zero_subtrt$rep_ct), " zero-abundance replicate identified in the '", zero_trt, "' treatment.")
-      print("Retaining that single replicate")
-      
-      # If there's more than one...
-    } else {
-      
-      # Identify a random replicate
-      rand_rep <- sample(x = zero_subtrt$rep_ct, size = 1, replace = F)
-      
-      # Subset to all replicates except that replicate and add to the list
-      zero_list[[paste0(zero_des2, "__", zero_trt)]] <- zero_subtrt %>% 
-        dplyr::filter(rep_ct != rand_rep)
-      
-      # Conclusion message
-      message("For '", zero_des2, "' ", max(zero_subtrt$rep_ct), " zero-abundance replicates identified in the '", zero_trt, "' treatment. Choosing replicate number: ")
-      print(rand_rep)
-    } # Close conditional
-  } # Close treatment loop
-} # Close design 2 loop
+# Check structure
+dplyr::glimpse(fake_abun)
 
-# Unlist & wrangle the list that we just created
-zero_abun_v2 <- purrr::list_rbind(x = zero_list) %>% 
-  dplyr::select(-tot_abundance, -rep_ct)
+# Attach the fake abundances to the real data
+## This means experiments that would have had two (or more) zero-abundance reps now have one non-zero abundance
+## (i.e., the fake species/abundance that we just added!)
+beta_v2 <- dplyr::bind_rows(beta_v1, fake_abun)
 
-# Re-check structure
-dplyr::glimpse(zero_abun_v2)
-
-# Anti join the unwanted data to the original data to remove the 'extra' zero abundance replicates
-beta_v2 <- beta_v1 %>% 
-  anti_join(y = zero_abun_v2, by = c("source", "exp.name", "exp.design.4", 
-                                     "exp.design.3", "exp.design.2",
-                                     "exp.design.1", "cage.treatment_std"))
 # Re-check structure
 dplyr::glimpse(beta_v2)
 
-# Check how many design 1-by-treatment reps were dropped via this operation
-message(length(unique(paste0(beta_v1$exp.design.1, beta_v1$cage.treatment_std))) - 
-          length(unique(paste0(beta_v2$exp.design.1, beta_v2$cage.treatment_std))),
-        " zero abundance replicates were dropped")
+# How many fake abundances were inserted?
+message(nrow(fake_abun), " fake abundances added (", 
+        round(nrow(fake_abun) / nrow(beta_v2) * 100, digits = 2), 
+        "% of the total)")
 
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
@@ -554,7 +524,7 @@ for(lost_src in dropped_sources){
   write.csv(x = beta_lost, na = '', row.names = F,
             file = file.path("data", "diagnostic", lost_file))
   
-} # Close loop
+}
 
 ## ------------------------------------------- ##
 # Export ----
