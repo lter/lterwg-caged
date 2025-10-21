@@ -40,7 +40,7 @@ diag_v1 <- ltertools::read(raw_folder = file.path("data"), data_format = "csv") 
                                    .before = source)) %>% 
   # Unlist to dataframe
   purrr::list_rbind(x = .) %>% 
-  # Ditch the very first harmonized data and 
+  # Ditch the very first harmonized data and gamma richness data
   ## (01 is not super useful as a diagnostic because it hasn't had any QC)
   ## (gamma richness is not useful because it doesn't have treatment info)
   dplyr::filter(!tidy_source %in% c("01_caged_harmonized.csv", "05-B_caged_gamma-rich.csv"))
