@@ -17,33 +17,42 @@ source(file = file.path("00_setup.R"))
 rm(list = ls()); gc()
 
 # Manually identify files of interest
-want_src <- c("parker_wetlands_carpgrass_2005_crayfish_plants.csv")
+want_src <- c("parker_wetlands_carpgrass_2005_crayfish_plants.csv", 
+              "porensky_wyoming_nex_2015-2024_prairiedogs_vegetation.csv")
 
 ## ------------------------------------------- ##
 # Load All Tidy Data ----
 ## ------------------------------------------- ##
 
-# Get a list of data objects
-diag_v1 <- ltertools::read(raw_folder = file.path("data"), data_format = "csv") %>% 
+# Identify local files (excluding some not useful files)
+(local_files <- setdiff(x = dir(path = file.path("data"), pattern = "csv"),
+                        y = c("caged_data-key.csv", "sitelevel-metadata.csv",
+                              "01_caged_harmonized.csv", "05-B_caged_gamma-rich.csv")))
+
+
+# Make an empty list
+diag_v0 <- list()
+
+# Read in each tidy data object
+for(file in local_files){
+  diag_v0[[file]] <- read.csv(file = file.path("data", file)) %>%
+    dplyr::mutate(tidy_source = file, .before = source)
+}
+
+# Tidy up that list slightly
+diag_v1 <- diag_v0 %>%
   # Pare down columns
   purrr::map(.x = ., .f = ~ dplyr::select(
-    .data = .x, source, exp.name, dplyr::starts_with(c("exp.design.", "cage.treatment_std"))
+    .data = .x, dplyr::contains("source"), exp.name, 
+                dplyr::starts_with(c("exp.design.", "cage.treatment_std"))
   )) %>% 
   # Drop some columns specifically
   purrr::map(.x = ., .f = ~ dplyr::select(
     .data = .x, -dplyr::contains("spatialextent.category"))) %>% 
   # Drop non-unique rows
   purrr::map(.x = ., .f = dplyr::distinct) %>% 
-  # Get 'tidy source' as a column in its own right
-  purrr::imap(.x = ., 
-              .f = ~ dplyr::mutate(.data = .x, tidy_source = .y, 
-                                   .before = source)) %>% 
   # Unlist to dataframe
-  purrr::list_rbind(x = .) %>% 
-  # Ditch the very first harmonized data and gamma richness data
-  ## (01 is not super useful as a diagnostic because it hasn't had any QC)
-  ## (gamma richness is not useful because it doesn't have treatment info)
-  dplyr::filter(!tidy_source %in% c("01_caged_harmonized.csv", "05-B_caged_gamma-rich.csv"))
+  purrr::list_rbind(x = .)
 
 # Check structure
 dplyr::glimpse(diag_v1)
