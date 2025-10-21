@@ -11,12 +11,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries (performance might be within easystats)
-librarian::shelf(tidyverse, ltertools, lme4, lmerTest, 
-                 performance, easystats, lubridate, car, 
-                 njlyon0/supportR, MuMIn, visreg, 
-                 emmeans, tidymodels, qqplotr, sjPlot
-                 )
-                 # , update_all = TRUE)
+librarian::shelf(tidyverse, njlyon0/supportR)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
