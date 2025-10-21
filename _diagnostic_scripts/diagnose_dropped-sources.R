@@ -27,7 +27,11 @@ want_src <- c("parker_wetlands_carpgrass_2005_crayfish_plants.csv",
 # Identify local files (excluding some not useful files)
 (local_files <- setdiff(x = dir(path = file.path("data"), pattern = "csv"),
                         y = c("caged_data-key.csv", "sitelevel-metadata.csv",
-                              "01_caged_harmonized.csv", "05-B_caged_gamma-rich.csv")))
+                              ## Lack standard treatment info
+                              "01_caged_harmonized.csv", "05-B_caged_gamma-rich.csv", 
+                              ## Lack any treatment info (is implied by 'difference' column)
+                              "08_caged_prepped-beta-dispersion.csv", 
+                              "08_caged_prepped-effect-size.csv")))
 
 
 # Make an empty list
@@ -85,7 +89,7 @@ for(focal_src in sort(unique(want_src))){
   
   # Generate a nice-ish file name for this diagnostic output
   diag_name <- paste0("workflow-drop-diagnostic_", focal_src)
-  
+   
   # Export this locally
   write.csv(x = diag_v3, row.names = F, na = '',
             file = file.path("data", "diagnostic", diag_name))
