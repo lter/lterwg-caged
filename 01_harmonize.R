@@ -11,60 +11,10 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, googledrive, supportR)
+librarian::shelf(tidyverse, ltertools, supportR)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
-
-# Clear environment + collect garbage
-rm(list = ls()); gc()
-
-## ------------------------------------------- ##
-# Download Data ----
-## ------------------------------------------- ##
-
-# Note: 
-## This script assumes (1) access to the "LTER-WG_CAGED" Shared Drive (2) authentication with R
-## For more information on authentication, see the following tutorial:
-### https://lter.github.io/scicomp/tutorial_googledrive-pkg.html
-
-# Identify wanted files
-files_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX")) %>% 
-  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv"))
-
-# Did that work?
-files_drive
-
-# Identify local files
-files_local <- dir(path = file.path("data", "raw"))
-files_local
-
-# Overwrite local data files?
-update <- FALSE
-
-# Identify desired files
-if(update == T) {
-  files_wanted <- files_drive 
-} else {
-  files_wanted <- files_drive %>%
-    dplyr::filter(!name %in% files_local)
-}
-
-# Download them!
-purrr::walk2(.x = files_wanted$id, .y = files_wanted$name,
-             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
-                                                path = file.path("data", "raw", .y)))
-
-# Grab the data key
-key_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M")) %>% 
-  dplyr::filter(name == "caged_data-key")
-
-# Did that work?
-key_drive
-
-# Download the data key
-googledrive::drive_download(file = key_drive$id, overwrite = T, type = "csv",
-                            path = file.path("data", key_drive$name))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
