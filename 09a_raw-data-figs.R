@@ -27,8 +27,8 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 
 # View(caged_effectsize) 
 # View(caged_beta) 
-dim(caged_effectsize)# 273 rows
-dim(caged_beta)# 11281 rows
+dim(caged_effectsize)# 365 rows
+dim(caged_beta)# 12235 rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
