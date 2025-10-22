@@ -25,39 +25,39 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
-#BaeDiff.df <- read.csv("data/BaeDiff.df.csv")
-BaeDiff.df <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
-#BaeDisp.df <- read.csv("data/BaeDisp.df.csv")
-BaeDisp.df <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
+#caged_effectsize <- read.csv("data/BaeDiff.df.csv")
+caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
+#caged_beta <- read.csv("data/caged_beta.csv")
+caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
-#View(BaeDiff.df) # 290 rows
-#View(BaeDisp.df) # 12195 rows
+#View(caged_effectsize) # 290 rows
+#View(caged_beta) # 12195 rows
 
 
 ## ------------------------------------------- ##
 # Models for Paper 1 ----
 ## ------------------------------------------- ##
 
-glimpse(BaeDisp.df) #12,195 rows
+glimpse(caged_beta) #12,195 rows
 
 # Check distribution of values in response variable, betadisp.comm.dist
-hist(BaeDisp.df$betadisp.comm.dist)  
+hist(caged_beta$betadisp.comm.dist)  
 
 # Check range of values in response variable, betadisp.comm.dist, with increased precision
 options(digits = 22) # 22 is maximum value allowable
-range(BaeDisp.df$betadisp.comm.dist) 
+range(caged_beta$betadisp.comm.dist) 
 
 # Check relative frequencies of true ones
-table(BaeDisp.df$betadisp.comm.dist == 1)
+table(caged_beta$betadisp.comm.dist == 1)
 paste0("Frequency of true ones is ",
-       round(100 * table(BaeDisp.df$betadisp.comm.dist == 1)[2] / nrow(BaeDisp.df), 2), 
+       round(100 * table(caged_beta$betadisp.comm.dist == 1)[2] / nrow(caged_beta), 2), 
        "%"
 )
 # Check relative frequencies of true zeroes
-table(BaeDisp.df$betadisp.comm.dist == 0) 
+table(caged_beta$betadisp.comm.dist == 0) 
 paste0("Frequency of true zeroes is ",
-       round(100 * table(BaeDisp.df$betadisp.comm.dist == 0)[2] / nrow(BaeDisp.df), 2), 
+       round(100 * table(caged_beta$betadisp.comm.dist == 0)[2] / nrow(caged_beta), 2), 
        "%"
        )
 
@@ -74,7 +74,7 @@ options(digits = 7)
 
 # Data are in the semi-closed interval [0,1), i.e., they include true 0s but no 1s. Hence, we apply a transformation that only adjusts the zeroes while leaving the interior values nearly unchanged
 # This nudges zeros to a small positive value but barely affects values near 1
-n <- nrow(BaeDisp.df)
+n <- nrow(caged_beta)
 transform.fun <- function(y){(y * (n - 1) + 0.5 ) / n}
 
 # Alternative transformation if you have true zeroes and true ones, [0, 1] - DO NOT NEED TO USE
@@ -82,47 +82,47 @@ transform.fun <- function(y){(y * (n - 1) + 0.5 ) / n}
 #epsilon <- 1e-6
 
 # Apply transformation
-BaeDisp.df$betadisp.comm.dist_transform <- sapply(X = BaeDisp.df$betadisp.comm.dist, FUN = transform.fun)
+caged_beta$betadisp.comm.dist_transform <- sapply(X = caged_beta$betadisp.comm.dist, FUN = transform.fun)
 
 # Validate (this should look like a 1:1)
-plot(x = BaeDisp.df$betadisp.comm.dist, y =  BaeDisp.df$betadisp.comm.dist_transform)
+plot(x = caged_beta$betadisp.comm.dist, y =  caged_beta$betadisp.comm.dist_transform)
 
 
 ## ------------------------------------------- ##
 ## Create new dataframes for models to follow ----
 ## ------------------------------------------- ##
 # Drop rows for which there is no terrestrial or aquatic categorization
-table(BaeDisp.df$var_aq.or.terr)
+table(caged_beta$var_aq.or.terr)
 
-BaeDisp.df2 <- BaeDisp.df %>% 
+caged_beta2 <- caged_beta %>% 
   dplyr::filter(var_aq.or.terr != "") %>% 
   droplevels()
 
-table(BaeDisp.df2$var_aq.or.terr) #Good!
+table(caged_beta2$var_aq.or.terr) #Good!
 
 # Drop rows for which latitude is missing
-table(is.na(BaeDisp.df2$lat))
+table(is.na(caged_beta2$lat))
 
-BaeDisp.df2 <- BaeDisp.df2[!is.na(BaeDisp.df2$lat), ]
+caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
 
-table(is.na(BaeDisp.df2$lat)) #Good!
+table(is.na(caged_beta2$lat)) #Good!
 
 # Create a column for absolute value of latitude
-BaeDisp.df2 <- BaeDisp.df2 %>%
+caged_beta2 <- caged_beta2 %>%
   mutate(abs.lat = abs(lat))
 
 # Make sure there are no NAs for the experiment name
-table(is.na(BaeDisp.df2$exp.name)) #Good!
+table(is.na(caged_beta2$exp.name)) #Good!
 
 # Make aquatic/terrestrial a factor
-BaeDisp.df2$var_aq.or.terr <- factor(BaeDisp.df2$var_aq.or.terr)
+caged_beta2$var_aq.or.terr <- factor(caged_beta2$var_aq.or.terr)
 
 # Subset datasets for uncaged plots only or caged plots only
-uncaged.df <- BaeDisp.df2 %>%
+uncaged.df <- caged_beta2 %>%
   filter(cage.treatment_std == "uncaged") %>%
   droplevels()
 
-caged.df <- BaeDisp.df2 %>%
+caged.df <- caged_beta2 %>%
   filter(cage.treatment_std == "caged") %>%
   droplevels()
 
@@ -136,15 +136,15 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
 # Note that terrestrial locations are higher in latitude than aquatic ones, on average, by about 10-20 degrees
 
 # Check data: General relationships between y and x1 or x2
-ggplot(data = BaeDisp.df2, aes(x = lat, y = betadisp.comm.dist_transform)) +
+ggplot(data = caged_beta2, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) +
   facet_grid(cage.treatment_std ~ var_aq.or.terr) 
-ggplot(data = BaeDisp.df2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
+ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
-ggplot(data = BaeDisp.df2, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
+ggplot(data = caged_beta2, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
-ggplot(data = BaeDisp.df2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
+ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
   geom_boxplot() +
   facet_wrap( ~ var_aq.or.terr) 
 
@@ -183,7 +183,7 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 ## ------------------------------------------- ## 
 
 # Fit model on only uncaged data
-BaeDisp.df3 <- BaeDisp.df2 %>%
+caged_beta3 <- caged_beta2 %>%
   dplyr::filter(cage.treatment_std == "uncaged") %>%
   droplevels()
  
@@ -208,7 +208,7 @@ uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                             control = glmmTMBControl(optimizer = optim, 
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
-                            data = BaeDisp.df3) 
+                            data = caged_beta3) 
 AIC(uncaged.betamod)
 summary(uncaged.betamod)    
 car::Anova(uncaged.betamod, type = "II")
@@ -275,7 +275,7 @@ print(anova_table)
 # Validate with DHARMa
 
 # === Inputs ===
-dat <- BaeDisp.df3
+dat <- caged_beta3
 fittedModel <- uncaged.betamod
 dirloc <- "graphs/model_validation/"
 outfile <- "model_diagnostics_summary.txt"
@@ -517,12 +517,12 @@ plot_model(caged.mod1)
 ## ------------------------------------------- ##
 
 # absolute value of difference
-BaeDiff.df_abs <- BaeDiff.df %>% 
+caged_effectsize_abs <- caged_effectsize %>% 
   mutate(ablat = abs(lat), 
          abdiff = abs(within.cage.treat_betadisp.mean.diff) )
 
-range(BaeDiff.df_abs$abdiff) #  0.0002819578 0.4272029784
-hist(BaeDiff.df_abs$abdiff) # try a beta regression?
+range(caged_effectsize_abs$abdiff) #  0.0002819578 0.4272029784
+hist(caged_effectsize_abs$abdiff) # try a beta regression?
 
 
 Baediff.betamod1 <- glmmTMB(abdiff ~ 
@@ -534,7 +534,7 @@ Baediff.betamod1 <- glmmTMB(abdiff ~
                             control = glmmTMBControl(optimizer = optim, 
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
-                            data = BaeDiff.df_abs) 
+                            data = caged_effectsize_abs) 
 
 summary(Baediff.betamod1)    
 car::Anova(Baediff.betamod1, type = "II")
@@ -547,7 +547,7 @@ check_model(Baediff.betamod1) # looks like it fits well?
 abs.diff.mod1 <- lm(abdiff ~ 
                            ablat*var_aq.or.terr, #+ 
                         #   (1|source), 
-                         data = BaeDiff.df_abs)
+                         data = caged_effectsize_abs)
 check_model(abs.diff.mod1)
 summary(abs.diff.mod1)
 car::Anova(abs.diff.mod1, test.statistic = "F") 
@@ -566,7 +566,7 @@ plot_model(abs.diff.mod1)
 diff.mod1 <- lmer(within.cage.treat_betadisp.mean.diff ~ 
                         ablat*var_aq.or.terr + 
                         (1|source), 
-                      data = BaeDiff.df_abs)
+                      data = caged_effectsize_abs)
 check_model(diff.mod1)
 summary(diff.mod1)
 car::Anova(diff.mod1, test.statistic = "F") 
@@ -584,7 +584,7 @@ performance::r2(diff.mod1)
 
 require(effects)
 
-# use dataframe BaeDisp.df2
+# use dataframe caged_beta2
 # has beta dispersion data from caged and uncaged 
 
 three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
@@ -595,7 +595,7 @@ three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                            control = glmmTMBControl(optimizer = optim, 
                                                     optArgs = list(method = "BFGS")), 
                            # Or use nlminb, or bobyqa via nloptr
-                           data = BaeDisp.df2) 
+                           data = caged_beta2) 
 AIC(three.way.betamod)
 summary(three.way.betamod)    
 car::Anova(three.way.betamod, type = "II")
@@ -606,7 +606,7 @@ plot(allEffects(three.way.betamod))
 check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
 
 # Validate with DHARMa
-dat <- BaeDisp.df2
+dat <- caged_beta2
 fittedModel <- three.way.betamod
  
 simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
@@ -630,7 +630,7 @@ three.way.pred<-data.frame(emmeans(three.way.betamod, ~ var_aq.or.terr *cage.tre
 # beta regression
 # directly copied max's code to put all 3 models in one place
 # Fit model on only uncaged data
-BaeDisp.df3 <- BaeDisp.df2 %>%
+caged_beta3 <- caged_beta2 %>%
   dplyr::filter(cage.treatment_std == "uncaged") %>%
   droplevels()
 
@@ -642,7 +642,7 @@ uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                            control = glmmTMBControl(optimizer = optim, 
                                                     optArgs = list(method = "BFGS")), 
                            # Or use nlminb, or bobyqa via nloptr
-                           data = BaeDisp.df3) 
+                           data = caged_beta3) 
 AIC(uncaged.betamod)
 summary(uncaged.betamod)    
 car::Anova(uncaged.betamod, type = "II")
@@ -654,12 +654,12 @@ plot(allEffects(uncaged.betamod))
 # beta regression
 
 # absolute value of difference
-BaeDiff.df_abs <- BaeDiff.df %>% 
+caged_effectsize_abs <- caged_effectsize %>% 
   mutate(ablat = abs(lat), 
          abdiff = abs(within.cage.treat_betadisp.mean.diff) )
 
-range(BaeDiff.df_abs$abdiff) #  0.0002819578 0.4272029784
-hist(BaeDiff.df_abs$abdiff) # try a beta regression?
+range(caged_effectsize_abs$abdiff) #  0.0002819578 0.4272029784
+hist(caged_effectsize_abs$abdiff) # try a beta regression?
 
 
 Baediff.betamod1 <- glmmTMB(abdiff ~ 
@@ -671,7 +671,7 @@ Baediff.betamod1 <- glmmTMB(abdiff ~
                             control = glmmTMBControl(optimizer = optim, 
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
-                            data = BaeDiff.df_abs) 
+                            data = caged_effectsize_abs) 
 
 summary(Baediff.betamod1)    
 car::Anova(Baediff.betamod1, type = "II")
@@ -693,9 +693,9 @@ check_model(Baediff.betamod1) # looks like it fits well?
 
 #RVs
 #1. Beta dispersion, per plot, for each experiment (right?? or per-site?) 
-#betadisp.comm.dist = from BaeDisp.df and caged_v1, average community distance 
+#betadisp.comm.dist = from caged_beta and caged_v1, average community distance 
 #2. Beta dispersion Effect Size (Uncaged - Caged)
-#within.cage.treat_betadisp.mean.diff = from BaeDisp.df and caged_v1, mean beta difference bt uncaged and caged. negative = consumers decrease B dispersion, positive = consumers increase B dispersion
+#within.cage.treat_betadisp.mean.diff = from caged_beta and caged_v1, mean beta difference bt uncaged and caged. negative = consumers decrease B dispersion, positive = consumers increase B dispersion
 #3. Beta dispersion ES absolute value
 
 #IVs
@@ -711,7 +711,7 @@ check_model(Baediff.betamod1) # looks like it fits well?
 #Leave name of best fitting/most ecological sense model up here for reference (will delete when final models selected)
 #BaeDisp.lmer
 
-#BaeDisp.df <- read.csv(file.path("data", "BaeDisp.df.csv"))
+#caged_beta <- read.csv(file.path("data", "caged_beta.csv"))
 
 ## ------------------------------------------- ##
 # Models I.  ----
@@ -724,7 +724,7 @@ check_model(Baediff.betamod1) # looks like it fits well?
 BaeDisp_lat.lmer <- lmer(betadisp.comm.dist ~ 
                            cage.treatment_std*var_aq.or.terr  +  
                            abs(lat) + 
-                           (1|exp.name), data = BaeDisp.df)
+                           (1|exp.name), data = caged_beta)
 
 check_model(BaeDisp_lat.lmer)
 summary(BaeDisp_lat.lmer)
@@ -743,7 +743,7 @@ BaeDisp_richsamp.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_aq.or.
                        gamma.richness + abs(lat) + 
                        #exp.age + 
                        betadisp.sample.size + 
-                       (1|exp.name), data = BaeDisp.df)
+                       (1|exp.name), data = caged_beta)
 
 check_model(BaeDisp_richsamp.lmer)
 summary(BaeDisp_richsamp.lmer)
@@ -761,7 +761,7 @@ BaeDisp2Way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_aq.or.terr 
                        abs(lat) + 
                        #exp.age + 
                        betadisp.sample.size + 
-                       (1|exp.name), data = BaeDisp.df)
+                       (1|exp.name), data = caged_beta)
 
 check_model(BaeDisp2Way.lmer, panel = F) %>% plot()
 check_collinearity(BaeDisp2Way.lmer)
@@ -773,7 +773,7 @@ performance::r2(BaeDisp2Way.lmer)
 #"rank deficient" but bolker says that is ok. 
 BaeDisp3way.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*var_ecotype1*var_consumer.richness.category + gamma.richness + #lat + exp.age + 
                            betadisp.sample.size + 
-                           (1|exp.name), data = BaeDisp.df)
+                           (1|exp.name), data = caged_beta)
 
 check_model(BaeDisp3way.lmer, panel = F) |> plot() #resid normality is wack
 summary(BaeDisp3way.lmer)
@@ -790,7 +790,7 @@ AIC(BaeDisp.lmer, BaeDispsimp.lmer, BaeDisp3way.lmer)
 BaeDisp_lat.nestlmer <- lmer(betadisp.comm.dist ~ 
                            cage.treatment_std*var_aq.or.terr  +  
                            abs(lat) + 
-                           (1|source/exp.name), data = BaeDisp.df)
+                           (1|source/exp.name), data = caged_beta)
 
 check_model(BaeDisp_lat.nestlmer, panel = F) |> plot() #plot them all 
 summary(BaeDisp_lat.nestlmer)
@@ -809,7 +809,7 @@ plot_model(BaeDisp_lat.lmer)
 #Singular
 #BaeDisp3way_slop.lmer <- lmer(betadisp.comm.dist ~ cage.treatment_std*ecotype1*consumer.richness.category + gamma.richness + #lat + exp.age + 
 #                                betadisp.sample.size + 
-#                                (cage.treatment_std|source/exp.name), data = BaeDisp.df)
+#                                (cage.treatment_std|source/exp.name), data = caged_beta)
 
 #check_model(BaeDisp3way_slop.lmer, panel = F) |> plot() #plot them all 
 #summary(BaeDisp3way_slop.lmer)
@@ -825,13 +825,13 @@ plot_model(BaeDisp_lat.lmer)
 # Models II. Consumer Effect Size (Difference in Beta Dispersion) ----
 ## ------------------------------------------- ##
 
-glimpse(BaeDiff.df)
+glimpse(caged_effectsize)
 #II.i LMER:  RE = 1|source ----
 #Habitat * latitude... no effects
 
 BaeES_lat.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~ 
                      var_aq.or.terr * abs(lat) +
-                     (1|source), data = BaeDiff.df)
+                     (1|source), data = caged_effectsize)
 
 check_model(BaeES_lat.lmer, panel = F) %>% plot()
 check_collinearity(BaeES_lat.lmer)
@@ -849,7 +849,7 @@ BaeES_richsamp.lmer <- lmer(within.cage.treat_betadisp.mean.diff ~
                               gamma.richness + 
                               abs(lat) + 
                               betadisp.sample.size + 
-                              (1|source), data = BaeDiff.df)
+                              (1|source), data = caged_effectsize)
 
 check_model(BaeES_richsamp.lmer)
 summary(BaeES_richsamp.lmer)
@@ -867,18 +867,18 @@ plot_model(BaeES_richsamp.lmer)
 ## ------------------------------------------- ##
 #I dont like this response variable
 
-BaeDiff.df_lat = BaeDiff.df %>% 
+caged_effectsize_lat = caged_effectsize %>% 
   mutate(ablat = abs(lat), abdiff = abs(within.cage.treat_betadisp.mean.diff) )
 
 LatHabIntES.lmer <- lmer(abdiff ~ 
                      ablat*var_aq.or.terr + 
                        (1|source), 
-                   data = BaeDiff.df_lat)
+                   data = caged_effectsize_lat)
 
 LatHabES.lmer <- lmer(abdiff ~ 
                         ablat+var_aq.or.terr + 
                         (1|source), 
-                      data = BaeDiff.df_lat)
+                      data = caged_effectsize_lat)
 AIC(LatHabIntES.lmer, LatHabES.lmer)
 
 check_model(LatHabIntES.lmer, panel = F) %>% plot()
@@ -924,7 +924,7 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 #                                   control = glmmTMBControl(optimizer = optim, 
 #                                                            optArgs = list(method = "BFGS")), 
 #                                   # Or use nlminb, or bobyqa via nloptr
-#                                   data = BaeDisp.df2) 
+#                                   data = caged_beta2) 
 # summary(caged.uncaged.betamod1)    
 # car::Anova(caged.uncaged.betamod1, type = "II")
 # 
@@ -942,7 +942,7 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 #                                   control = glmmTMBControl(optimizer = optim, 
 #                                                            optArgs = list(method = "BFGS")), 
 #                                   # Or use nlminb, or bobyqa via nloptr
-#                                   data = BaeDisp.df2) 
+#                                   data = caged_beta2) 
 # summary(caged.uncaged.betamod1)    
 # car::Anova(caged.uncaged.betamod1, type = "II")
 # 
@@ -959,7 +959,7 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 #                                   control = glmmTMBControl(optimizer = optim, 
 #                                                            optArgs = list(method = "BFGS")), 
 #                                   # Or use nlminb, or bobyqa via nloptr
-#                                   data = BaeDisp.df2) 
+#                                   data = caged_beta2) 
 # summary(caged.uncaged.betamod1)    
 # car::Anova(caged.uncaged.betamod1, type = "III")
 # 
@@ -998,7 +998,7 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 # ## ------------------------------------------- ##
 # 
 # # Validate with DHARMa
-# dat <- BaeDisp.df2
+# dat <- caged_beta2
 # fittedModel <- caged.uncaged.betamod1
 # 
 # simulationOutput <- simulateResiduals(fittedModel = fittedModel, plot = F)
@@ -1020,13 +1020,13 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 # ## ------------------------------------------- ##
 # 
 # # Save original polynomial transformation
-# lat_poly <- poly(BaeDisp.df2$lat, 2)
+# lat_poly <- poly(caged_beta2$lat, 2)
 # 
 # # Generate prediction grid
 # newdata <- expand.grid(
-#   cage.treatment_std = unique(BaeDisp.df2$cage.treatment_std),
-#   var_aq.or.terr     = unique(BaeDisp.df2$var_aq.or.terr),
-#   lat                = seq(min(BaeDisp.df2$lat), max(BaeDisp.df2$lat), length.out = 100)
+#   cage.treatment_std = unique(caged_beta2$cage.treatment_std),
+#   var_aq.or.terr     = unique(caged_beta2$var_aq.or.terr),
+#   lat                = seq(min(caged_beta2$lat), max(caged_beta2$lat), length.out = 100)
 # )
 # 
 # # Create poly terms using same basis
@@ -1053,7 +1053,7 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 # my_shapes <- c("caged" = 16,    # solid circle
 #                "uncaged" = 17)  # solid triangle
 # 
-# ggplot(BaeDisp.df2, aes(x = lat, y = betadisp.comm.dist_transform)) +
+# ggplot(caged_beta2, aes(x = lat, y = betadisp.comm.dist_transform)) +
 #   geom_point(aes(color = var_aq.or.terr, shape = cage.treatment_std), alpha = 0.4) +
 #   geom_line(data = newdata, aes(y = fit, color = var_aq.or.terr), size = 1) +
 #   geom_ribbon(data = newdata, 
@@ -1074,7 +1074,7 @@ emtrends(LatHabIntES.lmer, "var_aq.or.terr", var = "ablat")
 # ggsave("graphs/beta.reg.output1-raw.data.pdf", height = 8, width = 8)
 # 
 # # Compute study-level means
-# study_means <- BaeDisp.df2 %>%
+# study_means <- caged_beta2 %>%
 #   group_by(source, cage.treatment_std, var_aq.or.terr) %>%
 #   summarise(
 #     lat  = mean(lat, na.rm = T),

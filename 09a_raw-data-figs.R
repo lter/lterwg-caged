@@ -21,23 +21,23 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
-BaeDiff.df <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
-BaeDisp.df <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
+caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
+caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
-# View(BaeDiff.df) 
-# View(BaeDisp.df) 
-dim(BaeDiff.df)# 273 rows
-dim(BaeDisp.df)# 11281 rows
+# View(caged_effectsize) 
+# View(caged_beta) 
+dim(caged_effectsize)# 273 rows
+dim(caged_beta)# 11281 rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
 ## ------------------------------------------- ##
-colnames(BaeDisp.df)
-colnames(BaeDiff.df)
+colnames(caged_beta)
+colnames(caged_effectsize)
 
 # Beta dispersion (uncaged only) by latitude
-BaeDisp.df %>%
+caged_beta %>%
   filter(cage.treatment_std == "uncaged") %>%
   ggplot(aes(x=abs(lat), 
              y=betadisp.comm.dist,
@@ -53,12 +53,12 @@ BaeDisp.df %>%
   ggtitle("Uncaged data only")
 
 # Remove rows for which we have no biome classification
-BaeDisp.df <- BaeDisp.df %>%
+caged_beta <- caged_beta %>%
   filter(var_aq.or.terr != "") %>%
   droplevels()
 
 # Beta dispersion (caged only) by latitude
-BaeDisp.df %>%
+caged_beta %>%
   filter(cage.treatment_std == "caged") %>%
   ggplot(aes(x=abs(lat), 
              y=betadisp.comm.dist,
@@ -75,7 +75,7 @@ BaeDisp.df %>%
 
 
 # Diff by latitude
-BaeDiff.df %>%
+caged_effectsize %>%
   ggplot(aes(x=abs(lat), 
              y=within.cage.treat_betadisp.mean.diff,
              col=var_aq.or.terr)) +
@@ -88,7 +88,7 @@ BaeDiff.df %>%
        colour = "Biome")
   
 # Absolute diff by latitude
-BaeDiff.df %>%
+caged_effectsize %>%
   ggplot(aes(x=abs(lat), 
              y=abs(within.cage.treat_betadisp.mean.diff),
              col=var_aq.or.terr)) +
@@ -105,7 +105,7 @@ BaeDiff.df %>%
 
 
 # Gamma richness by latitude
-BaeDiff.df %>%
+caged_effectsize %>%
   ggplot(aes(x=abs(lat), 
              y=gamma.richness,
              col=var_aq.or.terr)) +
@@ -120,7 +120,7 @@ BaeDiff.df %>%
 
 
 # Plot size for aquatic vs terrestrial 
-BaeDiff.df %>%
+caged_effectsize %>%
   # lots of these values are "unknown"
   filter(!is.na(as.numeric(var_exclosure.area.m2))) %>%
   ggplot(aes(x=var_aq.or.terr, 
