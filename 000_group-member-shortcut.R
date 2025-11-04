@@ -6,6 +6,7 @@
 ## Group members may want a "shortcut" so they don't need to run the full workflow
 ## This script downloads the outputs of core scripts from Drive
 ## Allowing a user to skip numbered workflow scripts before the one that they are interested in
+## You need to run this script prior to running 01 and onward
 
 # Note:
 ## This script assumes that you (the person running the script):

@@ -5,6 +5,7 @@
 # Purpose:
 ## Use a data key to standardize the column names of all input files
 ## And combine all standardized tables into one large table
+## You need to run 00 and 000 before you can run this script
 
 ## ------------------------------------------- ##
 # Housekeeping ----
