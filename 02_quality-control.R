@@ -383,6 +383,8 @@ tidy_v8 <- tidy_v7 %>%
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
     ## Date in mm/dd/yy format
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
+    ## Date has 4-digit year at end of  date but not necessarily two digits for month/day
+    source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv" ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ "year")) %>% 
