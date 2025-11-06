@@ -40,7 +40,7 @@ core_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com
 core_drive
 
 # Download 'em all (overwriting your local versions)
-purrr::walk2(.x = core_outs$id, .y = core_outs$name,
+purrr::walk2(.x = core_drive$id, .y = core_drive$name,
              .f = ~ googledrive::drive_download(file = .x, overwrite = T,
                                                 path = file.path("data", .y)))
 
