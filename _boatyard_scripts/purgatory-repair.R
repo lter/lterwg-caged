@@ -20,8 +20,8 @@
 # Load libraries
 librarian::shelf(tidyverse, googledrive, supportR, readxl)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 dir.create(path = file.path("data", "purgatory"), showWarnings = F)
 dir.create(path = file.path("data", "drydock"), showWarnings = F)
 
@@ -1872,6 +1872,52 @@ write.csv(x = proj24, file = proj24_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj24_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Purgatory TEMPLATE ----
+## ------------------------------------------- ##
+## Duplicate and flesh out one copy!
+
+# Reason for purgatory status
+## 
+
+# Identify file(s) name(s)
+proj0_raw_name <- "BAD_FILE.csv"
+
+# Identify file(s) in Drive
+proj0_gdrive <- googledrive::drive_ls(googledrive::as_id("raw file GDrive link (in subfolder of 'metadata' folder)")) %>% 
+  dplyr::filter(name %in% c(proj0_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj0_gdrive$id, .y = proj0_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj0_raw <- read.csv(file.path("data", "purgatory", proj0_raw_name))
+
+# Check structure
+dplyr::glimpse(proj0_raw)
+
+# Do needed repairs
+proj0 <- proj0_raw
+
+# Re-check structure
+dplyr::glimpse(proj0)
+
+# Create good/new file name
+proj0_name <- "organization_region_experiment-name_study-years_excluded-group_measured-group.csv"
+proj0_path <- file.path("data", "drydock", proj0_name)
+
+# Export locally
+write.csv(x = proj0, file = proj0_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj0_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
