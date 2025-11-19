@@ -1,6 +1,8 @@
 ## --------------------------------------------------------------- ##
-# CAGED *Mean* Difference in Beta Dispersion Calculation
+# CAGED Beta Deviation Calculation
 ## --------------------------------------------------------------- ##
+# Purpose:
+## Calculate "beta deviation" (beta dispersion adjusted for sample size / species pool values)
 
 ## ------------------------------------------- ##
 # Housekeeping ----
