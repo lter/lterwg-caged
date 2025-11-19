@@ -145,15 +145,15 @@ SES
 
 
 # define list to populate below
-beta.list <- list()
+# beta.list <- list()
+# 
+#   rand.results <- assemblages.from.pool.randA(compo=t(otu_table(dat)), fix.local.abund=TRUE, fix.rSAD=TRUE, 
+#   rand.N=N, save.output=FALSE)
+#   null.compos <- rand.results$rand.datasets
+#   null.matrices <- null.compos
 
-  rand.results <- assemblages.from.pool.randA(compo=t(otu_table(dat)), fix.local.abund=TRUE, fix.rSAD=TRUE, 
-  rand.N=N, save.output=FALSE)
-  null.compos <- rand.results$rand.datasets
-  null.matrices <- null.compos
-
-compo<- t(otu_table(dat))
-beta.list [[i]] <- beta.ses(compo, null.matrices)
+# compo<- t(otu_table(dat))
+# beta.list [[i]] <- beta.ses(compo, null.matrices)
 
 
 
