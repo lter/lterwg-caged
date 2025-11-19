@@ -202,6 +202,7 @@ caged_beta3 <- caged_beta2 %>%
 
 uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                               var_aq.or.terr * abs.lat  +
+                             gamma.richness + betadisp.sample.size +
                               (1|exp.name), 
                             dispformula = ~ var_aq.or.terr, #+ abs.lat,
                             family = beta_family(link = "probit"),
