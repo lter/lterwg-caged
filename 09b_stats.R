@@ -217,9 +217,9 @@ summary(uncaged.betamod)
 car::Anova(uncaged.betamod, type = "II")
 
 library(effects)
-plot(allEffects(three.way.betamod))
+plot(allEffects(uncaged.betamod))
 
-check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
+check_model(uncaged.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
 
 
 # MODEL 2: beta.disp ~ caging * abs(latitude) * ecosystem type + (1/exp.name)
