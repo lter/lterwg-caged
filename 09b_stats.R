@@ -25,9 +25,8 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
-#caged_effectsize <- read.csv("data/BaeDiff.df.csv")
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
-#caged_beta <- read.csv("data/caged_beta.csv")
+
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
@@ -36,10 +35,10 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 
 
 ## ------------------------------------------- ##
-# Models for Paper 1 ----
+# Latitude Models  ----
 ## ------------------------------------------- ##
 
-glimpse(caged_beta) #12,195 rows
+glimpse(caged_beta) #12,243 rows
 
 # Check distribution of values in response variable, betadisp.comm.dist
 hist(caged_beta$betadisp.comm.dist)  
@@ -172,21 +171,11 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
   geom_boxplot()
 
 
-## ------------------------------------------- ##
-## ------------------------------------------- ##
-# REPEAT ABOVE WORKFLOW FOR ONLY UNCAGED PLOTS
-## ------------------------------------------- ##
-## ------------------------------------------- ##
 
 ## ------------------------------------------- ##
 ## Fit Beta Regression Models ----
 ## ------------------------------------------- ## 
 
-# Fit model on only uncaged data
-caged_beta3 <- caged_beta2 %>%
-  dplyr::filter(cage.treatment_std == "uncaged") %>%
-  droplevels()
- 
 # ------------------------------------------
 # A Preamble: Common Link Functions for Beta Regression
 # ------------------------------------------
@@ -200,8 +189,21 @@ caged_beta3 <- caged_beta2 %>%
 
 # In the end, the probit model had the lowest AIC by at least 10-20 units and was best behaved in DHARMa diagnostics.
 
+
+
+# MODEL: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
+# this is only on the uncaged data 
+
+# Uncaged data 
+uncaged.beta2 <- caged_beta2 %>%
+  dplyr::filter(cage.treatment_std == "uncaged") %>%
+  droplevels()
+
+
+# Adding in gamma diversity and sample size to the models
 uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                               var_aq.or.terr * abs.lat  +
+                             # accounting for gamma richness and sample size
                              gamma.richness + betadisp.sample.size +
                               (1|exp.name), 
                             dispformula = ~ var_aq.or.terr, #+ abs.lat,
@@ -209,10 +211,51 @@ uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                             control = glmmTMBControl(optimizer = optim, 
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
-                            data = caged_beta3) 
+                            data = uncaged.beta2) 
 AIC(uncaged.betamod)
 summary(uncaged.betamod)    
 car::Anova(uncaged.betamod, type = "II")
+
+library(effects)
+plot(allEffects(three.way.betamod))
+
+check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
+
+
+# MODEL: beta.disp ~ caging * abs(latitude) * ecosystem type + (1/exp.name)
+# this is on the caged and uncaged data 
+three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                               var_aq.or.terr * abs.lat + abs.lat*cage.treatment_std  +
+                               gamma.richness + betadisp.sample.size +
+                               (1|exp.name), 
+                             dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                             family = beta_family(link = "probit"),
+                             control = glmmTMBControl(optimizer = optim, 
+                                                      optArgs = list(method = "BFGS")), 
+                             # Or use nlminb, or bobyqa via nloptr
+                             data = caged_beta2) 
+AIC(three.way.betamod)
+summary(three.way.betamod)    
+car::Anova(three.way.betamod, type = "II")
+# the three way interaction is no longer significant? even without gamma richness and sample size?
+# is this because of new data? why was it significant before in october?
+
+library(effects)
+plot(allEffects(three.way.betamod))
+
+check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
+
+
+
+
+
+
+
+
+
+# Code that needs to be cleaned is below 
+
+
 
 # Assign the best model
 uncaged.betamod 
