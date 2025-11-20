@@ -191,7 +191,7 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 
 
-# MODEL: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
+# MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
 # this is only on the uncaged data 
 
 # Uncaged data 
@@ -222,10 +222,10 @@ plot(allEffects(three.way.betamod))
 check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
 
 
-# MODEL: beta.disp ~ caging * abs(latitude) * ecosystem type + (1/exp.name)
+# MODEL 2: beta.disp ~ caging * abs(latitude) * ecosystem type + (1/exp.name)
 # this is on the caged and uncaged data 
 three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                               var_aq.or.terr * abs.lat + abs.lat*cage.treatment_std  +
+                               var_aq.or.terr * abs.lat * cage.treatment_std  +
                                gamma.richness + betadisp.sample.size +
                                (1|exp.name), 
                              dispformula = ~ var_aq.or.terr, #+ abs.lat,
@@ -240,12 +240,28 @@ car::Anova(three.way.betamod, type = "II")
 # the three way interaction is no longer significant? even without gamma richness and sample size?
 # is this because of new data? why was it significant before in october?
 
+
+# Rerun without the threeway interaction- only keep the significant interactions from above
+three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                               var_aq.or.terr * abs.lat  + 
+                               abs.lat *cage.treatment_std  +
+                               gamma.richness + 
+                               betadisp.sample.size +
+                               (1|exp.name), 
+                             dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                             family = beta_family(link = "probit"),
+                             control = glmmTMBControl(optimizer = optim, 
+                                                      optArgs = list(method = "BFGS")), 
+                             # Or use nlminb, or bobyqa via nloptr
+                             data = caged_beta2) 
+AIC(three.way.betamod)
+summary(three.way.betamod)    
+car::Anova(three.way.betamod, type = "II")
+
 library(effects)
 plot(allEffects(three.way.betamod))
 
-check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
-
-
+check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- if you wait >5mins it works :)
 
 
 
