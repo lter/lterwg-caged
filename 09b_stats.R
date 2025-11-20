@@ -262,7 +262,7 @@ library(effects)
 plot(allEffects(three.way.betamod))
 
 check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- if you wait >5mins it works :)
-
+# homogeneity doesn't print but everything else does!
 
 
 
