@@ -31,7 +31,7 @@ dplyr::glimpse(caged_v1)
 
 # Check number of sources
 unique(caged_v1$source) # 110
-unique(caged_v1$exp.name) # 298
+unique(caged_v1$exp.name) # 302
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion & Difference Data ---- 
@@ -65,7 +65,7 @@ dplyr::glimpse(caged_mean)
 
 # Check replicates
 unique(caged_mean$source) # 110
-unique(caged_mean$exp.name) # 298
+unique(caged_mean$exp.name) # 302
 # now these are the same!
 
 # Which are lost (if any)
@@ -107,7 +107,7 @@ caged_effectsize <- caged_mean %>%
 
 # Check number of sources
 unique(caged_effectsize$source) # 110
-unique(caged_effectsize$exp.name) # 298
+unique(caged_effectsize$exp.name) # 302
 
 # Which are lost (if any)
 supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_effectsize$source))
@@ -143,7 +143,7 @@ dplyr::glimpse(caged_model)
 
 # Check replicates
 unique(caged_model$source) # 110
-unique(caged_model$exp.name) # 298
+unique(caged_model$exp.name) # 302
 
 # Which are lost (if any)
 supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_model$source))
@@ -164,7 +164,7 @@ supportR::diff_check(old = names(caged_model), new = names(caged_beta))
 
 # Check number of sources
 unique(caged_beta$source) # 109
-unique(caged_beta$exp.name) # 297
+unique(caged_beta$exp.name) # 302
 
 # Check structure
 dplyr::glimpse(caged_beta)
