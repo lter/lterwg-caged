@@ -196,6 +196,11 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 # In the end, the probit model had the lowest AIC by at least 10-20 units and was best behaved in DHARMa diagnostics.
 
 
+# check sample size
+dim(caged_beta2) # 11929 rows
+unique(caged_beta2$exp.name) # 283
+unique(caged_beta2$source) # 105
+
 
 # MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
 # this is only on the uncaged data 
