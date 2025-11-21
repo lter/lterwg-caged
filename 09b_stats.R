@@ -30,8 +30,8 @@ caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
-#View(caged_effectsize) # 290 rows
-#View(caged_beta) # 12195 rows
+dim(caged_effectsize) # 365 rows, this increased alot?
+dim(caged_beta) # 12235 rows
 
 
 ## ------------------------------------------- ##
