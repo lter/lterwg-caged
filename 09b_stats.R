@@ -31,7 +31,13 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 
 
 dim(caged_effectsize) # 370 rows, this increased alot?
+# seems like there are maybe some duplicates? shouldn't there only be 302??
+# i think its because there are different sample sizes for caged vs uncaged so then you get a duplicate row?
 dim(caged_beta) # 12339  rows
+
+# Check number of sources
+unique(caged_effectsize$exp.name) # 302
+dim(caged_effectsize)
 
 
 ## ------------------------------------------- ##
