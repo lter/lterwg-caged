@@ -33,6 +33,7 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 dim(caged_effectsize) # 370 rows, this increased alot?
 # seems like there are maybe some duplicates? shouldn't there only be 302??
 # i think its because there are different sample sizes for caged vs uncaged so then you get a duplicate row?
+# but we also decided to move forward with beta dispersion 
 dim(caged_beta) # 12339  rows
 
 # Check number of sources
@@ -210,8 +211,6 @@ uncaged.beta2 <- caged_beta2 %>%
   dplyr::filter(cage.treatment_std == "uncaged") %>%
   droplevels()
 
-
-# Adding in gamma diversity and sample size to the models
 uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                               var_aq.or.terr * abs.lat  +
                              # accounting for gamma richness and sample size
@@ -225,12 +224,17 @@ uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                             data = uncaged.beta2) 
 AIC(uncaged.betamod)
 summary(uncaged.betamod)    
-car::Anova(uncaged.betamod, type = "II")
+car::Anova(uncaged.betamod, type = "II") # interaction is significant
 
 library(effects)
 plot(allEffects(uncaged.betamod))
+# beta dispresion increases with gamma richness and sample size
+# beta dispersion increases with latitude for aquatic, but decreases with latitude for terrestrial
 
 check_model(uncaged.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
+# JMI: works for me other than homogeneity not printing 
+
+
 
 
 # MODEL 2: beta.disp ~ caging * abs(latitude) * ecosystem type + (1/exp.name)
@@ -271,10 +275,37 @@ car::Anova(three.way.betamod, type = "II")
 
 library(effects)
 plot(allEffects(three.way.betamod))
+# terrestrial beta diversity decreaes with latitude, aquatic slightly increases (regardless of caging)
+# caged (No consumers) has a stronger decline with latitude than uncaged (regardless of aquatic vs terrestrial)
 
 check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- if you wait >5mins it works :)
 # homogeneity doesn't print but everything else does!
 
+
+# Try the model with caged data only to see if this helps us understand why the three way interaction is not significant
+
+# Caged data
+caged.beta2 <- caged_beta2 %>%
+  dplyr::filter(cage.treatment_std == "caged") %>%
+  droplevels()
+
+caged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                             var_aq.or.terr * abs.lat  +
+                             # accounting for gamma richness and sample size
+                             gamma.richness + betadisp.sample.size +
+                             (1|exp.name), 
+                           dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                           family = beta_family(link = "probit"),
+                           control = glmmTMBControl(optimizer = optim, 
+                                                    optArgs = list(method = "BFGS")), 
+                           # Or use nlminb, or bobyqa via nloptr
+                           data = caged.beta2) 
+AIC(caged.betamod)
+summary(caged.betamod)    
+car::Anova(caged.betamod, type = "II") # interaction is significant
+
+plot(allEffects(caged.betamod))
+# difference from the uncaged model is the aquatic slope is now negative, terrestrial looks the same
 
 
 
