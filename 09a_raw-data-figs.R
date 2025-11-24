@@ -27,8 +27,8 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 
 # View(caged_effectsize) 
 # View(caged_beta) 
-dim(caged_effectsize)# 365 rows
-dim(caged_beta)# 12235 rows
+dim(caged_effectsize)# 370 rows
+dim(caged_beta)# 12339  rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
@@ -89,6 +89,8 @@ caged_effectsize %>%
   
 # Absolute diff by latitude
 caged_effectsize %>%
+  filter(var_aq.or.terr != "") %>%
+  droplevels() %>%
   ggplot(aes(x=abs(lat), 
              y=abs(within.cage.treat_betadisp.mean.diff),
              col=var_aq.or.terr)) +
@@ -106,6 +108,8 @@ caged_effectsize %>%
 
 # Gamma richness by latitude
 caged_effectsize %>%
+  filter(var_aq.or.terr != "") %>%
+  droplevels() %>%
   ggplot(aes(x=abs(lat), 
              y=gamma.richness,
              col=var_aq.or.terr)) +
