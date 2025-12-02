@@ -216,9 +216,9 @@ caged_beta2 %>%
   
 
 uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                              var_aq.or.terr * abs.lat  +
+                              var_aq.or.terr * scale(abs.lat)  +
                              # accounting for gamma richness and sample size
-                             gamma.richness + betadisp.sample.size +
+                             scale(gamma.richness) + scale(betadisp.sample.size) +
                               (1|exp.name), 
                             dispformula = ~ var_aq.or.terr, #+ abs.lat,
                             family = beta_family(link = "probit"),
@@ -226,6 +226,8 @@ uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
                             data = uncaged.beta2) 
+# scaling the continuous variables reduced multicollinearity to low from moderate
+
 AIC(uncaged.betamod)
 summary(uncaged.betamod)    
 car::Anova(uncaged.betamod, type = "II") # interaction is significant
@@ -339,8 +341,8 @@ aquatic.beta <- caged_beta2 %>%
 
 
 aquatic.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                               abs.lat * cage.treatment_std  +
-                               gamma.richness + betadisp.sample.size +
+                               scale(abs.lat) * cage.treatment_std  +
+                               scale(gamma.richness) + scale(betadisp.sample.size) +
                                (1|exp.name), 
                              #dispformula = ~ var_aq.or.terr, #+ abs.lat,
                              family = beta_family(link = "probit"),
@@ -363,8 +365,8 @@ terrestrial.beta <- caged_beta2 %>%
 
 
 terrestrial.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                             abs.lat * cage.treatment_std  +
-                             gamma.richness + betadisp.sample.size +
+                             scale(abs.lat) * cage.treatment_std  +
+                             scale(gamma.richness) + scale(betadisp.sample.size) +
                              (1|exp.name), 
                            #dispformula = ~ var_aq.or.terr, #+ abs.lat,
                            family = beta_family(link = "probit"),
