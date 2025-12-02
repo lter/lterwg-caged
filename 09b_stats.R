@@ -238,7 +238,7 @@ plot(allEffects(uncaged.betamod))
 check_model(uncaged.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE
 # JMI: works for me other than homogeneity not printing 
 
-
+check_collinearity(uncaged.betamod)
 
 
 # MODEL 2: beta.disp ~ caging * abs(latitude) * ecosystem type + (1/exp.name)
@@ -352,6 +352,8 @@ aquatic.betamod <- glmmTMB(betadisp.comm.dist_transform ~
 car::Anova(aquatic.betamod, type = "II") # interaction is significant
 plot(allEffects(aquatic.betamod))
 
+check_model(aquatic.betamod)
+check_collinearity(aquatic.betamod)
 
 
 
@@ -373,6 +375,9 @@ terrestrial.betamod <- glmmTMB(betadisp.comm.dist_transform ~
 
 car::Anova(terrestrial.betamod, type = "II") # interaction is significant
 plot(allEffects(terrestrial.betamod))
+
+check_model(terrestrial.betamod)
+check_collinearity(terrestrial.betamod) 
 
 # Code that needs to be cleaned is below 
 
