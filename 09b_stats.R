@@ -198,10 +198,9 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 
 # check sample size
-dim(caged_beta2) # 11929 rows
-unique(caged_beta2$exp.name) # 283
-unique(caged_beta2$source) # 105
-
+dim(caged_beta2) # 12315    27
+unique(caged_beta2$exp.name) # 300
+unique(caged_beta2$source) # 109
 
 # MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
 # this is only on the uncaged data 
@@ -210,6 +209,11 @@ unique(caged_beta2$source) # 105
 uncaged.beta2 <- caged_beta2 %>%
   dplyr::filter(cage.treatment_std == "uncaged") %>%
   droplevels()
+
+caged_beta2 %>%
+  group_by(var_aq.or.terr) %>%
+  summarize(n())
+  
 
 uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                               var_aq.or.terr * abs.lat  +
@@ -256,8 +260,12 @@ car::Anova(three.way.betamod, type = "II")
 # is this because of new data? why was it significant before in october?
 
 
+plot(allEffects(three.way.betamod))
+check_model(three.way.betamod)
+
+
 # Rerun without the threeway interaction- only keep the significant interactions from above
-three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+two.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                                var_aq.or.terr * abs.lat  + 
                                abs.lat *cage.treatment_std  +
                                gamma.richness + 
@@ -269,7 +277,7 @@ three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                                                       optArgs = list(method = "BFGS")), 
                              # Or use nlminb, or bobyqa via nloptr
                              data = caged_beta2) 
-AIC(three.way.betamod)
+AIC(two.way.betamod)
 summary(three.way.betamod)    
 car::Anova(three.way.betamod, type = "II")
 
@@ -310,6 +318,61 @@ plot(allEffects(caged.betamod))
 
 
 
+# Can we run separate models for aquatic and terrestrial?
+caged_beta2 %>%
+  group_by(var_aq.or.terr) %>%
+  summarize(n()) # aquatic is only ~16% of our data
+
+
+unique(aquatic.beta$exp.name) # 88
+unique(terrestrial.beta$exp.name) # 212
+# ~29% is aquatic 
+
+unique(aquatic.beta$source) # 32
+unique(terrestrial.beta$source) # 77
+# ~29% is aquatic
+
+
+aquatic.beta <- caged_beta2 %>%
+  dplyr::filter(var_aq.or.terr == "aquatic") %>%
+  droplevels()
+
+
+aquatic.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                               abs.lat * cage.treatment_std  +
+                               gamma.richness + betadisp.sample.size +
+                               (1|exp.name), 
+                             #dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                             family = beta_family(link = "probit"),
+                             control = glmmTMBControl(optimizer = optim, 
+                                                      optArgs = list(method = "BFGS")), 
+                             # Or use nlminb, or bobyqa via nloptr
+                             data = aquatic.beta) 
+
+car::Anova(aquatic.betamod, type = "II") # interaction is significant
+plot(allEffects(aquatic.betamod))
+
+
+
+
+terrestrial.beta <- caged_beta2 %>%
+  dplyr::filter(var_aq.or.terr == "terrestrial") %>%
+  droplevels()
+
+
+terrestrial.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                             abs.lat * cage.treatment_std  +
+                             gamma.richness + betadisp.sample.size +
+                             (1|exp.name), 
+                           #dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                           family = beta_family(link = "probit"),
+                           control = glmmTMBControl(optimizer = optim, 
+                                                    optArgs = list(method = "BFGS")), 
+                           # Or use nlminb, or bobyqa via nloptr
+                           data = terrestrial.beta) 
+
+car::Anova(terrestrial.betamod, type = "II") # interaction is significant
+plot(allEffects(terrestrial.betamod))
 
 # Code that needs to be cleaned is below 
 

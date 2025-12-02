@@ -163,7 +163,7 @@ caged_beta <- caged_model %>%
 supportR::diff_check(old = names(caged_model), new = names(caged_beta))
 
 # Check number of sources
-unique(caged_beta$source) # 109
+unique(caged_beta$source) # 110
 unique(caged_beta$exp.name) # 302
 
 # Check structure

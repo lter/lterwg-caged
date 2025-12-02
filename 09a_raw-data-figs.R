@@ -75,6 +75,12 @@ caged_beta %>%
 
 
 # Diff by latitude
+
+caged_beta <- caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  droplevels()
+
+
 caged_effectsize %>%
   ggplot(aes(x=abs(lat), 
              y=within.cage.treat_betadisp.mean.diff,
