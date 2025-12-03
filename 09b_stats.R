@@ -202,6 +202,14 @@ dim(caged_beta2) # 12315    27
 unique(caged_beta2$exp.name) # 300
 unique(caged_beta2$source) # 109
 
+# which sources and experiment names make it through the pipeline 
+test<- caged_beta %>% select(exp.name, source) %>% distinct()
+
+write.csv(test, "data/final.data.through.pipeline.csv")
+
+
+
+
 # MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
 # this is only on the uncaged data 
 
@@ -269,10 +277,11 @@ check_model(three.way.betamod)
 
 # Rerun without the threeway interaction- only keep the significant interactions from above
 two.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                               var_aq.or.terr * abs.lat  + 
-                               abs.lat *cage.treatment_std  +
-                               gamma.richness + 
-                               betadisp.sample.size +
+                             # scaling continuous predictors does not affect results but does help with multicollinearity
+                               var_aq.or.terr * scale(abs.lat)  + 
+                               scale(abs.lat) *cage.treatment_std  +
+                               scale(gamma.richness) + 
+                               scale(betadisp.sample.size) +
                                (1|exp.name), 
                              dispformula = ~ var_aq.or.terr, #+ abs.lat,
                              family = beta_family(link = "probit"),
@@ -334,6 +343,15 @@ unique(terrestrial.beta$exp.name) # 212
 unique(aquatic.beta$source) # 32
 unique(terrestrial.beta$source) # 77
 # ~29% is aquatic
+
+caged_beta2 %>%
+  group_by(var_aq.or.terr, var_ecotype1) %>%
+  summarize(n()) 
+
+5809/10380 # 56% are grassland
+
+
+
 
 
 aquatic.beta <- caged_beta2 %>%
