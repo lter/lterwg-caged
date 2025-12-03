@@ -36,6 +36,28 @@ dim(caged_beta)# 12339  rows
 colnames(caged_beta)
 colnames(caged_effectsize)
 
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+ # filter(var_aq.or.terr == c("aquatic")) %>%
+ # filter(!abs(lat) > 60) %>%
+  ggplot(aes(x=abs(lat), 
+             y=betadisp.comm.dist,
+             col=cage.treatment_std)) +
+  geom_point() +
+  facet_wrap(~var_aq.or.terr)+
+  geom_smooth(method="lm") +
+  theme_pubr(base_size=16) +
+  #scale_color_manual(values= c("royalblue",
+  #                             "darkgreen")) +
+  labs(x= "Absolute latitude",
+       y= "Beta dispersion",
+       colour = "Biome") 
+
+
+
+
+
+
 # Beta dispersion (uncaged only) by latitude
 caged_beta %>%
   filter(cage.treatment_std == "uncaged") %>%

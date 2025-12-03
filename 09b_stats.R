@@ -208,6 +208,7 @@ unique(caged_beta2$source) # 109
 # Uncaged data 
 uncaged.beta2 <- caged_beta2 %>%
   dplyr::filter(cage.treatment_std == "uncaged") %>%
+  filter(!abs.lat > 75) %>%
   droplevels()
 
 caged_beta2 %>%
@@ -280,15 +281,15 @@ two.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                              # Or use nlminb, or bobyqa via nloptr
                              data = caged_beta2) 
 AIC(two.way.betamod)
-summary(three.way.betamod)    
-car::Anova(three.way.betamod, type = "II")
+summary(two.way.betamod)    
+car::Anova(two.way.betamod, type = "II")
 
 library(effects)
-plot(allEffects(three.way.betamod))
+plot(allEffects(two.way.betamod))
 # terrestrial beta diversity decreaes with latitude, aquatic slightly increases (regardless of caging)
 # caged (No consumers) has a stronger decline with latitude than uncaged (regardless of aquatic vs terrestrial)
 
-check_model(three.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- if you wait >5mins it works :)
+check_model(two.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- if you wait >5mins it works :)
 # homogeneity doesn't print but everything else does!
 
 
@@ -337,6 +338,7 @@ unique(terrestrial.beta$source) # 77
 
 aquatic.beta <- caged_beta2 %>%
   dplyr::filter(var_aq.or.terr == "aquatic") %>%
+  filter(!abs.lat > 75) %>%
   droplevels()
 
 
