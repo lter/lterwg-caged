@@ -36,6 +36,22 @@ dim(caged_beta)# 12339  rows
 colnames(caged_beta)
 colnames(caged_effectsize)
 
+
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  ggplot(aes(x=var_aq.or.terr, 
+             y=betadisp.comm.dist,
+             color=cage.treatment_std,)) +
+  geom_boxplot(size=1.1) +
+  geom_point(position= position_jitterdodge(), alpha= 0.05) +
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("royalblue",
+                              "darkturquoise")) +
+  labs(x= "Biome",
+       y= "Beta dispersion",
+       colour = "Caging treatment") 
+
+
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
  # filter(var_aq.or.terr == c("aquatic")) %>%
@@ -47,8 +63,8 @@ caged_beta %>%
   facet_wrap(~var_aq.or.terr)+
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  #scale_color_manual(values= c("royalblue",
-  #                             "darkgreen")) +
+  scale_color_manual(values= c("royalblue",
+                               "darkturquoise")) +
   labs(x= "Absolute latitude",
        y= "Beta dispersion",
        colour = "Biome") 

@@ -401,6 +401,8 @@ plot(allEffects(terrestrial.betamod))
 check_model(terrestrial.betamod)
 check_collinearity(terrestrial.betamod) 
 
+
+
 # Code that needs to be cleaned is below 
 
 
