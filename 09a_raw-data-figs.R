@@ -38,6 +38,19 @@ colnames(caged_effectsize)
 
 
 caged_beta %>%
+  dplyr::count(exp.name, var_aq.or.terr, var_ecotype1) %>%
+  filter(var_aq.or.terr != "") %>%
+  filter(var_ecotype1 != "") %>%
+  ggplot(aes(x=var_aq.or.terr, 
+             fill=var_ecotype1)) +
+  geom_bar(position= "fill") +
+  theme_pubr(base_size=16) +
+  labs(x= "Biome",
+       y="Proportion",
+       fill = "Ecotype")
+
+
+caged_beta %>%
   filter(var_aq.or.terr != "") %>%
   ggplot(aes(x=var_aq.or.terr, 
              y=betadisp.comm.dist,
@@ -46,10 +59,28 @@ caged_beta %>%
   geom_point(position= position_jitterdodge(), alpha= 0.05) +
   theme_pubr(base_size=16) +
   scale_color_manual(values= c("royalblue",
-                              "darkturquoise")) +
+                               "darkturquoise")) +
   labs(x= "Biome",
        y= "Beta dispersion",
        colour = "Caging treatment") 
+
+
+caged_beta %>%
+ # filter(var_aq.or.terr != "") %>%
+  filter(var_ecotype1 != "") %>%
+  ggplot(aes(x=cage.treatment_std, 
+             y=betadisp.comm.dist,
+             color=cage.treatment_std,)) +
+  geom_boxplot(size=1.1) +
+  geom_point(position= position_jitterdodge(), alpha= 0.05) +
+  facet_wrap(~var_ecotype1)+
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("royalblue",
+                               "darkturquoise")) +
+  labs(x= "",
+       y= "Beta dispersion",
+       colour = "Caging treatment") 
+
 
 
 caged_beta %>%
