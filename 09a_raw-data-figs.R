@@ -37,6 +37,20 @@ colnames(caged_beta)
 colnames(caged_effectsize)
 
 
+
+caged_beta %>%
+  dplyr::count(exp.name, var_aq.or.terr) %>%
+  filter(var_aq.or.terr != "") %>%
+  ggplot(aes(x= var_aq.or.terr,
+             fill=var_aq.or.terr)) +
+  geom_bar() +
+  theme_pubr(base_size=16) +
+  scale_fill_manual(values= c("turquoise",
+                               "darkgreen")) +
+  labs(x= "Biome",
+       y="Number of experiments",
+       fill = "Ecotype")
+
 caged_beta %>%
   dplyr::count(exp.name, var_aq.or.terr, var_ecotype1) %>%
   filter(var_aq.or.terr != "") %>%
