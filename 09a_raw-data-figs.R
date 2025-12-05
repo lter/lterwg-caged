@@ -64,6 +64,20 @@ caged_beta %>%
        fill = "Ecotype")
 
 
+
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  ggplot(aes(x=cage.treatment_std,
+             y=betadisp.comm.dist)) +
+  geom_boxplot(size=1.1) +
+  geom_point(position= position_jitter(), alpha= 0.05) +
+  theme_pubr(base_size=16) +
+ # scale_color_manual(values= c("royalblue",
+  #                             "darkturquoise")) +
+  labs(x= "Caging treatment",
+       y= "Beta dispersion") 
+
+
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
   ggplot(aes(x=var_aq.or.terr, 

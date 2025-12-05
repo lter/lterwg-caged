@@ -212,7 +212,7 @@ write.csv(test, "data/final.data.through.pipeline.csv")
 
 # Caged vs Uncaged Model
 caging.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                            cage.treatment_std *var_aq.or.terr +
+                            cage.treatment_std +
                              # accounting for gamma richness and sample size
                              scale(gamma.richness) + scale(betadisp.sample.size) +
                              (1|exp.name), 
