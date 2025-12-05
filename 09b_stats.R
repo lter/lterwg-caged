@@ -203,11 +203,30 @@ unique(caged_beta2$exp.name) # 300
 unique(caged_beta2$source) # 109
 
 # which sources and experiment names make it through the pipeline 
-test<- caged_beta %>% select(exp.name, source) %>% distinct()
+test<- caged_beta2 %>% select(exp.name, source) %>% distinct()
 
 write.csv(test, "data/final.data.through.pipeline.csv")
 
 
+
+
+# Caged vs Uncaged Model
+caging.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                            cage.treatment_std *var_aq.or.terr +
+                             # accounting for gamma richness and sample size
+                             scale(gamma.richness) + scale(betadisp.sample.size) +
+                             (1|exp.name), 
+                           #dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                           family = beta_family(link = "probit"),
+                           control = glmmTMBControl(optimizer = optim, 
+                                                    optArgs = list(method = "BFGS")), 
+                           # Or use nlminb, or bobyqa via nloptr
+                           data = caged_beta2) 
+
+summary(caging.betamod)    
+car::Anova(caging.betamod, type = "II") # interaction is significant
+library(effects)
+plot(allEffects(caging.betamod))
 
 
 # MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 

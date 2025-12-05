@@ -88,7 +88,7 @@ caged_beta %>%
   geom_boxplot(size=1.1) +
   geom_point(position= position_jitterdodge(), alpha= 0.05) +
   facet_wrap(~var_ecotype1)+
-  theme_pubr(base_size=16) +
+  theme_pubr(base_size=20) +
   scale_color_manual(values= c("royalblue",
                                "darkturquoise")) +
   labs(x= "",
