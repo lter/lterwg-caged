@@ -245,8 +245,11 @@ supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.n
 tidy_v4 <- tidy_v3b %>%
   dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
                       yes = exp.name,
-                      no = paste(exp.name, treat.fire, sep = "--")) )
-
+                      no = paste(exp.name, treat.fire, sep = "--")) ) %>% 
+  # While we're here, fix any casing/typo issues in experiment names
+  dplyr::mutate(exp.name = dplyr::case_when(
+    exp.name == "Camano_protected-Warm" ~ "Camano_Protected-Warm",
+    T ~ exp.name))
 
 # Check again
 supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
