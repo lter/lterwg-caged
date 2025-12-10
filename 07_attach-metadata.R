@@ -90,7 +90,7 @@ meta_v4 <- meta_v3 %>%
   # Drop rows without either a source name or an experiment names
   dplyr::filter(!is.na(source) | !is.na(exp.name)) %>% 
   # Remove unwanted columns
-  dplyr::select(-dplyr::contains("notes"), -assigned.to,
+  dplyr::select(-dplyr::contains("notes"), -assigned.to, -dropped.reason,
                 -dplyr::starts_with("second.round.")) %>% 
   # Drop any columns that are entirely empty
   dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
