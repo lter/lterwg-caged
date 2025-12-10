@@ -227,6 +227,7 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
 
+
 # Re-check sampling point for same datasets that previously had more than 1
 multi.times_v2 <- sub_v6 %>% 
   dplyr::bind_rows(dplyr::filter(sub_v5, !source %in% sub_v6$source)) %>% 
@@ -389,6 +390,9 @@ message(nrow(sub_v10) - nrow(sub_v11), " rows lost")
 # Lose any full datasets (we shouldn't)?
 supportR::diff_check(old = unique(sub_v10$source), new = unique(sub_v11$source))
 
+# Lose any experiment names?
+supportR::diff_check(old = unique(sub_v10$exp.name), new = unique(sub_v11$exp.name))
+
 # Check structure
 dplyr::glimpse(sub_v11)
 
@@ -434,3 +438,6 @@ write.csv(x = sub_v99, row.names = F, na = '', file = filter_path)
 
 # End ----
 
+# What sources made it? 
+unique(sub_v99$source)
+unique(sub_v99$exp.name)

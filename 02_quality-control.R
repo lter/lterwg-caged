@@ -435,3 +435,7 @@ tidy_path <- file.path("data", tidy_name)
 write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 
 # End ----
+
+# What sources made it? 
+unique(tidy_v99$source)
+unique(tidy_v99$exp.name)

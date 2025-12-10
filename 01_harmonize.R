@@ -266,3 +266,7 @@ combo_path <- file.path("data", combo_name)
 write.csv(x = combo_v99, row.names = F, na = '', file = combo_path)
 
 # End ----
+
+# What sources made it? 
+unique(combo_v99$source)
+

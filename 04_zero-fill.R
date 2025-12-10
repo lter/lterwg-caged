@@ -158,3 +158,7 @@ zerofill_path <- file.path("data", zerofill_name)
 write.csv(x = fill_v99, row.names = F, na = '', file = zerofill_path)
 
 # End ----
+
+# What sources made it? 
+unique(fill_v99$source)
+unique(fill_v99$exp.name)
