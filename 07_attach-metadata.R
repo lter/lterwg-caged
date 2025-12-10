@@ -1,8 +1,6 @@
 ## --------------------------------------------------------------- ##
 # CAGED Attach Metadata
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
-
 # Purpose:
 ## Group members collectively filled out a metadata GoogleSheet manually
 ## We want that attached to the data for use in visualization / analysis
@@ -227,7 +225,7 @@ dplyr::glimpse(w.meta_v4)
 
 # How many sources and exp.name got through the pipeline?
 unique(w.meta_v4$source) # 110
-unique(w.meta_v4$exp.name) #302
+unique(w.meta_v4$exp.name) # 302
 
 ## ------------------------------------------- ##
 # Export ----
@@ -247,11 +245,6 @@ for(w.meta_outs in unique(names(w.meta_out_list))){
   
   # Export locally
   write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
-  
 }
 
 # End ----
-
-
-unique(diff_v99$source) # 110
-unique(diff_v99$exp.name) # 302
