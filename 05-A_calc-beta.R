@@ -497,6 +497,7 @@ beta_fine_v2 <- purrr::list_rbind(beta_finelist)
 dplyr::glimpse(beta_fine_v2)
 
 # Did we lose any sources?
+# these are datasets that don't have both caging treatments for at least one design level
 supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine_v2$source))
 
 # Did we lose any experiments?
