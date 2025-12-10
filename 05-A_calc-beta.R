@@ -528,6 +528,28 @@ for(lost_src in dropped_sources){
 }
 
 ## ------------------------------------------- ##
+# Diagnose Lost Experiment Names ----
+## ------------------------------------------- ##
+
+# Identify lost experiments
+dropped_names <- setdiff(x = unique(beta_test$exp.name), y = unique(beta_fine_v2$exp.name))
+
+# Create a nice diagnostic output for sources that we do lose in this process
+for(lost_exp in dropped_names){
+  
+  # Subset the 'all scales' output to just this source
+  beta_lost <- dplyr::filter(beta_allscales, exp.name == lost_exp)
+  
+  # Generate a file name
+  lost_file <- paste0("beta-disp-calc-failure-diagnostic_", lost_exp, ".csv")
+  
+  # Export locally
+  write.csv(x = beta_lost, na = '', row.names = F,
+            file = file.path("data", "diagnostic", lost_file))
+  
+}
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
