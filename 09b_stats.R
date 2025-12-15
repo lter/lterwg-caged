@@ -37,7 +37,7 @@ dim(caged_effectsize) # 370 rows, this increased alot?
 dim(caged_beta) # 12339  rows
 
 # Check number of sources
-unique(caged_effectsize$exp.name) # 302
+unique(caged_effectsize$exp.name) # 317
 dim(caged_effectsize)
 
 
@@ -198,8 +198,8 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 
 # check sample size
-dim(caged_beta2) # 12315    27
-unique(caged_beta2$exp.name) # 300
+dim(caged_beta2) # 12516   27
+unique(caged_beta2$exp.name) # 315
 unique(caged_beta2$source) # 109
 
 # which sources and experiment names make it through the pipeline 
