@@ -65,6 +65,7 @@ message(nrow(sub_v2) - nrow(sub_v3), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v2$source), y = unique(sub_v3$source))
+setdiff(x = unique(sub_v2$exp.name), y = unique(sub_v3$exp.name))
 
 # Re-check structure
 dplyr::glimpse(sub_v3)
@@ -140,7 +141,9 @@ sub_v6 <- sub_v5 %>%
          sampling.point == "June") |
       ## E
       (source == "emry_britishcolumbia_intertidalexclusion_2011_herbivores_intertidal.csv" &
-         sampling.point == "7/6/11") |
+         exp.name == "Low" & sampling.point == "7/6/11") |
+      (source == "emry_britishcolumbia_intertidalexclusion_2011_herbivores_intertidal.csv" &
+         exp.name == "High" & sampling.point == "6/29/11") |
       ## G
       (source == "gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv" & 
          sampling.point == "12") | 
@@ -226,7 +229,7 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
-
+setdiff(x = unique(sub_v5$exp.name), y = unique(sub_v6$exp.name))
 
 # Re-check sampling point for same datasets that previously had more than 1
 multi.times_v2 <- sub_v6 %>% 
@@ -263,44 +266,53 @@ sub_list <- list()
 
 # Iterate across datasets
 for(focal_src in sort(unique(sub_v7$source))){
-  
-  # Progress message
-  message("Working on file ", focal_src)
-  
-  # Subset data
-  focal_df <- dplyr::filter(.data = sub_v7, source == focal_src)
-  
-  # Count number of years of data within that dataset
-  yr_ct <- length(unique(focal_df$year))
-  
-  # If just one year, return that
-  if(yr_ct == 1){
-    focal_out <- focal_df
-    
-    # Otherwise...
-  } else {
-    
-    # Identify the last year
-    last_yr <- sort(unique(focal_df$year))[yr_ct]
-    
-    # Subset the data
-    focal_out <- dplyr::filter(.data = focal_df, year == last_yr)
-    
-    # Print message
-    print(paste0(yr_ct, " years identified. ", last_yr, " identified as the last."))
-    
-  } # Close conditional
-  
-  # Add outputs to list
-  sub_list[[focal_src]] <- focal_out
-  
-}
+   # focal_src <- "gex_tibet1-25_exrainfallgradient_2009-2010_grazers_plants.csv"
+
+   # Progress message
+   message("Working on file ", focal_src)
+
+   # Subset data
+   focal_src_df <- dplyr::filter(.data = sub_v7, source == focal_src)
+
+   # Now loop across experiments
+   for(focal_exp in sort(unique(focal_src_df$exp.name))){
+
+      # Progress message
+      message("Working on experiment ", focal_exp)
+
+      # Subset data again
+      focal_df <- dplyr::filter(.data = focal_src_df, exp.name == focal_exp)
+
+      # Count number of years of data within that dataset
+      yr_ct <- length(unique(focal_df$year))
+
+      # If just one year, return that
+      if(yr_ct == 1){ focal_out <- focal_df
+
+      # Otherwise...
+      } else {
+
+         # Identify the last year
+         last_yr <- sort(unique(focal_df$year))[yr_ct]
+
+         # Subset the data
+         focal_out <- dplyr::filter(.data = focal_df, year == last_yr)
+
+         # Print message
+         print(paste0(yr_ct, " years identified. ", last_yr, " identified as the last."))
+
+      } # Close conditional
+
+   # Add outputs to list
+   sub_list[[paste0(focal_src, focal_exp)]] <- focal_out } # Close exp.name loop
+} # Close source loop
 
 # Unlist outputs
 sub_v8 <- purrr::list_rbind(x = sub_list)
 
 # Any full datasets lost?
 supportR::diff_check(old = unique(sub_v7$source), new = unique(sub_v8$source))
+supportR::diff_check(old = unique(sub_v7$exp.name), new = unique(sub_v8$exp.name))
 
 # Re-check multi-annual data
 sub_v8 %>% 
@@ -360,7 +372,8 @@ sub_v10 <- sub_v9 %>%
 
 
 # Check for lost files
-supportR::diff_check(old = unique(sub_v9$taxa), new = unique(sub_v10$taxa))
+supportR::diff_check(old = unique(sub_v9$source), new = unique(sub_v10$source))
+supportR::diff_check(old = unique(sub_v9$exp.name), new = unique(sub_v10$exp.name))
 
 # How many lost rows?
 message(nrow(sub_v9) - nrow(sub_v10), " rows lost")
@@ -429,6 +442,10 @@ dplyr::glimpse(sub_v12)
 # Create final object name
 sub_v99 <- sub_v12
 
+# What sources/experiments made it? 
+sort(unique(sub_v99$source))
+sort(unique(sub_v99$exp.name))
+
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
 filter_path <- file.path("data", filter_name)
@@ -437,7 +454,3 @@ filter_path <- file.path("data", filter_name)
 write.csv(x = sub_v99, row.names = F, na = '', file = filter_path)
 
 # End ----
-
-# What sources made it? 
-unique(sub_v99$source)
-unique(sub_v99$exp.name)
