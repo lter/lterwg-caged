@@ -1,8 +1,6 @@
 ## --------------------------------------------------------------- ##
 # CAGED Harmonization Workflow
 ## --------------------------------------------------------------- ##
-# Written by: Kelly Speare, Nick J Lyon, ...
-
 # Purpose
 ## this script downloads data from purgatory folder in google drive for all data files that require rangling
 ## then does necessary wrangling to get the data in the needed format
