@@ -37,7 +37,7 @@ colnames(caged_beta)
 colnames(caged_effectsize)
 
 
-
+# Number of experiments in aquatic vs terrestrial
 caged_beta %>%
   dplyr::count(exp.name, var_aq.or.terr) %>%
   filter(var_aq.or.terr != "") %>%
@@ -51,6 +51,7 @@ caged_beta %>%
        y="Number of experiments",
        fill = "Ecotype")
 
+# Proportion of experiments in each ecosystem type
 caged_beta %>%
   dplyr::count(exp.name, var_aq.or.terr, var_ecotype1) %>%
   filter(var_aq.or.terr != "") %>%
@@ -63,8 +64,22 @@ caged_beta %>%
        y="Proportion",
        fill = "Ecotype")
 
+# Proportion of experiments in aquatic and terrestrial that are successional vs late 
+caged_beta %>%
+  dplyr::count(exp.name, var_aq.or.terr, var_succ.vs.late) %>%
+  filter(var_aq.or.terr != "") %>%
+  filter(var_succ.vs.late != "") %>%
+  ggplot(aes(x=var_aq.or.terr, 
+             fill=var_succ.vs.late)) +
+  geom_bar(position= "fill") +
+  theme_pubr(base_size=16) +
+  labs(x= "Biome",
+       y="Proportion",
+       fill = "Assembly")
 
 
+
+# Beta dispersion by caging treatment
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
   ggplot(aes(x=cage.treatment_std,
@@ -77,7 +92,7 @@ caged_beta %>%
   labs(x= "Caging treatment",
        y= "Beta dispersion") 
 
-
+# Beta dispersion by caging * aquatic.terrestrial
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
   ggplot(aes(x=var_aq.or.terr, 
@@ -92,7 +107,22 @@ caged_beta %>%
        y= "Beta dispersion",
        colour = "Caging treatment") 
 
+# Beta dispersion by caging treatment * succession
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  filter(var_succ.vs.late != "") %>%
+  ggplot(aes(x=cage.treatment_std,
+             y=betadisp.comm.dist)) +
+  geom_boxplot(size=1.1) +
+  geom_point(position= position_jitter(), alpha= 0.05) +
+  facet_wrap(~var_succ.vs.late)+
+  theme_pubr(base_size=16) +
+  # scale_color_manual(values= c("royalblue",
+  #                             "darkturquoise")) +
+  labs(x= "Caging treatment",
+       y= "Beta dispersion") 
 
+# Beta dispersion by caging * ecosystem type
 caged_beta %>%
  # filter(var_aq.or.terr != "") %>%
   filter(var_ecotype1 != "") %>%
@@ -110,7 +140,7 @@ caged_beta %>%
        colour = "Caging treatment") 
 
 
-
+# Beta dispersion by caging treatment*latitude
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
  # filter(var_aq.or.terr == c("aquatic")) %>%
@@ -130,6 +160,23 @@ caged_beta %>%
 
 
 
+
+# Beta dispersion by caging treatment*latitude
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  filter(var_succ.vs.late != "") %>%
+  ggplot(aes(x=abs(lat), 
+             y=betadisp.comm.dist,
+             col=var_succ.vs.late)) +
+  geom_point(alpha=0.2) +
+  facet_wrap(~var_aq.or.terr*cage.treatment_std)+
+  geom_smooth(method="lm") +
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("royalblue",
+                               "darkturquoise")) +
+  labs(x= "Absolute latitude",
+       y= "Beta dispersion",
+       colour = "Succession") 
 
 
 
