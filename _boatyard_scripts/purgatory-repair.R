@@ -1876,6 +1876,114 @@ googledrive::drive_upload(media = proj24_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 25 (Lenihan Antarctica) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Caged/uncaged are in different files
+## Also multiple formatting issues within each of those
+
+# Identify file(s) name(s)
+proj25_raw_name <- c("CC 0_0 uncaged abundance.csv", "CC 0_0 caged_simple.csv")
+
+# Identify file(s) in Drive
+proj25_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1xFFFyJJKJLyqDCI2z4yXj93u7Rwl5TgX")) %>% 
+  dplyr::filter(name %in% c(proj25_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj25_gdrive$id, .y = proj25_gdrive$name,
+  .f = ~ googledrive::drive_download(file = .x, overwrite = T, path = file.path("data", "purgatory", .y)))
+
+# Read in uncaged data and make empty cells true NAs
+proj25_free_raw <- read.csv(file.path("data", "purgatory", proj25_raw_name[1])) %>% 
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(),
+    .fns = ~ ifelse(nchar(.) == 0, yes = NA, no = .)))
+
+# Check structure
+dplyr::glimpse(proj25_free_raw)
+
+# Do needed repairs
+proj25_free <- proj25_free_raw %>% 
+  # Ditch unwanted rows
+  dplyr::filter(!is.na(Cinder.Cones) & 
+    stringr::str_detect(string = tolower(Cinder.Cones), pattern = "total|species") != T &
+    Cinder.Cones %in% c("Uncaged", "Treatment:", " 0% TOC   0 ppm Cu", "S[ecies richness") != T) %>% 
+  # Rename some columns
+  dplyr::rename(species = Cinder.Cones,
+    higher.taxonomy = One.year.treatments) %>% 
+  supportR::safe_rename(data = ., bad_names = paste0("X.", 1:7),
+    good_names = paste0("replicate.uncage_", 1:7)) %>% 
+  # Pare down to only needed columns
+  dplyr::select(species, higher.taxonomy, dplyr::starts_with("replicate")) %>% 
+  # Add in desired columns from header
+  dplyr::mutate(cage.treat = "uncaged",
+    treat.methods = "0% TOC; 0 ppm Cu",
+    .before = dplyr::everything()) %>% 
+  # Add zeros for missing abundances
+  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("replicate"),
+    .fns = ~ ifelse(is.na(.) | nchar(.) == 0, yes = "0", no = .))) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("replicate"),
+    names_to = "replicate", values_to = "abundance")
+
+# Re-check structure
+dplyr::glimpse(proj25_free)
+
+# Read in _caged_ data and make empty cells true NAs
+proj25_cage_raw <- read.csv(file.path("data", "purgatory", proj25_raw_name[2])) %>% 
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(),
+    .fns = ~ ifelse(nchar(.) == 0, yes = NA, no = .)))
+
+# Check structure
+dplyr::glimpse(proj25_cage_raw)
+
+# Do needed repairs
+proj25_cage <- proj25_cage_raw %>% 
+  # Ditch unwanted rows
+  dplyr::filter(!is.na(Cinder.Cones) & 
+    stringr::str_detect(string = tolower(Cinder.Cones), pattern = "total|species") != T &
+    Cinder.Cones %in% c("caged", "Treatment:", " 0% TOC  0 ppm Cu") != T) %>% 
+  # Rename some columns
+  dplyr::rename(species = Cinder.Cones,
+    higher.taxonomy = One.year.treatments) %>% 
+  supportR::safe_rename(data = ., bad_names = paste0("X.", 1:8),
+    good_names = paste0("replicate.cage_", 1:8)) %>% 
+  # Pare down to only needed columns
+  dplyr::select(species, higher.taxonomy, dplyr::starts_with("replicate")) %>% 
+  # Add in desired columns from header
+  dplyr::mutate(cage.treat = "caged",
+    treat.methods = "0% TOC; 0 ppm Cu",
+    .before = dplyr::everything()) %>% 
+  # Add zeros for missing abundances
+  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("replicate"),
+    .fns = ~ ifelse(is.na(.) | nchar(.) == 0, yes = "0", no = .))) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("replicate"),
+    names_to = "replicate", values_to = "abundance")
+
+# Re-check structure
+dplyr::glimpse(proj25_cage)
+
+# Combine the two files
+proj25 <- dplyr::bind_rows(proj25_free, proj25_cage)
+
+# Re-check structure
+dplyr::glimpse(proj25)
+
+# Create good/new file name
+proj25_name <- "lenihan_antarctica_benthicstressors_1998-2000_epibenthicanimals_invertebrates.csv"
+proj25_path <- file.path("data", "drydock", proj25_name)
+
+# Export locally
+write.csv(x = proj25, file = proj25_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj25_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
