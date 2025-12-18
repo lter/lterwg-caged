@@ -1,7 +1,9 @@
 ## --------------------------------------------------------------- ##
                   # Boatyard - Expand Column Key
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+# Purpose:
+## Create first two columns of data key for new raw data files
+## "New" = not yet _any_ rows in the data key for that raw file
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -10,9 +12,8 @@
 # Load libraries
 librarian::shelf(tidyverse, ltertools, googledrive)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("data", "raw"), showWarnings = F)
+# Get set up
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
