@@ -148,7 +148,7 @@ sub_v6 <- sub_v5 %>%
       (source == "gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv" & 
          sampling.point == "12") | 
       (source == "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv" & 
-         sampling.point == "12") |   
+         sampling.point == "9") |   
       ## H
       (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
          year == "2013" & sampling.point == "7/5/13") | 
