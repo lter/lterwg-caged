@@ -1984,6 +1984,53 @@ googledrive::drive_upload(media = proj25_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Project 26 (Sellers Molluscs) ----
+## ------------------------------------------- ##
+
+# Reason for purgatory status
+## Experiment was conducted multiple times (different seasons) at multiple sites. These should be different experiments.
+
+# Identify file(s) name(s)
+proj26_raw_name <- "sessile_data.csv"
+
+# Identify file(s) in Drive
+proj26_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1InVqWKqN2bRFfkQH3gupnJPWsGBRaSf5")) %>% 
+  dplyr::filter(name %in% c(proj26_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj26_gdrive$id, .y = proj26_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj26_raw <- read.csv(file.path("data", "purgatory", proj26_raw_name))
+
+# Check structure
+dplyr::glimpse(proj26_raw)
+
+# Do needed repairs
+proj26 <- proj26_raw %>% 
+  dplyr::mutate(experiment = paste0(season, "__", site),
+    .before = season)
+
+# Re-check structure
+dplyr::glimpse(proj26)
+
+# Create good/new file name
+proj26_name <- "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv"
+proj26_path <- file.path("data", "drydock", proj26_name)
+
+# Export locally
+write.csv(x = proj26, file = proj26_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj26_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
