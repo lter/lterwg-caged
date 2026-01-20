@@ -1986,7 +1986,6 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 # Project 26 (Sellers Molluscs) ----
 ## ------------------------------------------- ##
-
 # Reason for purgatory status
 ## Experiment was conducted multiple times (different seasons) at multiple sites. These should be different experiments.
 
@@ -2025,6 +2024,77 @@ write.csv(x = proj26, file = proj26_path, na = '', row.names = F)
 
 # Export to Drive
 googledrive::drive_upload(media = proj26_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 27 (Zamin Caribou) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Columns contain treatment and replicate information. There are 10 columns representing 2 treatments (C=control, E=Exclosure) and numbers denote replicates. Rows represent different taxa in experimental units.
+
+# Identify file(s) name(s)
+proj27_raw_name <- "Point framing data summary (2005&2008&2011).xlsx"
+
+# Identify file(s) in Drive
+proj27_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1j1XescsktCHPIco27hIUE6bDWxdveI1m")) %>% 
+  dplyr::filter(name %in% c(proj27_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj27_gdrive$id, .y = proj27_gdrive$name,
+  .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+      path = file.path("data", "purgatory", .y)))
+
+# Identify sheets in data
+proj27_sheets_all <- readxl::excel_sheets(file.path("data", "purgatory", proj27_raw_name))
+(proj27_sheets <- proj27_sheets_all[stringr::str_detect(string = proj27_sheets_all, pattern = "exclosure")])
+
+# Read in data
+proj27_raw <- purrr::map(.x = proj27_sheets,
+    .f = ~ readxl::read_xlsx(path = file.path("data", "purgatory", proj27_raw_name),
+      sheet = .x)) %>% 
+  rlang::set_names(x = ., nm = proj27_sheets)
+
+# Check raw structure of one sheet/list element
+dplyr::glimpse(proj27_raw[[1]])
+
+# Do needed repairs
+proj27 <- proj27_raw %>% 
+  # Get sheet name into dataset
+  purrr::map2(.x = ., .y = names(.),
+    .f = ~ dplyr::mutate(.data = ., sheet = .y)) %>% 
+  # Collapse into a single dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Identify year & fix issue with inconsistent taxa column name
+  dplyr::mutate(year = gsub("exclosure_", "", x = sheet), 
+    species = dplyr::coalesce(spp, `Plot Name`),
+    .before = dplyr::everything()) %>% 
+  # Ditch unwanted columns
+  dplyr::select(-spp, -sheet, -`Plot Name`) %>% 
+  # Reshape longer
+  tidyr::pivot_longer(cols = -year:-species,
+    names_to = "treat_rep") %>% 
+  # Separate treatment from replicate
+  dplyr::mutate(treatment = stringr::str_sub(string = treat_rep, start = 1, end = 1),
+    replicate = stringr::str_sub(string = treat_rep, start = 2, end = 2),
+    .before = treat_rep) %>% 
+  # Remove NAs
+  dplyr::filter(!is.na(value))
+
+# Re-check structure
+dplyr::glimpse(proj27)
+
+# Create good/new file name
+proj27_name <- "zamin_canadianarctic_tundra_2005-2011_caribou_vegetation.csv"
+proj27_path <- file.path("data", "drydock", proj27_name)
+
+# Export locally
+write.csv(x = proj27, file = proj27_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj27_path, overwrite = T,
                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
 
 # Clear environment + collect garbage
