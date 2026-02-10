@@ -24,6 +24,11 @@ We will include data that 1) excludes consumers and compares to a control with c
 - We are considering sites/locations with separate experiments as separate datapoints in our project (i.e., exp.name). This is a change from the May 2025 meeting where Sally/Kelly/Jamie discussed that we werent splitting up the sites enough (https://github.com/lter/lterwg-caged/issues/23)  
 - We are including data with multiple years, but not if there are multiple sampling time points within a year (we filter this out post-harmonization). We will likely only include the last year/sampling time point in our analysis, but have included all the data in case we decide to do some temporal comparison. (https://github.com/lter/lterwg-caged/issues/7)
 - Many experiments have multiple measures of "abundance" (e.g., biomass, cover, density) and we will only take one to ensure they are independent (https://github.com/lter/lterwg-caged/issues/1)
+- For exp.names that have >1 replicates with zero total abundance, we add a dummy taxa with 0.01 abundance to every sample in that exp.name so we can retain it for beta diversity (https://github.com/lter/lterwg-caged/issues/30)
+- If there are different caging treatments (e.g., Recharge, 4X4, 3X3, 2X2, 1X1) then each "original caging treatment" has its own spatial median (https://github.com/lter/lterwg-caged/issues/24)
+- We filter out any confounding treaments (e.g., Nutrients) but keep a few types like Disturbance (https://github.com/lter/lterwg-caged/issues/11)  
+
+
 - We will create a "unique.id" column after harmonization so we can create one datapoint for each exp.name. The exp.name in the harmonized file will just be the file.name if there are no exp.name (separate experiments/sites that need to be treated as independent).
 
 unique.id = exp.design<sub>N</sub> + treatment<sub>N</sub> + year + exp.name  
