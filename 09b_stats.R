@@ -37,7 +37,7 @@ dim(caged_effectsize) # 370 rows, this increased alot?
 dim(caged_beta) # 12339  rows
 
 # Check number of sources
-unique(caged_effectsize$exp.name) # 317
+unique(caged_effectsize$exp.name) # 302
 dim(caged_effectsize)
 
 
