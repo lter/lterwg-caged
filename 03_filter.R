@@ -79,6 +79,8 @@ dplyr::glimpse(sub_v4)
 ## ------------------------------------------- ##
 # Handle Sub-Annual Sampling ----
 ## ------------------------------------------- ##
+# This is for any datasets that have sampling points within each year
+# We need to identify what is the last sampling point within that year
 
 # Check structure
 dplyr::glimpse(sub_v4)
@@ -119,14 +121,23 @@ sub_v6 <- sub_v5 %>%
       (source == "alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv" &
          sampling.point %in% c("2024-11-08", "2024-11-09")) |
       ## B
+      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+      #    year == "2009" & sampling.point == "Fall 2009") |
+      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+      #    year == "2010" & sampling.point == "Fall 2010") |
+      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+      #    year == "2011" & sampling.point == "Fall 2011") |
+      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+      #    year == "2012" & sampling.point == "Winter 2012") |
+      # this is the new code for burkepile going through purgatory
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         year == "2009" & sampling.point == "Fall 2009") |
+             sampling.point == "August-09") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         year == "2010" & sampling.point == "Fall 2010") |
+         sampling.point == "August-10") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         year == "2011" & sampling.point == "Fall 2011") |
+         sampling.point == "August-11") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         year == "2012" & sampling.point == "Winter 2012") |
+         sampling.point == "August-12") |
       ## C
       (source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
          sampling.point == "2016") |
@@ -138,6 +149,10 @@ sub_v6 <- sub_v5 %>%
       (source == "diaz_thiisbukta_sedimentexclusionexp_2017_epibenthicpredators_benthic.csv" &
          sampling.point == "2017-08-08T00:00") |
       (source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
+         sampling.point == "June") |
+      (source == "duran_florida-keys_established_2012_fishes_algae.csv" &
+         sampling.point == "June") |
+      (source == "duran_florida-keys_succession_2012_fishes_algae.csv" &
          sampling.point == "June") |
       ## E
       (source == "emry_britishcolumbia_intertidalexclusion_2011_herbivores_intertidal.csv" &
@@ -202,6 +217,8 @@ sub_v6 <- sub_v5 %>%
       ## S
       (source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" & 
          sampling.point == "13") |
+      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
+         sampling.point == "2") |
       (source == "shantz_florida_partialcages_2013-2014_fish_benthic.csv" & 
          sampling.point == "Sep_14") |
       (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
@@ -253,6 +270,9 @@ dplyr::glimpse(sub_v7)
 ## ------------------------------------------- ##
 # Handle Multi-Annual Sampling ----
 ## ------------------------------------------- ##
+# These are datasets that have more than one year of data
+# we just want to take the final year
+
 
 # How many datasets have more than one year of data?
 sub_v7 %>% 
