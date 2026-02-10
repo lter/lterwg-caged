@@ -157,10 +157,15 @@ tidy_v2 <- tidy_v1 %>%
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
       organization == "royo" & cage.tmp == "1" ~ "caged",
       organization == "royo" & cage.tmp == "0" ~ "uncaged",
+      organization == "sellers" & cage.tmp == "E" ~ "caged",
+      organization == "sellers" & cage.tmp == "PC" ~ "partial",
+      organization == "sellers" & cage.tmp == "C" ~ "uncaged",
       organization == "spiecker" & cage.tmp %in% c("b", "l", "lu", "u") ~ "caged",
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
       organization == "villar" & cage.tmp == "a" ~ "caged",
       organization == "villar" & cage.tmp == "c" ~ "uncaged",
+      organization == "zamin" & cage.tmp == "E" ~ "caged"
+      organization == "zamin" & cage.tmp == "C" ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
