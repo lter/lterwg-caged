@@ -131,11 +131,11 @@ sub_v6 <- sub_v5 %>%
       #    year == "2012" & sampling.point == "Winter 2012") |
       # this is the new code for burkepile going through purgatory
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-             sampling.point == "August-09") |
+             sampling.point == "December-09") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         sampling.point == "August-10") |
+         sampling.point == "November-10") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         sampling.point == "August-11") |
+         sampling.point == "November-11") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
          sampling.point == "August-12") |
       ## C
