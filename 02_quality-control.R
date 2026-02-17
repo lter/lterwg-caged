@@ -164,7 +164,7 @@ tidy_v2 <- tidy_v1 %>%
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
       organization == "villar" & cage.tmp == "a" ~ "caged",
       organization == "villar" & cage.tmp == "c" ~ "uncaged",
-      organization == "zamin" & cage.tmp == "E" ~ "caged"
+      organization == "zamin" & cage.tmp == "E" ~ "caged",
       organization == "zamin" & cage.tmp == "C" ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
@@ -442,5 +442,5 @@ write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 # End ----
 
 # What sources made it? 
-unique(tidy_v99$source)
-unique(tidy_v99$exp.name)
+unique(tidy_v99$source) #127
+unique(tidy_v99$exp.name) #369
