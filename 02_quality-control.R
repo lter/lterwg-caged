@@ -139,6 +139,10 @@ tidy_v2 <- tidy_v1 %>%
         cage.tmp == "1" ~ "uncaged",
       source == "lter-cdr_cedarcreekecosystem_plantabovegroundbiomass_1991_grasshoppers_vegetation.csv" &
         cage.tmp %in% c(2:8) ~ "caged",
+      ## Burkepile Herbvr
+      source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+        cage.tmp == "Crtl" ~ "uncaged",
+    
       ### alberti netherlands cattle
       source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
         cage.tmp %in% c(1:2) ~ "caged",
@@ -444,3 +448,4 @@ write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 # What sources made it? 
 unique(tidy_v99$source) #127
 unique(tidy_v99$exp.name) #369
+

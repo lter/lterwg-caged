@@ -161,7 +161,7 @@ sub_v6 <- sub_v5 %>%
          exp.name == "High" & sampling.point == "6/29/11") |
       ## G
       (source == "gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv" & 
-         sampling.point == "12") | 
+         sampling.point == "9") | 
       (source == "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv" & 
          sampling.point == "9") |   
       ## H
