@@ -179,7 +179,13 @@ proj3 <- proj3_list %>%
   tidyr::separate_wider_delim(cols = input_file, delim = "_",cols_remove = F, 
                               names = c("site", "junk2", "junk3")) %>% 
   dplyr::select(-contains("junk")) %>% 
-  
+  # Identify study years
+  dplyr::mutate(relative.month = as.numeric(stringr::str_extract(string = Time, pattern = "\\d{1,2}"))) %>% 
+  dplyr::mutate(year = (relative.month / 12) + 2009, .after = Time) %>% 
+  dplyr::mutate(year = floor(year)) %>% 
+  dplyr::select(-Time, -relative.month) %>% 
+  dplyr::rename(Time = year)
+
 # Check structure
 dplyr::glimpse(proj3)
 
