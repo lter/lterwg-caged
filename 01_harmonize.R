@@ -235,9 +235,9 @@ combo_v5 <- combo_v4 %>%
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Remove non-numbers
   dplyr::mutate(abundance = gsub(pattern = "^\\.$", replacement = "", x = abundance)) %>% 
-  dplyr::mutate(abundance = ifelse(test = abundance %in% c("n/a", "—", "na",
-                                                           "#VALUE!"),
-                                   yes = "", no = abundance)) %>% 
+  dplyr::mutate(
+    abundance = ifelse(test = abundance %in% c("n/a", "—", "na", "NaN", "#VALUE!"),
+      yes = "", no = abundance)) %>% 
   # Remove any rows where no metric of abundance is included
   dplyr::filter(is.na(abundance) != T &
                   nchar(abundance) != 0 &
@@ -258,6 +258,9 @@ combo_v99 <- combo_v5
 # Check structure
 dplyr::glimpse(combo_v99)
 
+# What sources made it? 
+unique(combo_v99$source)
+
 # Identify tidy file name / path
 combo_name <- "01_caged_harmonized.csv"
 combo_path <- file.path("data", combo_name)
@@ -266,7 +269,3 @@ combo_path <- file.path("data", combo_name)
 write.csv(x = combo_v99, row.names = F, na = '', file = combo_path)
 
 # End ----
-
-# What sources made it? 
-unique(combo_v99$source)
-
