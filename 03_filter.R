@@ -121,28 +121,14 @@ sub_v6 <- sub_v5 %>%
       (source == "alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv" &
          sampling.point %in% c("2024-11-08", "2024-11-09")) |
       ## B
-      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-      #    year == "2009" & sampling.point == "Fall 2009") |
-      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-      #    year == "2010" & sampling.point == "Fall 2010") |
-      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-      #    year == "2011" & sampling.point == "Fall 2011") |
-      # (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-      #    year == "2012" & sampling.point == "Winter 2012") |
-      # this is the new code for burkepile going through purgatory
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-             sampling.point == "December-09") |
+         year == "2009" & sampling.point == "December-09") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         sampling.point == "November-10") |
+         year == "2010" & sampling.point == "Nov-10") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         sampling.point == "November-11") |
+         year == "2011" & sampling.point == "November-11") |
       (source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
-         sampling.point == "August-12") |
-      ## C
-      (source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
-         sampling.point == "2016") |
-      (source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
-         sampling.point == "2019") |
+         year == "2012" & sampling.point == "August-12") |
       ## D
       (source == "diaz_longyearbyen_sedimentexclusionexp_2017_epibenthicpredators_benthic.csv" &
          sampling.point == "2017-08-23T00:00") |
@@ -170,8 +156,6 @@ sub_v6 <- sub_v5 %>%
       (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
          year == "2014" & sampling.point == "7/1/14") | 
       ## L
-      (source == "lamb_galapagos_consumermobility_2017_fish-urchins_algae.csv" &
-         year == "2017" & sampling.point == "Warm") |
       ## LTER Andrews
       (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
          year == "1980" & sampling.point == "6/15/80") |
@@ -193,19 +177,6 @@ sub_v6 <- sub_v5 %>%
          year == "1996" & sampling.point == "6/26/96") |
       (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
          year == "2007" & sampling.point == "6/9/07") |
-      ## LTER Arctic
-      (source == "lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv" &
-         sampling.point == "2017") |
-      (source == "lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv" &
-         sampling.point == "2017") |
-      ## LTER Cedar Creek
-      (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
-         year == "1984" & sampling.point == "840724") |
-      (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
-         year == "1985" & sampling.point == "850829") |
-      ## LTER Sevilleta
-      (source == "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv" &
-         year == "2005" & sampling.point == "11/29/05") |
       ## M
       (source == "mclaren_canada_borealforestexcover_1990-1999_herbivore_plants.csv" &
          sampling.point == "2") |
@@ -216,22 +187,44 @@ sub_v6 <- sub_v5 %>%
          sampling.point == "3") |
       ## S
       (source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" & 
-         sampling.point == "13") |
+         year == "2018" & sampling.point == "9") |
+      (source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" & 
+         year == "2019" & sampling.point == "13") |
       (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
-         sampling.point == "2") |
+         year == "2016" & sampling.point == "9/21/2016") |
+      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
+         year == "2017" & sampling.point == "12/12/2017") |
+      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
+         year == "2018" & sampling.point == "4/18/2018") |
       (source == "shantz_florida_partialcages_2013-2014_fish_benthic.csv" & 
-         sampling.point == "Sep_14") |
+         year == "2013" & sampling.point == "Sep_13") |
+      (source == "shantz_florida_partialcages_2013-2014_fish_benthic.csv" & 
+         year == "2014" & sampling.point == "Sep_14") |
       (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
          year == "2017" & sampling.point == "11") |
       (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
          year == "2018" & sampling.point == "3") |
       ## V
-      (source == "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv" &
-         sampling.point %in% c("T73", "T87", "T74")) |
       (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
-         sampling.point == "105") |
+         year == "2004" & sampling.point == "8") |
+      (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2005" & sampling.point == "21") |
+      (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2006" & sampling.point == "33") |
+      (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2007" & sampling.point == "45") |
+      (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2008" & sampling.point == "57") |
       (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
-         sampling.point == "105") |
+         year == "2004" & sampling.point == "8") |
+      (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2005" & sampling.point == "21") |
+      (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2006" & sampling.point == "33") |
+      (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2007" & sampling.point == "45") |
+      (source == "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
+         year == "2008" & sampling.point == "57") |
       ## W
       (source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
          sampling.point %in% c("2018.9.13", "2018.9.7")) |
@@ -247,6 +240,7 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
 setdiff(x = unique(sub_v5$exp.name), y = unique(sub_v6$exp.name))
+## Experiment names like "nu16__AC" are from "sellers_..." dataset
 
 # Re-check sampling point for same datasets that previously had more than 1
 multi.times_v2 <- sub_v6 %>% 
@@ -276,8 +270,8 @@ dplyr::glimpse(sub_v7)
 
 # How many datasets have more than one year of data?
 sub_v7 %>% 
-  dplyr::group_by(source) %>% 
-  dplyr::summarize(yr_ct = length(unique(year))) %>% 
+  dplyr::group_by(source, exp.name) %>% 
+  dplyr::summarize(yr_ct = length(unique(year)), .groups = "keep") %>% 
   dplyr::filter(yr_ct > 1) %>% 
   as.data.frame()
 
@@ -336,8 +330,8 @@ supportR::diff_check(old = unique(sub_v7$exp.name), new = unique(sub_v8$exp.name
 
 # Re-check multi-annual data
 sub_v8 %>% 
-  dplyr::group_by(source) %>% 
-  dplyr::summarize(yr_ct = length(unique(year))) %>% 
+  dplyr::group_by(source, exp.name) %>% 
+  dplyr::summarize(yr_ct = length(unique(year)), .groups = "keep") %>% 
   dplyr::filter(yr_ct > 1) %>% 
   as.data.frame()
 
