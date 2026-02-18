@@ -538,15 +538,15 @@ dropped_names <- setdiff(x = unique(beta_test$exp.name), y = unique(beta_fine_v2
 for(lost_exp in dropped_names){
   
   # Subset the 'all scales' output to just this source
-  beta_lost <- dplyr::filter(beta_allscales, exp.name == lost_exp)
-  
+  beta_lost_tmp <- dplyr::filter(beta_allscales, !source %in% unique(dropped_sources))
+  beta_lost <- dplyr::filter(beta_lost_tmp, exp.name == lost_exp)
+
   # Generate a file name
   lost_file <- paste0("beta-disp-calc-failure-diagnostic_", lost_exp, ".csv")
   
   # Export locally
   write.csv(x = beta_lost, na = '', row.names = F,
-            file = file.path("data", "diagnostic", lost_file))
-  
+            file = file.path("data", "diagnostic", lost_file)) 
 }
 
 ## ------------------------------------------- ##
@@ -557,8 +557,8 @@ for(lost_exp in dropped_names){
 beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source) # 116
-unique(beta_v99$exp.name) # 347
+unique(beta_v99$source)
+unique(beta_v99$exp.name)
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
