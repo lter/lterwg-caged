@@ -27,8 +27,8 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 
 # View(caged_effectsize) 
 # View(caged_beta) 
-dim(caged_effectsize)# 384 rows
-dim(caged_beta)# 12540  rows
+dim(caged_effectsize)# 370 rows
+dim(caged_beta)# 12339  rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
@@ -172,8 +172,8 @@ caged_beta %>%
   facet_wrap(~var_aq.or.terr*cage.treatment_std)+
   geom_smooth(method="lm") +
   theme_pubr(base_size=16) +
-  scale_color_manual(values= c("royalblue",
-                               "darkturquoise")) +
+  scale_color_manual(values= c("hotpink",
+                               "purple3")) +
   labs(x= "Absolute latitude",
        y= "Beta dispersion",
        colour = "Succession") 

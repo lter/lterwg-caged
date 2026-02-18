@@ -139,6 +139,10 @@ tidy_v2 <- tidy_v1 %>%
         cage.tmp == "1" ~ "uncaged",
       source == "lter-cdr_cedarcreekecosystem_plantabovegroundbiomass_1991_grasshoppers_vegetation.csv" &
         cage.tmp %in% c(2:8) ~ "caged",
+      ## Burkepile Herbvr
+      source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+        cage.tmp == "Crtl" ~ "uncaged",
+    
       ### alberti netherlands cattle
       source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
         cage.tmp %in% c(1:2) ~ "caged",
@@ -157,10 +161,15 @@ tidy_v2 <- tidy_v1 %>%
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
       organization == "royo" & cage.tmp == "1" ~ "caged",
       organization == "royo" & cage.tmp == "0" ~ "uncaged",
+      organization == "sellers" & cage.tmp == "E" ~ "caged",
+      organization == "sellers" & cage.tmp == "PC" ~ "partial",
+      organization == "sellers" & cage.tmp == "C" ~ "uncaged",
       organization == "spiecker" & cage.tmp %in% c("b", "l", "lu", "u") ~ "caged",
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
       organization == "villar" & cage.tmp == "a" ~ "caged",
       organization == "villar" & cage.tmp == "c" ~ "uncaged",
+      organization == "zamin" & cage.tmp == "E" ~ "caged",
+      organization == "zamin" & cage.tmp == "C" ~ "uncaged",
       ## If treatment isn't known, leave it that way
       tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
@@ -437,5 +446,6 @@ write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 # End ----
 
 # What sources made it? 
-unique(tidy_v99$source)
-unique(tidy_v99$exp.name)
+unique(tidy_v99$source) #127
+unique(tidy_v99$exp.name) #369
+

@@ -557,8 +557,8 @@ for(lost_exp in dropped_names){
 beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source) # 110
-unique(beta_v99$exp.name) # 317!
+unique(beta_v99$source) # 116
+unique(beta_v99$exp.name) # 347
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"

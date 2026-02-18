@@ -100,6 +100,7 @@ raw_local
 
 # Overwrite local data files?
 raw_update <- FALSE
+# NOTE: if you update files but keep the same name, you will need to delete local raw data folders, or else this wont download the new version of the file
 
 # Identify desired files
 if(raw_update == T) {
@@ -121,3 +122,4 @@ purrr::walk2(.x = raw_wanted$id, .y = raw_wanted$name,
 rm(list = ls()); gc()
                                                  
 # End ----
+
