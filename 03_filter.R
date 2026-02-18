@@ -351,8 +351,8 @@ sub_v9 <- sub_v8 %>%
   # Jamie says this dataset has only one replicate per treatment
   dplyr::filter(source != "lter-harvard_newengland_plantcover_2008-2019_moose_treeseedling.csv") %>%
   # JMI & KS decided these should be excluded because they are more like enclosures (check google docs meeting notes)
-  dplyr::filter(source != "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv") %>%
-    dplyr::filter(source != "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv")
+  dplyr::filter(!source %in% c("wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv",
+   "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv"))
 
 # Double check only unwanted data are lost
 supportR::diff_check(old = unique(sub_v8$source), new = unique(sub_v9$source))
