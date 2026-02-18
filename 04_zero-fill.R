@@ -1,8 +1,6 @@
 ## --------------------------------------------------------------- ##
 # CAGED Zero Filling
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
-
 # NOTE
 ## This is _extremely_ computationally-intensive
 ## That's why a relatively short operation is housed in its own script
@@ -84,9 +82,7 @@ dplyr::glimpse(lost_rows)
 ## View(lost_rows)
 
 # Which datasets are the problem?
-lost_rows %>%
-  pull(source) %>%
-  unique()
+sort(unique(lost_rows$source))
 
 # Re-check structure of filled object
 dplyr::glimpse(fill_v2)
@@ -150,6 +146,13 @@ dplyr::glimpse(fill_v3)
 # Create final object name
 fill_v99 <- fill_v3
 
+# One last structure check
+dplyr::glimpse(fill_v99)
+
+# What sources made it? 
+unique(fill_v99$source)
+unique(fill_v99$exp.name)
+
 # Identify tidy file name / path
 zerofill_name <- "04_caged_zero-filled.csv"
 zerofill_path <- file.path("data", zerofill_name)
@@ -158,8 +161,3 @@ zerofill_path <- file.path("data", zerofill_name)
 write.csv(x = fill_v99, row.names = F, na = '', file = zerofill_path)
 
 # End ----
-
-# What sources made it? 
-unique(fill_v99$source) # 121
-unique(fill_v99$exp.name) # 361
-
