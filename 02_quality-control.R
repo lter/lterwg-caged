@@ -388,19 +388,61 @@ tidy_v7 %>%
 # Fill in missing years as appropriate
 tidy_v8 <- tidy_v7 %>% 
   dplyr::mutate(year = dplyr::case_when(
-    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), 
-    !is.na(year) ~ as.character(year),
-    ## sampling point is year
-    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
-    source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
+    ## Year is a relative integer counting years from study start
+    source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" ~ as.character(supportR::force_num(sampling.point) + 1993), # column starts at 1
+    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), # column starts at 0
+    ## Sampling point is year
+    source %in% c("chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv",
+      "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv") ~ sampling.point,
     ## Date in mm/dd/yy format
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
-    ## Date has 4-digit year at end of  date but not necessarily two digits for month/day
-    source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv" ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
+    ## Date has 4-digit year at end of date but not necessarily two digits for month/day
+    source %in% c("aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv",
+      "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv") ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
     ## Date is malformed in interesting other way
-    source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ paste0("20", stringr::str_extract(string = sampling.point, pattern = "\\d{2}")),
+    ### MS Excel turned (likely) year/month combos into fake dates
+    source %in% c("burkepile_florida_herbvr_2009-2012_fish_benthic.csv",
+      "shantz_florida_partialcages_2013-2014_fish_benthic.csv") ~ paste0("20", stringr::str_extract(string = sampling.point, pattern = "\\d{2}")),
+    ### Relative month recorded so needs to be transformed
+    source %in% c("villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv",
+      "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv") ~ as.character(floor(x = (supportR::force_num(sampling.point) / 12)) + 2004),
+    ### Relative month with different start year
+    source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" ~ 
+      as.character(floor(x = (supportR::force_num(sampling.point) / 12)) + 2018),
+    ## We know the year(s) _a priori_
+    ### (All of these were verified using the available metadata/related publications)
+    ### Data is all from one year
+    source == "gex_bakker-cedarcreek_bakker-cedarcreek_year_deer_plants.csv" ~ "2002",
+    source == "gex_boer-ca-n4_grazing_year_grazers_plants.csv" ~ "2006",
+    source == "lenihan_antarctica_benthicstressors_1998-2000_epibenthicanimals_invertebrates.csv" ~ "1999",
+    source == "lter-harvard_simestract_hemlockremoval_2012-2013_ungulates_shrubherb.csv" ~ "2012",
+    source == "lter-harvard_newengland_plantcover_2008-2019_moose_treeseedling.csv" ~ "2010",
+    source == "lter-harvard_newengland_plantcover_2008-2019_moose_plants.csv" ~ "2013",
+    source == "lter-mcr_moorea_grazingintensity_2010-2011_fish_benthic.csv" ~ "2011", 
+    source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" ~ "2018",
+    ### Certain experimental units are from different years
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
+      exp.design.2 %in% c("BO17", "SF17", "SI17", "ST17") ~ "2017", 
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
+      exp.design.2 %in% c("CCH", "COO", "COL", "COR", "COS", "DAR", "DEL", "FTP", 
+        "HAK", "OAX", "MAS", "NEW", "NFL", "LPZ", "SFO", "STR", "STB", "YUC") ~ "2018",
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
+      exp.design.2 %in% c("ADC", "BO19", "CCP", "COQ", "CRU", "ECU2", "FLO", "FTL", 
+        "MDP", "NAT", "PMA", "PML", "PTA", "PTM", "RDJ", "SSB", "USH") ~ "2019",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Berry") ~ "1998",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Savernake") ~ "2000",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Ag_Biod") ~ "2005",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Yathong_small", "AUS_Wapweelah") ~ "2008",
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
+    # If sampling point is a 4-digit number, use that
+    nchar(stringr::str_extract(string = sampling.point, pattern = "\\d{4}")) == 4 ~ sampling.point,
+    # If there's something else in the year column, use that
+    !is.na(year) ~ as.character(year),
     T ~ "year")) %>% 
   # Do any needed post-processing
   ## Drop season names
@@ -412,8 +454,7 @@ tidy_v8 %>%
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   .groups = "keep") %>% 
-  view()
+                   .groups = "keep")
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
@@ -439,6 +480,10 @@ tidy_v99 <- tidy_v9
 # Check structure
 dplyr::glimpse(tidy_v99)
 
+# What sources made it? 
+unique(tidy_v99$source)
+unique(tidy_v99$exp.name)
+
 # Identify tidy file name / path
 tidy_name <- "02_caged_tidied.csv"
 tidy_path <- file.path("data", tidy_name)
@@ -447,8 +492,3 @@ tidy_path <- file.path("data", tidy_name)
 write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
 
 # End ----
-
-# What sources made it? 
-unique(tidy_v99$source) #127
-unique(tidy_v99$exp.name) #369
-
