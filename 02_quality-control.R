@@ -392,12 +392,13 @@ tidy_v8 <- tidy_v7 %>%
     !is.na(year) ~ as.character(year),
     ## sampling point is year
     source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" ~ sampling.years,
-    source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ sampling.point,
     source == "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv" ~ sampling.years,
     ## Date in mm/dd/yy format
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
     ## Date has 4-digit year at end of  date but not necessarily two digits for month/day
     source == "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv" ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
+    ## Date is malformed in interesting other way
+    source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" ~ paste0("20", stringr::str_extract(string = sampling.point, pattern = "\\d{2}")),
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
     T ~ "year")) %>% 
@@ -411,7 +412,8 @@ tidy_v8 %>%
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   .groups = "keep")
+                   .groups = "keep") %>% 
+  view()
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
