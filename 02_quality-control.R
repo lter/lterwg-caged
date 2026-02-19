@@ -188,26 +188,18 @@ tidy_v2 %>%
   dplyr::select(organization, cage.treatment_orig) %>% 
   dplyr::distinct()
 
-# Should a diagnostic CSV be exported summarizing that information?
-diagnostic_export <- TRUE
-
-# Generate / export a diagnostic if desired
-if(diagnostic_export == TRUE){
+# Generate
+diagnose_treats <- tidy_v2 %>% 
+  dplyr::select(source, cage.treatment_std, cage.treatment_orig) %>% 
+  dplyr::group_by(source, cage.treatment_std) %>% 
+  # dplyr::summarize(original.treatments = paste(unique(cage.treatment_orig), collapse = "; "),
+  #                  .groups = "keep") %>% 
+  dplyr::distinct() %>% 
+  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged", "partial") != T)
   
-  # Generate
-  diagnose_treats <- tidy_v2 %>% 
-    dplyr::select(source, cage.treatment_std, cage.treatment_orig) %>% 
-    dplyr::group_by(source, cage.treatment_std) %>% 
-    # dplyr::summarize(original.treatments = paste(unique(cage.treatment_orig), collapse = "; "),
-    #                  .groups = "keep") %>% 
-    dplyr::distinct() %>% 
-    dplyr::filter(cage.treatment_std %in% c("caged", "uncaged", "partial") != T)
-  
-  # Export
-  write.csv(x = diagnose_treats, na = '', row.names = F,
-            file = file.path("data", "diagnostic", "cage-treatment-standardization.csv"))
-  
-}
+# Export
+write.csv(x = diagnose_treats, na = '', row.names = F,
+  file = file.path("data", "diagnostic", "cage-treatment-standardization.csv"))
 
 # Re-check structure
 dplyr::glimpse(tidy_v2)
@@ -391,14 +383,21 @@ tidy_v8 <- tidy_v7 %>%
     ## Year is a relative integer counting years from study start
     source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" ~ as.character(supportR::force_num(sampling.point) + 1993), # column starts at 1
     source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), # column starts at 0
-    ## Sampling point is year
-    source %in% c("chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv",
-      "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv") ~ sampling.point,
-    ## Date in mm/dd/yy format
+    ## Date has 2-digit year at end of date (and is from 21st century)
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
     ## Date has 4-digit year at end of date but not necessarily two digits for month/day
     source %in% c("aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv",
-      "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv") ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
+      "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv",
+      "alderson_netherlands_saltwaterlake_2018-2023_geese_vegetation.csv",
+      "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv",
+      "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv") ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
+    ## Date has 4-digit year at the start
+    source %in% c("alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv",
+      "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv",
+      "galetti_brazil-atlanticforest_carlosbotelho_2009-2018_herbivores_trees.csv",
+      "galetti_brazil-atlanticforest_cardoso_2009-2023_herbivores_trees.csv",
+      "galetti_brazil-atlanticforest_itamambuca_2009-2023_herbivores_trees.csv",
+      "galetti_brazil-atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv") ~ stringr::str_sub(sampling.point, start = 1, end = 4),
     ## Date is malformed in interesting other way
     ### MS Excel turned (likely) year/month combos into fake dates
     source %in% c("burkepile_florida_herbvr_2009-2012_fish_benthic.csv",
@@ -442,7 +441,7 @@ tidy_v8 <- tidy_v7 %>%
     # If sampling point is a 4-digit number, use that
     nchar(stringr::str_extract(string = sampling.point, pattern = "\\d{4}")) == 4 ~ sampling.point,
     # If there's something else in the year column, use that
-    !is.na(year) ~ as.character(year),
+    !is.na(year) & nchar(year) == 4 ~ as.character(year),
     T ~ "year")) %>% 
   # Do any needed post-processing
   ## Drop season names
@@ -455,6 +454,17 @@ tidy_v8 %>%
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    .groups = "keep")
+
+# Diagnose years/sampling points per dataset
+diagnose_years <- tidy_v8 %>% 
+  dplyr::group_by(source, exp.name, year) %>% 
+  dplyr::summarize(sampling.points = paste(unique(sampling.point), collapse = "; "),
+    .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Export this locally
+write.csv(x = diagnose_years, na = '', row.names = F,
+  file = file.path("data", "diagnostic", "year-identification.csv"))
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
