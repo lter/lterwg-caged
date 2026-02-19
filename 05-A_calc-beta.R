@@ -519,7 +519,7 @@ for(lost_src in dropped_sources){
   beta_lost <- dplyr::filter(beta_allscales, source == lost_src)
   
   # Generate a file name
-  lost_file <- paste0("beta-disp-calc-failure-diagnostic_", lost_src)
+  lost_file <- paste0("source_betadisp-failure_", lost_src)
   
   # Export locally
   write.csv(x = beta_lost, na = '', row.names = F,
@@ -542,7 +542,7 @@ for(lost_exp in dropped_names){
   beta_lost <- dplyr::filter(beta_lost_tmp, exp.name == lost_exp)
 
   # Generate a file name
-  lost_file <- paste0("beta-disp-calc-failure-diagnostic_", lost_exp, ".csv")
+  lost_file <- paste0("expname_betadisp-failure_", lost_exp, ".csv")
   
   # Export locally
   write.csv(x = beta_lost, na = '', row.names = F,
