@@ -1,7 +1,8 @@
 ## --------------------------------------------------------------- ##
 # CAGED Gamma Richness Calculation
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+# Purpose:
+## Calculate gamma richness for each dataset
 
 ## ------------------------------------------- ##
 # Housekeeping ----
