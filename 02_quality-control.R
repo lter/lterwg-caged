@@ -379,6 +379,12 @@ tidy_v7 %>%
 
 # Fill in missing years as appropriate
 tidy_v8 <- tidy_v7 %>% 
+  # Fix any broken sampling points first
+  dplyr::mutate(sampling.point = dplyr::case_when(
+    ## Malformed Excel number dates
+    source %in% c("lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv") ~ as.character(suppressWarnings(lubridate::as_date(x = sampling.point))),
+    T ~ sampling.point)) %>% 
+  # Now do actual year fixing
   dplyr::mutate(year = dplyr::case_when(
     ## Year is a relative integer counting years from study start
     source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" ~ as.character(supportR::force_num(sampling.point) + 1993), # column starts at 1
@@ -397,7 +403,8 @@ tidy_v8 <- tidy_v7 %>%
       "galetti_brazil-atlanticforest_carlosbotelho_2009-2018_herbivores_trees.csv",
       "galetti_brazil-atlanticforest_cardoso_2009-2023_herbivores_trees.csv",
       "galetti_brazil-atlanticforest_itamambuca_2009-2023_herbivores_trees.csv",
-      "galetti_brazil-atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv") ~ stringr::str_sub(sampling.point, start = 1, end = 4),
+      "galetti_brazil-atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv",
+      "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv") ~ stringr::str_sub(sampling.point, start = 1, end = 4),
     ## Date is malformed in interesting other way
     ### MS Excel turned (likely) year/month combos into fake dates
     source %in% c("burkepile_florida_herbvr_2009-2012_fish_benthic.csv",
