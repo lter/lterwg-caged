@@ -462,29 +462,29 @@ for(finest_src in sort(unique(beta_allscales$source))){
     if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des1$cage.treatment_std))){
       
       # Add to list
-      beta_finelist[[finest_name]] <- beta_fine_sub_des1
+      beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des1
       
       # Print a message too
       message("For '", finest_name, "' exp.design.1 was the finest level with beta dispersion for both treatments") }
     
     # Do the same for design 2
-    if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des2$cage.treatment_std))){
-      beta_finelist[[finest_name]] <- beta_fine_sub_des2
+    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des2$cage.treatment_std))){
+      beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des2
       message("For '", finest_name, "' exp.design.2 was the finest level with beta dispersion for both treatments") }
     
     # And design 3
     else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des3$cage.treatment_std))){
-      beta_finelist[[finest_name]] <- beta_fine_sub_des3
+      beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des3
       message("For '", finest_name, "' exp.design.3 was the finest level with beta dispersion for both treatments") }
     
     # And design 4
     else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des4$cage.treatment_std))){
-      beta_finelist[[finest_name]] <- beta_fine_sub_des4
+      beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des4
       message("For '", finest_name, "' exp.design.4 was the finest level with beta dispersion for both treatments") }
     
     # And the experiment name
     else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_name$cage.treatment_std))){
-      beta_finelist[[finest_name]] <- beta_fine_sub_name
+      beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_name
       message("For '", finest_name, "' exp.name was the finest level with beta dispersion for both treatments") }
     
   } # Close 'exp.name' loop
