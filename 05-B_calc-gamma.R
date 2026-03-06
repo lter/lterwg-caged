@@ -1,7 +1,8 @@
 ## --------------------------------------------------------------- ##
 # CAGED Gamma Richness Calculation
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+# Purpose:
+## Calculate gamma richness for each dataset
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -10,8 +11,8 @@
 # Load libraries
 librarian::shelf(tidyverse, magrittr, vegan, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -57,9 +58,5 @@ gamma_path <- file.path("data", gamma_name)
 
 # Export locally
 write.csv(x = gamma_v99, row.names = F, na = '', file = gamma_path)
-
-# # Upload to Drive
-# googledrive::drive_upload(media = gamma_path, overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----

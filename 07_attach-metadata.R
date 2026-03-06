@@ -1,8 +1,6 @@
 ## --------------------------------------------------------------- ##
 # CAGED Attach Metadata
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
-
 # Purpose:
 ## Group members collectively filled out a metadata GoogleSheet manually
 ## We want that attached to the data for use in visualization / analysis
@@ -15,10 +13,10 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, googledrive, supportR)
+librarian::shelf(tidyverse, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -33,21 +31,10 @@ names(w.meta_in_list) <- w.meta_outs
 dplyr::glimpse(w.meta_in_list[[1]])
 
 ## ------------------------------------------- ##
-# Download Metadata ----
+# Load Metadata ----
 ## ------------------------------------------- ##
 
-# Identify the relevant GoogleSheet
-meta_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/0AFR2XIdw_sKbUk9PVA")) %>% 
-  dplyr::filter(name == "sitelevel-metadata")
-
-# Check that worked
-meta_drive
-
-# Download it
-googledrive::drive_download(file = meta_drive$id, type = "csv", overwrite = T,
-                            path = file.path("data", meta_drive$name))
-
-# Read it in
+# Read in the metadata
 meta_v1 <- read.csv(file = file.path("data", "sitelevel-metadata.csv"))
 
 # Check structure
@@ -57,55 +44,21 @@ dplyr::glimpse(meta_v1)
 # Standardize Lat/Long Format ----
 ## ------------------------------------------- ##
 
-# Check current lat/long formats
-sort(unique(meta_v1$var_lat))
+# Look for non-numbers in the current lat/long columns
+supportR::num_check(data = meta_v1, col = "var_lat")
+supportR::num_check(data = meta_v1, col = "var_long")
 
 # Do needed repairs
 meta_v2 <- meta_v1 %>% 
-  # Rename & duplicate original lat/long cols
+  # Rename relevant lat/long columns
   dplyr::rename(lat = var_lat, long = var_long) %>%
-  dplyr::mutate(lat.orig = lat, long.orig = long) %>% 
-  # Replace degree symbol with period
+  # Replace M-dashes with hyphens
   dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "°|º", replacement = ".", x = .))) %>% 
-  # Remove unwanted characters
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "’|'|′|\\\"", replacement = "", x = .))) %>% 
-  # Replace N/S and E/W with negative symbols as needed
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ ifelse(stringr::str_detect(string = ., pattern = "S"),
-                                              yes = paste0("-", .), no = .))) %>% 
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ ifelse(stringr::str_detect(string = ., pattern = "W"),
-                                              yes = paste0("-", .), no = .))) %>% 
-  # Then remove superseded cardinal direction letters
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "N|S|E|W", replacement = "", x = .))) %>% 
-  # Remove spaces after periods
-  dplyr::mutate(dplyr::across(.cols = lat:long,
-                              .fns = ~ gsub(pattern = "\\. ", replacement = "\\.", x = .))) %>% 
-  # Split based on periods
-  tidyr::separate_wider_delim(cols = lat, delim = ".", names = c("tmp__lat", "tmp__lat2"),
-                              too_many = "merge", too_few = "align_start") %>% 
-  tidyr::separate_wider_delim(cols = long, delim = ".", names = c("tmp__long", "tmp__long2"),
-                              too_many = "merge", too_few = "align_start") %>% 
-  # Remove periods from all four temp columns
-  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("tmp__"),
-                              .fns = ~ gsub(pattern = "\\.", replacement = "", x = .))) %>% 
-  # Recombine temp columns with period between first and second
-  dplyr::mutate(lat = ifelse(!is.na(tmp__lat) & !is.na(tmp__lat2),
-                             yes = paste0(tmp__lat, ".", tmp__lat2),
-                             no = "")) %>% 
-  dplyr::mutate(long = ifelse(!is.na(tmp__long) & !is.na(tmp__long2),
-                              yes = paste0(tmp__long, ".", tmp__long2),
-                              no = "")) %>% 
-  # Remove temp columns
-  dplyr::select(-dplyr::starts_with("tmp__")) %>% 
-  # Reorder some other columns
-  dplyr::relocate(lat.orig:long, .after = exp.name)
+                              .fns = ~ gsub(pattern = "−", replacement = "-", x = .)))
 
-# Re-check formats
-sort(unique(meta_v2$lat))
+# Re-check for non-numbers
+supportR::num_check(data = meta_v2, col = "lat")
+supportR::num_check(data = meta_v2, col = "long")
 
 # Check structure more generally
 dplyr::glimpse(meta_v2)
@@ -137,7 +90,8 @@ meta_v4 <- meta_v3 %>%
   # Drop rows without either a source name or an experiment names
   dplyr::filter(!is.na(source) | !is.na(exp.name)) %>% 
   # Remove unwanted columns
-  dplyr::select(-dplyr::contains("notes"), -assigned.to) %>% 
+  dplyr::select(-dplyr::contains("notes"), -assigned.to, -dropped.reason,
+                -dplyr::starts_with("second.round.")) %>% 
   # Drop any columns that are entirely empty
   dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
 
@@ -196,24 +150,7 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                   new = unique(meta_v6$exp.name))
 
 ## ------------------------------------------- ##
-# Download Other Relevant 'Metadata' Info ----
-## ------------------------------------------- ##
-
-# We want everything after beta dispersion calculation
-## **As of 5/8/2025**, outputs of that script are (05-A_)
-other_meta <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
-  dplyr::filter(stringr::str_detect(string = name, pattern = "05-B_|06_"))
-
-# Look like the right files?
-other_meta
-
-# Download 'em
-purrr::walk2(.x = other_meta$id, .y = other_meta$name,
-             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
-                                                path = file.path("data", .y)))
-
-## ------------------------------------------- ##
-# Check 'Other Metadata' Files ----
+# Load Gamma Richness Data ----
 ## ------------------------------------------- ##
 
 # Read in gamma richness
@@ -221,6 +158,10 @@ gamma_v1 <- read.csv(file = file.path("data", "05-B_caged_gamma-rich.csv"))
 
 # Check structure
 dplyr::glimpse(gamma_v1)
+
+## ------------------------------------------- ##
+# Load Mean Difference Data ----
+## ------------------------------------------- ##
 
 # Read in the mean difference files too
 diff_v1 <- read.csv(file = file.path("data", "06_caged_mean-beta-diff_all-scales.csv"))
@@ -282,6 +223,10 @@ dplyr::glimpse(w.meta_v3)
 ## After adding summarized beta disp + mean diff
 dplyr::glimpse(w.meta_v4)
 
+# How many sources and exp.name got through the pipeline?
+unique(w.meta_v4$source) # 110
+unique(w.meta_v4$exp.name) # 317
+
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
@@ -300,12 +245,6 @@ for(w.meta_outs in unique(names(w.meta_out_list))){
   
   # Export locally
   write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
-  
 }
-
-# # Upload all of these to the Drive
-# purrr::walk(.x = dir(path = file.path("data"), pattern = "07_caged_w.meta"),
-#             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
-#                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
 
 # End ----

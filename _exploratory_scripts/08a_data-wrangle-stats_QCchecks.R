@@ -34,8 +34,11 @@ caged_v1 <- read.csv(file.path("data",
 
 # Check structure
 dplyr::glimpse(caged_v1)
+unique(caged_v1$source) #113
+unique(caged_v1$exp.name) # 305
+# so we have all the files here
 
-# Create B Diff Dataset ----
+# Create Beta Difference Dataset ----
 #DF where the unit of replication is averages within treatment. Variable is already created, so just need to select and filter
 avg.caged_v1 <- caged_v1 %>% 
   dplyr::select(source:exp.name, starts_with("var"), 
@@ -43,7 +46,7 @@ avg.caged_v1 <- caged_v1 %>%
                 within.cage.treat_betadisp.mean, betadisp.sample.size,
                 excluded.group, consumer.trophic.level, gamma.richness,
                 within.cage.treat_betadisp.mean.diff) %>% 
-  # rename_all(~stringr::str_replace(.,"^var_","")) %>% #this line is the result of a fight between Marc and Jamie. 
+  # this drops any files that dont have a mean difference calculated 
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
   dplyr::distinct(exp.name, .keep_all = T) %>% #ALERT!!! This fixed a duplication error within exp.name. If this gets fixed upstream, can delete this line
   tidyr::pivot_wider(names_from = cage.treatment_std,
@@ -53,14 +56,15 @@ avg.caged_v1 <- caged_v1 %>%
 
 # Check structure of that
 dplyr::glimpse(avg.caged_v1)
+unique(avg.caged_v1$source) # 99, why are we losing so many here? maybe because of filtering out NA at mean diff column?
+unique(avg.caged_v1$exp.name) #272
 
 
 # ----explore and QC data----
-#NOTE: A ton of this can be dumped into antoher file once we have a complete dataframe we like. 
-#Skip to line 100 "Tidy and Wrangle the DF" if you dont want to look at the structure
 
 #Data QC Comments and Notes.. update with issues you notice
 #5/8: I (marc) am going to ignore the variables that are missing shit for now. I'll note if I force some of these mis-entered or incomplete data into NAs. E.G., I REALLY want exp age but there are 2K "year" or "2017-2019"
+#7/13: Marc deleted all of the QC check code, so now someone can just run this to wrangle the data. NOTE that Bae dfs get written locally, not in the gdrive.
 
 #lets see what we are dealing with
 glimpse(caged_v1)

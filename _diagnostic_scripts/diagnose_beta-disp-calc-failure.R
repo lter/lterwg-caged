@@ -10,8 +10,8 @@
 # Load libraries
 librarian::shelf(tidyverse)
 
-# Create needed folder(s)
-dir.create(path = file.path("data", "diagnostic"), showWarnings = F, recursive = T)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -57,10 +57,10 @@ for(focal_file in diag_v3$source){
   # Subset data
   diag_df <- dplyr::filter(diag_v3, source == focal_file)
   
-  # Export
-  write.csv(x = diag_df, row.names = F, na = '',
-            file = file.path("data", "diagnostic", paste0("DIAGNOSE_", focal_file)))
-  
+  # # Export
+  # write.csv(x = diag_df, row.names = F, na = '',
+  #           file = file.path("data", "diagnostic", paste0("beta-dispersion-failure_", focal_file)))
+  # 
 }
 
 # End ----

@@ -1,7 +1,6 @@
 ## --------------------------------------------------------------- ##
 # CAGED *Mean* Difference in Beta Dispersion Calculation
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -10,8 +9,8 @@
 # Load libraries
 librarian::shelf(tidyverse, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -116,9 +115,8 @@ for(diff_outs in unique(names(diff_list))){
 
 }
 
-# # Upload all of these to the Drive
-# purrr::walk(.x = dir(path = file.path("data"), pattern = "06_caged_mean-beta-diff"),
-#             .f = ~ googledrive::drive_upload(media = file.path("data", .x), overwrite = T,
-#                                              path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")))
-
 # End ----
+
+unique(diff_v99$source) # 116
+unique(diff_v99$exp.name) # 326
+

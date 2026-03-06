@@ -71,7 +71,10 @@ dplyr::glimpse(qc_df)
 meta_expansion <- qc_df %>% 
   dplyr::filter(!source %in% meta_df$source) %>% 
   # Add needed column(s)
-  dplyr::mutate(assigned.to = NA, .after = source)
+  dplyr::mutate(assigned.to = NA, 
+                second.round.assigned.to = NA,
+                second.round.check = NA,
+                .after = source)
 
 # Re-check structure
 dplyr::glimpse(meta_expansion)

@@ -1,17 +1,19 @@
 ## --------------------------------------------------------------- ##
                 # CAGED Wrangling & Quality Control
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+# Purpose:
+## Do quality control (QC) for harmonized data
+## Also performs conditional treatment standardization
 
 ## ------------------------------------------- ##
 # Housekeeping ----
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, supportR)
+librarian::shelf(tidyverse, ltertools)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -41,7 +43,7 @@ tidy_v2 <- tidy_v1 %>%
       ## Confident changes
       ### Cage Present
       cage.tmp %in% c("full", "exclosure", "exclusion", 
-                        "fenced", "caged", "2.full.cage",
+                        "fenced", "caged", "e", "2.full.cage",
                         "full nitex", "full quarter", "cage",
                         "control small fenced", "np small fenced",
                         "small fenced no fertilizer", "full exclosure",
@@ -49,27 +51,41 @@ tidy_v2 <- tidy_v1 %>%
                         "oui", "in", "caribou and small mammal fence", "caribou fence", 
                         "livest_excl", "Macropod-grazed") ~ "caged",
       ### Partial cage
-      cage.tmp %in% c("partial", "3.part.cage", 
-                        "partial nitex", "partial quarter",
+      cage.tmp %in% c("partial", "3.part.cage", "cage control",
+                        "partial nitex", "partial quarter", "p",
                         "partial exclosure") ~ "partial",
       ### No cage
-      cage.tmp %in% c("none", "open", "end/control", "control", 
+      cage.tmp %in% c("none", "open", "end/control", "control", "c", 
                         "unfenced", "uncaged", "1.open.ctrl",
                         "control unfenced", "np unfenced",
                         "deer", "grazed", "non", "out", "open-grazed", 
                         "nitrogen phosphorus unfenced", "no cage", 
                         "no fence") ~ "uncaged",
-      ## Organization/data source-dependent changes
+      ## Organization-dependent changes
       ### A
+      source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
+        cage.tmp == "cc" ~ "partial",
+      source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
+        cage.tmp == "g" ~ "uncaged",
+      source == "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv" &
+        cage.tmp == "ng" ~ "caged",
+      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+        cage.tmp %in% c(1:2) ~ "caged",
+      source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" &
+        cage.tmp == "3" ~ "uncaged",
       organization == "ashton" & cage.tmp == "4.cage.expo" ~ "partial",
-      organization == "alberti" & cage.tmp %in% c(1:2, "ng") ~ "caged",
-      organization == "alberti" & cage.tmp %in% c(3, "g") ~ "uncaged",
-      organization == "alberti" & cage.tmp == "cc" ~ "partial",
       ### B
-      organization == "burkepile" & cage.tmp == "Exclosure control" ~ "uncaged",
+      organization == "burkepile" & cage.tmp == "exclosure control" ~ "uncaged",
+      source == "burkepile_florida_herbvr_2009-2012_fish_benthic.csv" &
+        cage.tmp == "Crtl" ~ "uncaged",
       ### C
-      organization == "chen" & cage.tmp %in% c("ungrazed", "g") ~ "caged",
-      organization == "chen" & cage.tmp %in% c("hares", "hares & geese", "c") ~ "uncaged",
+      organization == "chen" & cage.tmp == "ungrazed" ~ "caged",
+      source == "chen_netherlands_gooseexclosures_2016_haresandgeese_plants.csv" &
+        cage.tmp %in% c("hares", "hares & geese") ~ "uncaged",
+      source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
+        cage.tmp == "c" ~ "uncaged",
+      source == "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv" &
+        cage.tmp == "g" ~ "caged",
       organization == "clausing" & cage.tmp == "removal" ~ "caged",
       organization == "clausing" & cage.tmp == "ambient" ~ "uncaged",
       organization == "cper" & cage.tmp == "ah" ~ "uncaged", # AH = all herbivores
@@ -81,22 +97,23 @@ tidy_v2 <- tidy_v1 %>%
       source == "duran_floridacoralreef_successiontiles_2016_fish_mcaroalgae.csv" &
         cage.tmp == "h" ~ "uncaged",
       ### G
-      organization == "gex" & cage.tmp %in% c("g", "gg") ~ "uncaged", # G = grazed
-      organization == "gex" & cage.tmp %in% c("u", "uu") ~ "caged", # U = ungrazed
-      source == "gex_queenslandaus1-5_Silcock_2009_grazers_plants.csv" &
-        cage.tmp == "macropod-grazed" ~ "caged",
+      organization == "gex" & cage.tmp %in% c("g", "gg") ~ "uncaged",
+      organization == "gex" & cage.tmp %in% c("u", "uu") ~ "caged",
       source == "gex_bakker-cedarcreek_bakker-cedarcreek_year_deer_plants.csv" &
         cage.tmp == "gs" ~ "uncaged", # Note gex "GS" differs between datasets!
       source == "gex_bakker-sgs_bakker-sgs_2001_cattle&lagomorphs_plants.csv" &
         cage.tmp == "gs" ~ "caged",
+      source == "gex_queenslandaus1-5_Silcock_2009_grazers_plants.csv" &
+        cage.tmp == "macropod-grazed" ~ "caged",
       organization == "gilson" & cage.tmp == "f" ~ "caged",
-      organization == "gilson" & cage.tmp %in% c("h", "c") ~ "uncaged",
+      organization == "gilson" & cage.tmp == "c" ~ "uncaged",
+      organization == "gilson" & cage.tmp == "h" ~ "partial",
       ### L
       organization == "lamb" & cage.tmp %in% c("roof", "fence") ~ "caged",
-      organization == "lter-arc" & cage.tmp %in% c("lfct", "lfnp", "sfct", "sfnp", 
-                                                   "lfct17", "sfct17", "mfct17") ~ "caged",
-      organization == "lter-arc" & cage.tmp %in% c("nfct", "nfnp", "ct", 
-                                                   "np", "n", "p") ~ "uncaged",
+      organization == "lter-arc" & 
+        cage.tmp %in% c("lfct", "lfnp", "sfct", "sfnp", "lfct17", "sfct17", "mfct17") ~ "caged",
+      organization == "lter-arc" & 
+        cage.tmp %in% c("nfct", "nfnp", "ct", "np", "n", "p") ~ "uncaged",
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
         cage.tmp %in% c(1:4, 7) ~ "caged",
       source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
@@ -114,33 +131,48 @@ tidy_v2 <- tidy_v1 %>%
       organization == "lter-sevilleta" & cage.tmp %in% c("l", "r") ~ "caged",
       organization == "lter-sevilleta" & cage.tmp == "c" ~ "uncaged",
       ### M
-      organization == "mclaren" & cage.tmp %in% c(0, "c") ~ "uncaged",
-      organization == "mclaren" & cage.tmp %in% c(1, "e") ~ "caged",
+      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
+        cage.tmp == "E" ~ "caged",
+      source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" &
+        cage.tmp == "C" ~ "uncaged",
+      organization == "mclaren" & cage.tmp == "0" ~ "uncaged",
+      organization == "mclaren" & cage.tmp == "1" ~ "caged",
       ### N
       organization == "nopp-mayer" & cage.tmp == "0" ~ "uncaged",
       organization == "nopp-mayer" & cage.tmp == "1" ~ "caged",
       ### P
       organization == "parker" & cage.tmp == "cage control" ~ "partial",
-      organization == "pascual" & cage.tmp == "cage control" ~ "partial",
+      organization == "pascual" & cage.tmp == "Cage control" ~ "partial",
       organization == "pelinson" & cage.tmp == "present" ~ "uncaged",
       organization == "pelinson" & cage.tmp == "absent" ~ "caged",
-      organization == "porensky" & cage.tmp %in% c("y__livestock ex", "y__ungulate ex") ~ "caged",
-      organization == "porensky" & cage.tmp %in% c("n__out", "y__out") ~ "uncaged",
-      organization == "porensky" & cage.tmp %in% c("n__livestock ex", "n__ungulate ex") ~ "partial",
+      organization == "porensky" & cage.tmp %in% c("livestock ex", "ungulate ex") ~ "caged",
+      organization == "porensky" & cage.tmp == "out" ~ "uncaged",
       ### R
       organization == "royo" & cage.tmp == "1" ~ "caged",
       organization == "royo" & cage.tmp == "0" ~ "uncaged",
       ### S
+      organization == "sellers" & cage.tmp == "E" ~ "caged",
+      organization == "sellers" & cage.tmp == "PC" ~ "partial",
+      organization == "sellers" & cage.tmp == "C" ~ "uncaged",
       organization == "spiecker" & cage.tmp %in% c("b", "l", "lu", "u") ~ "caged",
       organization == "spiecker" & cage.tmp %in% c("h", "hl", "hlu", "hu") ~ "uncaged",
       ### V
       organization == "villar" & cage.tmp == "a" ~ "caged",
-      organization == "villar" & cage.tmp == "c" ~ "uncaged",      
+      organization == "villar" & cage.tmp == "c" ~ "uncaged",
       ### W
-      organization == "wang" & cage.tmp %in% c("cg", "sg", "ng", "mg", "lg") ~ "caged",
-      organization == "wang" & cage.tmp %in% c("csg", "hg") ~ "uncaged",
+      # source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+      #   cage.tmp %in% c("CG", "SG", "NG") ~ "caged", # Excluded because they are more like enclosures, letting sheep in to graze
+      # source == "wang_mongolia_cattlesheepgrazersupp_2018_ruminant_plants.csv" &
+      #   cage.tmp == "CSG" ~ "uncaged",
+      # source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+      #   cage.tmp %in% c("MG", "LG", "NG") ~ "caged",
+      # source == "wang_mongolia_sheepgrazersupp_2014-2018_ruminant_plants.csv" &
+      #   cage.tmp == "HG" ~ "uncaged",
+      ### Z
+      organization == "zamin" & cage.tmp == "E" ~ "caged",
+      organization == "zamin" & cage.tmp == "C" ~ "uncaged",
       ## If treatment isn't known, leave it that way
-      cage.tmp == "no cage treatment identified" ~ "unknown",
+      tolower(cage.tmp) == "no cage treatment identified" ~ "unknown",
       ## If not covered by prior conditions, just flag it as uncertain
       T ~ "uncertain"), .before = treat.cage) %>% 
   # Drop temporary lowercase cage column
@@ -156,26 +188,18 @@ tidy_v2 %>%
   dplyr::select(organization, cage.treatment_orig) %>% 
   dplyr::distinct()
 
-# Should a diagnostic CSV be exported summarizing that information?
-diagnostic_export <- TRUE
-
-# Generate / export a diagnostic if desired
-if(diagnostic_export == TRUE){
+# Generate
+diagnose_treats <- tidy_v2 %>% 
+  dplyr::select(source, cage.treatment_std, cage.treatment_orig) %>% 
+  dplyr::group_by(source, cage.treatment_std) %>% 
+  # dplyr::summarize(original.treatments = paste(unique(cage.treatment_orig), collapse = "; "),
+  #                  .groups = "keep") %>% 
+  dplyr::distinct() %>% 
+  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged", "partial") != T)
   
-  # Generate
-  diagnose_treats <- tidy_v2 %>% 
-    dplyr::select(source, cage.treatment_std, cage.treatment_orig) %>% 
-    dplyr::group_by(source, cage.treatment_std) %>% 
-    # dplyr::summarize(original.treatments = paste(unique(cage.treatment_orig), collapse = "; "),
-    #                  .groups = "keep") %>% 
-    dplyr::distinct() %>% 
-    dplyr::filter(cage.treatment_std %in% c("caged", "uncaged", "partial") != T)
-  
-  # Export
-  write.csv(x = diagnose_treats, na = '', row.names = F,
-            file = file.path("data", "cage-treatment-standardization.csv"))
-  
-}
+# Export
+write.csv(x = diagnose_treats, na = '', row.names = F,
+  file = file.path("data", "diagnostic", "cage-treatment-standardization.csv"))
 
 # Re-check structure
 dplyr::glimpse(tidy_v2)
@@ -212,12 +236,9 @@ dplyr::glimpse(tidy_v3)
 
 # Need to fill missing experiment names and attach relevant context
 tidy_v3b <- tidy_v3 %>% 
-  # Make all empty design levels truly empty
-  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with(c("exp.name", "exp.design.")),
-                              .fns = ~ ifelse(nchar(.) == 0,
-                                              yes = NA, no = .))) %>% 
   ## If 'exp.name' is missing, fill with full dataset filename
-  dplyr::mutate(exp.name = ifelse(is.na(exp.name), yes = source, no = exp.name))
+  dplyr::mutate(exp.name = ifelse(nchar(exp.name) == 0 | is.na(exp.name),
+                                  yes = source, no = exp.name))
 
 # Check for 'new' experiment names
 supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.name))
@@ -226,7 +247,11 @@ supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.n
 tidy_v4 <- tidy_v3b %>%
   dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
                       yes = exp.name,
-                      no = paste(exp.name, treat.fire, sep = "--")) )
+                      no = paste(exp.name, treat.fire, sep = "--")) ) %>% 
+  # While we're here, fix any casing/typo issues in experiment names
+  dplyr::mutate(exp.name = dplyr::case_when(
+    exp.name == "Camano_protected-Warm" ~ "Camano_Protected-Warm",
+    T ~ exp.name))
 
 # Check again
 supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
@@ -248,10 +273,14 @@ tidy_v4 %>%
 tidy_v5 <- tidy_v4 %>% 
   dplyr::mutate(
     ## Fill any missing design level values with experiment name
-    exp.design.1 = ifelse(is.na(exp.design.1), yes = exp.name, no = exp.design.1),
-    exp.design.2 = ifelse(is.na(exp.design.2), yes = exp.name, no = exp.design.2),
-    exp.design.3 = ifelse(is.na(exp.design.3), yes = exp.name, no = exp.design.3),
-    exp.design.4 = ifelse(is.na(exp.design.4), yes = exp.name, no = exp.design.4)
+    exp.design.1 = ifelse(nchar(exp.design.1) == 0 | is.na(exp.design.1),
+                          yes = exp.name, no = exp.design.1),
+    exp.design.2 = ifelse(nchar(exp.design.2) == 0 | is.na(exp.design.2),
+                          yes = exp.name, no = exp.design.2),
+    exp.design.3 = ifelse(nchar(exp.design.3) == 0 | is.na(exp.design.3),
+                          yes = exp.name, no = exp.design.3),
+    exp.design.4 = ifelse(nchar(exp.design.4) == 0 | is.na(exp.design.4),
+                          yes = exp.name, no = exp.design.4)
   ) %>% 
   # Fix problem with Ashton dataset
   ## Blocks are accidentally uniquely identified by trailing period + number
@@ -340,56 +369,86 @@ sort(unique(tidy_v7$taxa))
 # Standardize Study Years ----
 ## ------------------------------------------- ##
 
-# Identify datasets where 'year' is not provided or isn't a number
-malformed_years <- tidy_v7 %>% 
-  dplyr::filter(is.na(supportR::force_num(.$year))) %>%
-  dplyr::pull(source) %>% unique()
-
 # Check current years
 tidy_v7 %>% 
-  dplyr::filter(source %in% malformed_years) %>% 
+  dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   points = paste(unique(sampling.point), collapse = ", "),
                    .groups = "keep") %>% 
   as.data.frame()
 
 # Fill in missing years as appropriate
 tidy_v8 <- tidy_v7 %>% 
+  # Fix any broken sampling points first
+  dplyr::mutate(sampling.point = dplyr::case_when(
+    ## Malformed Excel number dates
+    source %in% c("lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv") ~ as.character(suppressWarnings(lubridate::as_date(x = sampling.point))),
+    T ~ sampling.point)) %>% 
+  # Now do actual year fixing
   dplyr::mutate(year = dplyr::case_when(
-    ## If year is a non-NA number
-    !is.na(supportR::force_num(.$year)) ~ as.character(year),
-    ## Nopp-Mayer, 'year' is number of years after 1989
-    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), 
-    ## Sampling point is year
-    source %in% c(
-      "alberti_argentina_saltmarshexclosure_2007-2024_guineapigs_plants.csv",
-      "burkepile_florida_herbvr_2009-2012_fish_benthic.csv",
-      "chen_netherlands_saltmarsh_1972-2019_cattle_plants.csv",
-      "lter-arc_DHTundra_nutrientsandexclosures_2005-2013-2017_vertebrates_vegetation.csv",
-      "lter-arc_MATundra_nutrientsandexclosures_2005-2015-2017_vertebrates_vegetation.csv"
-      ) ~ sampling.point,
-    # Take from file name
-    source %in% c("ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv",
-                  "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv") ~ sampling.years,
-    ## Date in mm/dd/yy format (2-digit year)
-    source %in% c(
-      "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv"
-    )  ~ paste0("20", stringr::str_sub(sampling.point, 
-                                       start = nchar(sampling.point) - 1, 
-                                       end = nchar(sampling.point))),
-    ## Date in mm/dd/yyyy format (4-digit year)
-    source %in% c(
-      "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
-    ) ~ stringr::str_sub(sampling.point, 
-                         start = nchar(sampling.point) - 3, 
-                         end = nchar(sampling.point)),
-    ## Date is yyyy/mm/dd format (4-digit year at start)
-    source %in% c(
-      "alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv"
-    ) ~ stringr::str_sub(sampling.point, start = 1, end = 4),
+    ## Year is a relative integer counting years from study start
+    source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" ~ as.character(supportR::force_num(sampling.point) + 1993), # column starts at 1
+    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), # column starts at 0
+    ## Date has 2-digit year at end of date (and is from 21st century)
+    source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
+    ## Date has 4-digit year at end of date but not necessarily two digits for month/day
+    source %in% c("aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv",
+      "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv",
+      "alderson_netherlands_saltwaterlake_2018-2023_geese_vegetation.csv",
+      "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv",
+      "lter-sevilleta_newmexico_sev-project_1995-2005_smallmammals_vegetation.csv") ~ stringr::str_sub(sampling.point, start = nchar(sampling.point) - 3, end = nchar(sampling.point)),
+    ## Date has 4-digit year at the start
+    source %in% c("alberti_patagonia_grasslands_2016-2024_guanaco_vegetation.csv",
+      "clausing_newzealand_intertidalexclosure_2010-2012_grazers_algae.csv",
+      "galetti_brazil-atlanticforest_carlosbotelho_2009-2018_herbivores_trees.csv",
+      "galetti_brazil-atlanticforest_cardoso_2009-2023_herbivores_trees.csv",
+      "galetti_brazil-atlanticforest_itamambuca_2009-2023_herbivores_trees.csv",
+      "galetti_brazil-atlanticforest_vargemgrande_2009-2023_herbivores_trees.csv",
+      "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv") ~ stringr::str_sub(sampling.point, start = 1, end = 4),
+    ## Date is malformed in interesting other way
+    ### MS Excel turned (likely) year/month combos into fake dates
+    source %in% c("burkepile_florida_herbvr_2009-2012_fish_benthic.csv",
+      "shantz_florida_partialcages_2013-2014_fish_benthic.csv") ~ paste0("20", stringr::str_extract(string = sampling.point, pattern = "\\d{2}")),
+    ### Relative month recorded so needs to be transformed
+    source %in% c("villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv",
+      "villar_brazil-taq_largewildherbivores_2004-2014_largeherbivores_plants.csv") ~ as.character(floor(x = (supportR::force_num(sampling.point) / 12)) + 2004),
+    ### Relative month with different start year
+    source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" ~ 
+      as.character(floor(x = (supportR::force_num(sampling.point) / 12)) + 2018),
+    ## We know the year(s) _a priori_
+    ### (All of these were verified using the available metadata/related publications)
+    ### Data is all from one year
+    source == "gex_bakker-cedarcreek_bakker-cedarcreek_year_deer_plants.csv" ~ "2002",
+    source == "gex_boer-ca-n4_grazing_year_grazers_plants.csv" ~ "2006",
+    source == "lenihan_antarctica_benthicstressors_1998-2000_epibenthicanimals_invertebrates.csv" ~ "1999",
+    source == "lter-harvard_simestract_hemlockremoval_2012-2013_ungulates_shrubherb.csv" ~ "2012",
+    source == "lter-harvard_newengland_plantcover_2008-2019_moose_treeseedling.csv" ~ "2010",
+    source == "lter-harvard_newengland_plantcover_2008-2019_moose_plants.csv" ~ "2013",
+    source == "lter-mcr_moorea_grazingintensity_2010-2011_fish_benthic.csv" ~ "2011", 
+    source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" ~ "2018",
+    ### Certain experimental units are from different years
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
+      exp.design.2 %in% c("BO17", "SF17", "SI17", "ST17") ~ "2017", 
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
+      exp.design.2 %in% c("CCH", "COO", "COL", "COR", "COS", "DAR", "DEL", "FTP", 
+        "HAK", "OAX", "MAS", "NEW", "NFL", "LPZ", "SFO", "STR", "STB", "YUC") ~ "2018",
+    source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
+      exp.design.2 %in% c("ADC", "BO19", "CCP", "COQ", "CRU", "ECU2", "FLO", "FTL", 
+        "MDP", "NAT", "PMA", "PML", "PTA", "PTM", "RDJ", "SSB", "USH") ~ "2019",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Berry") ~ "1998",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Savernake") ~ "2000",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Ag_Biod") ~ "2005",
+    source == "gex_morgan-aus1-5_long-term_1997-2015_grazers_plants.csv" & 
+      exp.design.3 %in% c("AUS_Yathong_small", "AUS_Wapweelah") ~ "2008",
     ## If year from file name has four digits, use that
     nchar(sampling.years) == 4 ~ sampling.years,
+    # If sampling point is a 4-digit number, use that
+    nchar(stringr::str_extract(string = sampling.point, pattern = "\\d{4}")) == 4 ~ sampling.point,
+    # If there's something else in the year column, use that
+    !is.na(year) & nchar(year) == 4 ~ as.character(year),
     T ~ "year")) %>% 
   # Do any needed post-processing
   ## Drop season names
@@ -398,14 +457,21 @@ tidy_v8 <- tidy_v7 %>%
 
 # Re-check years
 tidy_v8 %>% 
-  dplyr::filter(source %in% malformed_years) %>% 
-  dplyr::mutate(fixed = ifelse(is.na(supportR::force_num(x = .$year)) != T,
-                             yes = T, no = F)) %>% 
-  dplyr::group_by(source, sampling.years, fixed) %>% 
+  dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
+  dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   points = paste(unique(sampling.point), collapse = ", "),
-                   .groups = "keep") %>% 
-  dplyr::filter(fixed != T) # %>% view()
+                   .groups = "keep")
+
+# Diagnose years/sampling points per dataset
+diagnose_years <- tidy_v8 %>% 
+  dplyr::group_by(source, exp.name, year) %>% 
+  dplyr::summarize(sampling.points = paste(unique(sampling.point), collapse = "; "),
+    .groups = "keep") %>% 
+  dplyr::ungroup()
+
+# Export this locally
+write.csv(x = diagnose_years, na = '', row.names = F,
+  file = file.path("data", "diagnostic", "year-identification.csv"))
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
@@ -431,15 +497,15 @@ tidy_v99 <- tidy_v9
 # Check structure
 dplyr::glimpse(tidy_v99)
 
+# What sources made it? 
+unique(tidy_v99$source)
+unique(tidy_v99$exp.name)
+
 # Identify tidy file name / path
 tidy_name <- "02_caged_tidied.csv"
 tidy_path <- file.path("data", tidy_name)
 
 # Export locally
 write.csv(x = tidy_v99, row.names = F, na = '', file = tidy_path)
-
-# Upload to Drive
-# googledrive::drive_upload(media = tidy_path, overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
 
 # End ----

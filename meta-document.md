@@ -2,7 +2,7 @@
 
 This document serves to identify macro-scale changes and judgement calls for easy revisiting / internal reminding.
 
-## First Meeting - 2025/01/27-30
+### First Meeting - 2025/01/27-30
 Overall Goal of this Meeting: 1) download data 2) create data key 3) harmonize data 4) create meta-data file  
 
 We were able to start each of these three tasks (we didn't finish any of them) and so have a protocol for each.  
@@ -21,9 +21,14 @@ We will include data that 1) excludes consumers and compares to a control with c
 ### Scientific / Domain Choices
 - We will take the lowest level of taxonomic organization (e.g, if they provide functional groups and species, we will take species). We will take data at any level as long as there is community structure.(https://github.com/lter/lterwg-caged/issues/3)
 - We will take the lowest level of spatial organization (even if its technically pseudoreplication) (e.g., plots within side a large exclosure that is typical of terrestrial systems)(https://github.com/lter/lterwg-caged/issues/6)
-- We are considering sites/locations with separate experiments as separate datapoints in our project (i.e., exp.name) only if the authors are considering differences across site (e.g., jamie's chagos project with sites with different shark abundance, Tibet grassland experiments). Otherwise, we will include all sites within one datapoint (most papers are more like this).
+- We are considering sites/locations with separate experiments as separate datapoints in our project (i.e., exp.name). This is a change from the May 2025 meeting where Sally/Kelly/Jamie discussed that we werent splitting up the sites enough (https://github.com/lter/lterwg-caged/issues/23)  
 - We are including data with multiple years, but not if there are multiple sampling time points within a year (we filter this out post-harmonization). We will likely only include the last year/sampling time point in our analysis, but have included all the data in case we decide to do some temporal comparison. (https://github.com/lter/lterwg-caged/issues/7)
 - Many experiments have multiple measures of "abundance" (e.g., biomass, cover, density) and we will only take one to ensure they are independent (https://github.com/lter/lterwg-caged/issues/1)
+- For exp.names that have >1 replicates with zero total abundance, we add a dummy taxa with 0.01 abundance to every sample in that exp.name so we can retain it for beta diversity (https://github.com/lter/lterwg-caged/issues/30)
+- If there are different caging treatments (e.g., Recharge, 4X4, 3X3, 2X2, 1X1) then each "original caging treatment" has its own spatial median (https://github.com/lter/lterwg-caged/issues/24)
+- We filter out any confounding treaments (e.g., Nutrients) but keep a few types like Disturbance so its comparable to "early succession" vs "late succession" (e.g., including settlement tile experiments). We make sure to include these treatments as their own exp.names (https://github.com/lter/lterwg-caged/issues/11)  
+
+
 - We will create a "unique.id" column after harmonization so we can create one datapoint for each exp.name. The exp.name in the harmonized file will just be the file.name if there are no exp.name (separate experiments/sites that need to be treated as independent).
 
 unique.id = exp.design<sub>N</sub> + treatment<sub>N</sub> + year + exp.name  
@@ -44,7 +49,7 @@ file.name = organization_site_projectdescription_yearssampled_excluded_measured
 - Then we manually fill in the data key with our knowledge
 - Column names for data key
     - exp.design.1-N: Block, transect, site, etc. each of those get a different number. These categories denote different aspects of the experimental design. Exp.design.1 might not always be the lowest level of experimental design because they might not have a column explicitely stating this so we will need to fix this post-harmonization.  
-    - exp.name: Unique name for the experiment. We use this if the sites are uniquely different from one another (this shouldn’t happen often) and is only if the authors have said there are unique differences across sites that make it interesting (and not part of exp.design). You will need to go look at the metadata and the data to decide this.  
+    - exp.name: Unique name for the experiment. You will need to go look at the metadata and the data to decide this.  
     - sampling.point: Unique sampling time point. When experiments are sampled or if data is recorded at multiple timepoints throughout a year. If they don't have a year column, this is also where you might have to extract this.  
     - year: year of sampling (they might not always have this)  
     - orig.treat:  Denotes the original treatment of the experiment, however the author described them. Any time we put anything but orig.treat we have to put another line of code (Nick). Only use if there is only one treatment given. For example, if they concatenate all treatments into one variable- orig.treat_nutirents, orig.treat_fire, orig.treat_cage, etc.

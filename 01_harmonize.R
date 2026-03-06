@@ -1,68 +1,21 @@
 ## --------------------------------------------------------------- ##
-                  # CAGED Harmonization Workflow
+# CAGED Harmonization Workflow
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, ...
+
+# Purpose:
+## Use a data key to standardize the column names of all input files
+## And combine all standardized tables into one large table
+## You need to run 00 and 000 before you can run this script
 
 ## ------------------------------------------- ##
 # Housekeeping ----
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, ltertools, googledrive, supportR)
+librarian::shelf(tidyverse, ltertools, supportR)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
-dir.create(path = file.path("data", "raw"), showWarnings = F)
-
-# Clear environment + collect garbage
-rm(list = ls()); gc()
-
-## ------------------------------------------- ##
-# Download Data ----
-## ------------------------------------------- ##
-
-# NOTE
-## This script assumes (1) access to the "LTER-WG_CAGED" Shared Drive (2) authentication with R
-## For more information on authentication, see the following tutorial:
-### https://lter.github.io/scicomp/tutorial_googledrive-pkg.html
-
-# Identify wanted files
-files_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX")) %>% 
-  dplyr::filter(stringr::str_detect(string = .$name, pattern = "\\.csv"))
-
-# Did that work?
-files_drive
-
-# Identify local files
-files_local <- dir(path = file.path("data", "raw"))
-files_local
-
-# Overwrite local data files?
-update <- FALSE
-
-# Identify desired files
-if(update == T) {
-  files_wanted <- files_drive 
-} else {
-  files_wanted <- files_drive %>%
-    dplyr::filter(!name %in% files_local)
-}
-
-# Download them!
-purrr::walk2(.x = files_wanted$id, .y = files_wanted$name,
-             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
-                                                path = file.path("data", "raw", .y)))
-
-# Grab the data key
-key_drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M")) %>% 
-  dplyr::filter(name == "caged_data-key")
-
-# Did that work?
-key_drive
-
-# Download the data key
-googledrive::drive_download(file = key_drive$id, overwrite = T, type = "csv",
-                            path = file.path("data", key_drive$name))
+# Create needed folders
+source(file = file.path("00_setup.R"))
 
 # Clear environment + collect garbage
 rm(list = ls()); gc()
@@ -129,7 +82,7 @@ for(focal_src in sort(intersect(x = key$source, y = names(list_raw)))){
                           names_to = "orig.taxa",
                           values_to = "abundance") %>% 
       dplyr::mutate(orig.taxa = gsub(pattern = "orig.taxa_", replacement = "", x = orig.taxa))
-      
+    
   } else { focal_v3 <- focal_v2 }
   
   # Also process wide-format spatial information (if any is found)
@@ -177,7 +130,7 @@ combo_v2 <- combo_v1 %>%
     treat.insecticide = orig.treat_insecticide,
     # treat.canopy = orig.treat_canopy,
     treat.distance = orig.treat_dist,
-     treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
+    treat.disturbance = orig.treat_disturbance, #IDK what happened to this but it disappeared during the great May 6th power outage
     treat.gap = orig.treat_gap,
     treat.nitrogen.addition = orig.treat_nitrogen.addition,
     treat.fire = orig.treat_burn
@@ -191,9 +144,9 @@ combo_v2 <- combo_v1 %>%
   dplyr::mutate(treat.cage = dplyr::case_when(
     !is.na(orig.treat_cage) ~ orig.treat_cage,
     !is.na(orig.treat_fence) ~ orig.treat_fence,
-  #  !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
-   #   paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
-  #  !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
+    #  !is.na(orig.treat_cage.prairie.dog) & !is.na(orig.treat_cage.cattle) ~ 
+    #   paste0(orig.treat_cage.prairie.dog, "__", orig.treat_cage.cattle),
+    #  !is.na(orig.treat_cage.prairie.dog) ~ orig.treat_cage.prairie.dog,
     !is.na(orig.treat_cage.cattle) ~ orig.treat_cage.cattle,
     ## If all else fails, just use whatever the singualr original treatment column is
     !is.na(orig.treat) ~ orig.treat,
@@ -282,18 +235,15 @@ combo_v5 <- combo_v4 %>%
   dplyr::filter(is.na(original.taxa) != T) %>% 
   # Remove non-numbers
   dplyr::mutate(abundance = gsub(pattern = "^\\.$", replacement = "", x = abundance)) %>% 
-  dplyr::mutate(abundance = ifelse(test = abundance %in% c("n/a", "—", "na",
-                                                           "#VALUE!"),
-                                   yes = "", no = abundance)) %>% 
+  dplyr::mutate(
+    abundance = ifelse(test = abundance %in% c("n/a", "—", "na", "NaN", "#VALUE!"),
+      yes = "", no = abundance)) %>% 
   # Remove any rows where no metric of abundance is included
   dplyr::filter(is.na(abundance) != T &
                   nchar(abundance) != 0 &
                   abundance != "NaN") %>% 
   # Make abundance truly a number
-  dplyr::mutate(abundance = as.numeric(abundance)) %>% 
-  # Remove any rows with zero abundace
-  ## (We'll zero fill later but fewer rows means faster computing in the meantime)
-  dplyr::filter(abundance > 0)
+  dplyr::mutate(abundance = as.numeric(abundance))
 
 # Check structure
 dplyr::glimpse(combo_v5)
@@ -307,13 +257,15 @@ combo_v99 <- combo_v5
 
 # Check structure
 dplyr::glimpse(combo_v99)
-  
-# Export locally
-write.csv(x = combo_v99, row.names = F, na = '',
-          file = file.path("data", "01_caged_harmonized.csv"))
 
-# # Upload to Drive
-# googledrive::drive_upload(media = file.path("data", "01_caged_harmonized.csv"), overwrite = T,
-#                           path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od"))
+# What sources made it? 
+unique(combo_v99$source)
+
+# Identify tidy file name / path
+combo_name <- "01_caged_harmonized.csv"
+combo_path <- file.path("data", combo_name)
+
+# Export locally
+write.csv(x = combo_v99, row.names = F, na = '', file = combo_path)
 
 # End ----

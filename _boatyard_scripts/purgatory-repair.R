@@ -1,8 +1,6 @@
 ## --------------------------------------------------------------- ##
 # CAGED Harmonization Workflow
 ## --------------------------------------------------------------- ##
-# Written by: Kelly Speare, Nick J Lyon, ...
-
 # Purpose
 ## this script downloads data from purgatory folder in google drive for all data files that require rangling
 ## then does necessary wrangling to get the data in the needed format
@@ -20,8 +18,8 @@
 # Load libraries
 librarian::shelf(tidyverse, googledrive, supportR, readxl)
 
-# Create needed folder(s)
-dir.create(path = file.path("data"), showWarnings = F)
+# Create needed folders
+source(file = file.path("00_setup.R"))
 dir.create(path = file.path("data", "purgatory"), showWarnings = F)
 dir.create(path = file.path("data", "drydock"), showWarnings = F)
 
@@ -181,7 +179,13 @@ proj3 <- proj3_list %>%
   tidyr::separate_wider_delim(cols = input_file, delim = "_",cols_remove = F, 
                               names = c("site", "junk2", "junk3")) %>% 
   dplyr::select(-contains("junk")) %>% 
-  
+  # Identify study years
+  dplyr::mutate(relative.month = as.numeric(stringr::str_extract(string = Time, pattern = "\\d{1,2}"))) %>% 
+  dplyr::mutate(year = (relative.month / 12) + 2009, .after = Time) %>% 
+  dplyr::mutate(year = floor(year)) %>% 
+  dplyr::select(-Time, -relative.month) %>% 
+  dplyr::rename(Time = year)
+
 # Check structure
 dplyr::glimpse(proj3)
 
@@ -984,9 +988,9 @@ proj14 <- proj14_raw %>%
 
 # How many plot reps within 'subblock'?
 proj14 %>% 
-  group_by(block, subblock) %>%
-  summarize(plots = paste(unique(plot), collapse = "; "),
-            plot_ct = length(unique(plot)))
+  dplyr::group_by(block, subblock) %>%
+  dplyr::summarize(plots = paste(unique(plot), collapse = "; "),
+                   plot_ct = length(unique(plot)))
 
 # Re-check structure
 dplyr::glimpse(proj14)
@@ -1587,6 +1591,520 @@ googledrive::drive_upload(media = proj22_path, overwrite = T,
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
+## ------------------------------------------- ##
+# Project 23 (Duran et al. Coral) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Data are malformed (bizarre headers, empty columns, merged cells)
+## Also, data are found in several separate sheets
+
+# Identify file(s) name(s)
+proj23_raw_name <- "Raw-Data_2016_PeerJ_paper_For_Kelly.xlsx"
+
+# Identify file(s) in Drive
+proj23_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/17K1NWtD5mVVY1BNXFeFiXvz6ssuWfyr7")) %>% 
+  dplyr::filter(name %in% c(proj23_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj23_gdrive$id, .y = proj23_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify sheets in the data
+(proj23_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj23_raw_name)))
+
+# Read in each sheet
+## First sheet ("A")
+proj23_a_raw <- readxl::read_excel(file.path("data", "purgatory", proj23_raw_name),
+                                   sheet = proj23_sheets[1])
+## Second sheet ("B")
+proj23_b_raw <- readxl::read_excel(file.path("data", "purgatory", proj23_raw_name),
+                                   sheet = proj23_sheets[2])
+## Third sheet ("C")
+proj23_c_raw <- readxl::read_excel(file.path("data", "purgatory", proj23_raw_name),
+                                   sheet = proj23_sheets[3])
+
+# Check structure of first sheet
+dplyr::glimpse(proj23_a_raw)
+
+# Do needed repairs
+proj23_a <- proj23_a_raw %>% 
+  # Manually rename columns correctly
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = c("season", "algal_groups",
+                          paste0(
+                            sort(rep(x = c("site1", "site2", "site3", "site4"), 
+                                     times = 8)), "___",
+                            rep(c(rep("NE", 2), rep("CE", 2), 
+                                  rep("CO", 2), rep("NO", 2)),
+                                times = 4), "___",
+                            rep(c("a", "b"), times = 16))) ) %>% 
+  # Filter bad heders rows
+  dplyr::filter(season %in% c("January", "June")) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("site"),
+                      values_to = "percent_cover") %>% 
+  # Slip site information into useable components
+  tidyr::separate_wider_delim(cols = name, delim = "___",
+                              names = c("site", "treatment", "tile")) %>% 
+  # Clarify 'treatment' abbreviations
+  dplyr::mutate(
+    treatment_cage = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "E"),
+                            yes = "exclosure", no = "uncaged"),
+    treatment_nutrient = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "N"),
+                            yes = "enriched", no = "ambient")) %>% 
+  # Reorder columns (implicitly dropping ones we don't want)
+  dplyr::select(site, dplyr::starts_with("treatment_"), season, tile,
+                algal_groups, percent_cover) %>% 
+  # Ditch empty rows
+  dplyr::mutate(percent_cover = as.numeric(percent_cover)) %>% 
+  dplyr::filter(!is.na(percent_cover)) %>% 
+  # Add a column for experiment and for year
+  dplyr::mutate(experiment = "succession", .before = dplyr::everything()) %>% 
+  dplyr::mutate(year = 2012, .before = season)
+
+# Check structure
+dplyr::glimpse(proj23_a)
+
+# Check structure of second sheet
+dplyr::glimpse(proj23_b_raw)
+
+# Do needed repairs (essentially same structure/problems as "A")
+proj23_b <- proj23_b_raw %>% 
+  # Manually rename columns correctly
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = c("season", "algal_groups",
+                                       paste0(
+                                         sort(rep(x = c("site1", "site2", "site3", "site4"), 
+                                                  times = 8)), "___",
+                                         rep(c(rep("NE", 2), rep("CE", 2), 
+                                               rep("CO", 2), rep("NO", 2)),
+                                             times = 4), "___",
+                                         rep(c("a", "b"), times = 16))) ) %>% 
+  # Filter bad heders rows
+  dplyr::filter(season %in% c("January", "June")) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("site"),
+                      values_to = "percent_cover") %>% 
+  # Slip site information into useable components
+  tidyr::separate_wider_delim(cols = name, delim = "___",
+                              names = c("site", "treatment", "tile")) %>% 
+  # Clarify 'treatment' abbreviations
+  dplyr::mutate(
+    treatment_cage = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "E"),
+                            yes = "exclosure", no = "uncaged"),
+    treatment_nutrient = ifelse(stringr::str_detect(string = treatment,
+                                                    pattern = "N"),
+                                yes = "enriched", no = "ambient")) %>% 
+  # Reorder columns (implicitly dropping ones we don't want)
+  dplyr::select(site, dplyr::starts_with("treatment_"), season, tile,
+                algal_groups, percent_cover) %>% 
+  # Ditch empty rows
+  dplyr::mutate(percent_cover = as.numeric(percent_cover)) %>% 
+  dplyr::filter(!is.na(percent_cover)) %>% 
+  # Add a column for experiment
+  dplyr::mutate(experiment = "established communities", .before = dplyr::everything()) %>% 
+  dplyr::mutate(year = 2012, .before = season)
+
+# Check structure
+dplyr::glimpse(proj23_b)
+
+# Check structure of third sheet
+dplyr::glimpse(proj23_c_raw)
+
+# Do needed repairs (same rough fixes but different specifics because structure is diff)
+proj23_c <- proj23_c_raw %>% 
+  # Manually rename columns correctly
+  supportR::safe_rename(data = ., bad_names = names(.),
+                        good_names = c("species",
+                                       paste0(
+                                         sort(rep(c("set1", "set2", "set3"), times = 15)), "___",
+                                         rep(c(paste0("site1", "___", c("NE", "CE", "CO", "NO")),
+                                               paste0("site2", "___", c("NE", "CE", "CO", "NO")),
+                                               # note not all treatments are included for this site (vvv)!
+                                               paste0("site3", "___", c("NE", "CO", "NO")), 
+                                               paste0("site4", "___", c("NE", "CE", "CO", "NO"))
+                                         ), times = 3))) ) %>% 
+  # Filter bad heders rows
+  dplyr::filter(species != "Species" & !is.na(species)) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("set"),
+                      values_to = "percent_cover") %>% 
+  # Slip site information into useable components
+  tidyr::separate_wider_delim(cols = name, delim = "___",
+                              names = c("set", "site", "treatment")) %>% 
+  # Clarify 'treatment' abbreviations
+  dplyr::mutate(
+    treatment_cage = ifelse(stringr::str_detect(string = treatment,
+                                                pattern = "E"),
+                            yes = "exclosure", no = "uncaged"),
+    treatment_nutrient = ifelse(stringr::str_detect(string = treatment,
+                                                    pattern = "N"),
+                                yes = "enriched", no = "ambient")) %>% 
+  # Reorder columns (implicitly dropping ones we don't want)
+  dplyr::select(site, dplyr::starts_with("treatment_"), set, 
+                species, percent_cover) %>% 
+  # Ditch empty rows
+  dplyr::mutate(percent_cover = as.numeric(percent_cover)) %>% 
+  dplyr::filter(!is.na(percent_cover)) %>% 
+  # Identify year information from ambiguous "sets"
+  dplyr::mutate(year = dplyr::case_when(
+   set == "set1" ~ 2011, 
+   set == "set2" ~ 2012, # technically includes December 2011 but that feels pretty close to 2012
+   set == "set3" ~ 2012),
+   .before = species) %>% 
+  # Rename 'set' information too
+  dplyr::rename(tile_deployment = set) %>% 
+  # Add a column for experiment
+  dplyr::mutate(experiment = "recruitment", .before = dplyr::everything())
+
+# Check structure
+dplyr::glimpse(proj23_c)
+
+# Create good/new file name for each sheet
+proj23_name_a <- "duran_florida-keys_succession_2012_fishes_algae.csv"
+proj23_name_b <- "duran_florida-keys_established_2012_fishes_algae.csv"
+proj23_name_c <- "duran_florida-keys_recruitment_2011-2012_fishes_algae.csv"
+
+# Create file paths using these
+proj23_path_a <- file.path("data", "drydock", proj23_name_a)
+proj23_path_b <- file.path("data", "drydock", proj23_name_b)
+proj23_path_c <- file.path("data", "drydock", proj23_name_c)
+
+# Export locally
+write.csv(x = proj23_a, file = proj23_path_a, na = '', row.names = F)
+write.csv(x = proj23_b, file = proj23_path_b, na = '', row.names = F)
+write.csv(x = proj23_c, file = proj23_path_c, na = '', row.names = F)
+
+# Export to Drive
+purrr::walk(.x = dir(path = file.path("data", "drydock"), pattern = "duran_florida-keys_"),
+            .f = ~ googledrive::drive_upload(media = file.path("data", "drydock", .x),
+                                      overwrite = T,
+                                      path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX")))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 24 (Doherty & Sale Coral) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Separate sampling time points occupy different sheets
+## Data are also in spatial wide format and we want that in long
+
+# Identify file(s) name(s)
+proj24_raw_name <- "Cage experiment data from first season.xlsx"
+
+# Identify file(s) in Drive
+proj24_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1TnYtqecznI9SdbHGbI_EqgJO6izvciYZ")) %>% 
+  dplyr::filter(name %in% c(proj24_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj24_gdrive$id, .y = proj24_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Identify sheets in the Excel file
+(proj24_sheets <- readxl::excel_sheets(path = file.path("data", "purgatory", proj24_raw_name)))
+
+# Make an empty list to store the raw data
+proj24_raw <- list()
+
+# Loop across the sheets
+for(proj24_tab in proj24_sheets){
+  
+  # Read in that sheet
+  proj24_raw[[proj24_tab]] <- readxl::read_excel(path = file.path("data", "purgatory",
+                                                                  proj24_raw_name),
+                                                 sheet = proj24_tab) %>% 
+    # Add a column for the sheet name
+    dplyr::mutate(tab_name = proj24_tab)
+}
+
+# Check structure
+dplyr::glimpse(proj24_raw[[1]])
+
+# Do needed repairs
+proj24 <- proj24_raw %>% 
+  # Collapse to dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Ditch empty columns
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.)))) %>% 
+  # Ditch bad header rows
+  dplyr::filter(!is.na(Sites) & Sites != "Species") %>% 
+  # Rename species column correctly
+  dplyr::rename(species = Sites) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::contains("..."),
+                      names_to = "treat_rep", values_to = "fish_count") %>% 
+  # Separate treatment from replicate number
+  tidyr::separate_wider_delim(cols = treat_rep, delim = "...",
+                              names = c("cage_treatment", "replicate")) %>% 
+  # Fix replicate numbering
+  dplyr::mutate(replicate = as.numeric(replicate)) %>% 
+  dplyr::mutate(replicate = dplyr::case_when(
+    cage_treatment == "Cage" ~ (replicate - 1),
+    cage_treatment == "Partial" ~ (replicate - 10),
+    cage_treatment == "Open" ~ (replicate - 19))) %>% 
+  dplyr::mutate(replicate = paste(cage_treatment, replicate)) %>% 
+  # Extract date from tab names
+  dplyr::mutate(tab_name = gsub(pattern = "7Feb", replacement = "07Feb",
+                                x = tab_name)) %>% 
+  dplyr::mutate(date = as.Date(
+    paste(stringr::str_sub(string = tab_name, start = 1, end = 2),
+          ifelse(stringr::str_detect(string = tab_name, pattern = "Jan"),
+                 yes = "01", no = "02"),
+          "1981", sep = "-"), format = "%d-%m-%Y"), 
+    .after = replicate) %>% 
+  # Reorder columns more intuitively
+  dplyr::select(date, cage_treatment, replicate, species, fish_count) %>% 
+  # Add a 'year' column
+  dplyr::mutate(year = 1981, .before = date)
+
+# Re-check structure
+dplyr::glimpse(proj24)
+
+# Create good/new file name
+proj24_name <- "doherty-sale_great-barrier-reef_juvenile-fish-predation_1981_fish_fish.csv"
+proj24_path <- file.path("data", "drydock", proj24_name)
+
+# Export locally
+write.csv(x = proj24, file = proj24_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj24_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 25 (Lenihan Antarctica) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Caged/uncaged are in different files
+## Also multiple formatting issues within each of those
+
+# Identify file(s) name(s)
+proj25_raw_name <- c("CC 0_0 uncaged abundance.csv", "CC 0_0 caged_simple.csv")
+
+# Identify file(s) in Drive
+proj25_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1xFFFyJJKJLyqDCI2z4yXj93u7Rwl5TgX")) %>% 
+  dplyr::filter(name %in% c(proj25_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj25_gdrive$id, .y = proj25_gdrive$name,
+  .f = ~ googledrive::drive_download(file = .x, overwrite = T, path = file.path("data", "purgatory", .y)))
+
+# Read in uncaged data and make empty cells true NAs
+proj25_free_raw <- read.csv(file.path("data", "purgatory", proj25_raw_name[1])) %>% 
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(),
+    .fns = ~ ifelse(nchar(.) == 0, yes = NA, no = .)))
+
+# Check structure
+dplyr::glimpse(proj25_free_raw)
+
+# Do needed repairs
+proj25_free <- proj25_free_raw %>% 
+  # Ditch unwanted rows
+  dplyr::filter(!is.na(Cinder.Cones) & 
+    stringr::str_detect(string = tolower(Cinder.Cones), pattern = "total|species") != T &
+    Cinder.Cones %in% c("Uncaged", "Treatment:", " 0% TOC   0 ppm Cu", "S[ecies richness") != T) %>% 
+  # Rename some columns
+  dplyr::rename(species = Cinder.Cones,
+    higher.taxonomy = One.year.treatments) %>% 
+  supportR::safe_rename(data = ., bad_names = paste0("X.", 1:7),
+    good_names = paste0("replicate.uncage_", 1:7)) %>% 
+  # Pare down to only needed columns
+  dplyr::select(species, higher.taxonomy, dplyr::starts_with("replicate")) %>% 
+  # Add in desired columns from header
+  dplyr::mutate(cage.treat = "uncaged",
+    treat.methods = "0% TOC; 0 ppm Cu",
+    .before = dplyr::everything()) %>% 
+  # Add zeros for missing abundances
+  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("replicate"),
+    .fns = ~ ifelse(is.na(.) | nchar(.) == 0, yes = "0", no = .))) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("replicate"),
+    names_to = "replicate", values_to = "abundance")
+
+# Re-check structure
+dplyr::glimpse(proj25_free)
+
+# Read in _caged_ data and make empty cells true NAs
+proj25_cage_raw <- read.csv(file.path("data", "purgatory", proj25_raw_name[2])) %>% 
+  dplyr::mutate(dplyr::across(.cols = dplyr::everything(),
+    .fns = ~ ifelse(nchar(.) == 0, yes = NA, no = .)))
+
+# Check structure
+dplyr::glimpse(proj25_cage_raw)
+
+# Do needed repairs
+proj25_cage <- proj25_cage_raw %>% 
+  # Ditch unwanted rows
+  dplyr::filter(!is.na(Cinder.Cones) & 
+    stringr::str_detect(string = tolower(Cinder.Cones), pattern = "total|species") != T &
+    Cinder.Cones %in% c("caged", "Treatment:", " 0% TOC  0 ppm Cu") != T) %>% 
+  # Rename some columns
+  dplyr::rename(species = Cinder.Cones,
+    higher.taxonomy = One.year.treatments) %>% 
+  supportR::safe_rename(data = ., bad_names = paste0("X.", 1:8),
+    good_names = paste0("replicate.cage_", 1:8)) %>% 
+  # Pare down to only needed columns
+  dplyr::select(species, higher.taxonomy, dplyr::starts_with("replicate")) %>% 
+  # Add in desired columns from header
+  dplyr::mutate(cage.treat = "caged",
+    treat.methods = "0% TOC; 0 ppm Cu",
+    .before = dplyr::everything()) %>% 
+  # Add zeros for missing abundances
+  dplyr::mutate(dplyr::across(.cols = dplyr::starts_with("replicate"),
+    .fns = ~ ifelse(is.na(.) | nchar(.) == 0, yes = "0", no = .))) %>% 
+  # Flip to long format
+  tidyr::pivot_longer(cols = dplyr::starts_with("replicate"),
+    names_to = "replicate", values_to = "abundance")
+
+# Re-check structure
+dplyr::glimpse(proj25_cage)
+
+# Combine the two files
+proj25 <- dplyr::bind_rows(proj25_free, proj25_cage)
+
+# Re-check structure
+dplyr::glimpse(proj25)
+
+# Create good/new file name
+proj25_name <- "lenihan_antarctica_benthicstressors_1998-2000_epibenthicanimals_invertebrates.csv"
+proj25_path <- file.path("data", "drydock", proj25_name)
+
+# Export locally
+write.csv(x = proj25, file = proj25_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj25_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 26 (Sellers Molluscs) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Experiment was conducted multiple times (different seasons) at multiple sites. These should be different experiments.
+
+# Identify file(s) name(s)
+proj26_raw_name <- "sessile_data.csv"
+
+# Identify file(s) in Drive
+proj26_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1InVqWKqN2bRFfkQH3gupnJPWsGBRaSf5")) %>% 
+  dplyr::filter(name %in% c(proj26_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj26_gdrive$id, .y = proj26_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj26_raw <- read.csv(file.path("data", "purgatory", proj26_raw_name))
+
+# Check structure
+dplyr::glimpse(proj26_raw)
+
+# Do needed repairs
+proj26 <- proj26_raw %>% 
+  dplyr::mutate(experiment = paste0(season, "__", site),
+    .before = season)
+
+# Re-check structure
+dplyr::glimpse(proj26)
+
+# Create good/new file name
+proj26_name <- "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv"
+proj26_path <- file.path("data", "drydock", proj26_name)
+
+# Export locally
+write.csv(x = proj26, file = proj26_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj26_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
+# Project 27 (Zamin Caribou) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## Columns contain treatment and replicate information. There are 10 columns representing 2 treatments (C=control, E=Exclosure) and numbers denote replicates. Rows represent different taxa in experimental units.
+
+# Identify file(s) name(s)
+proj27_raw_name <- "Point framing data summary (2005&2008&2011).xlsx"
+
+# Identify file(s) in Drive
+proj27_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1j1XescsktCHPIco27hIUE6bDWxdveI1m")) %>% 
+  dplyr::filter(name %in% c(proj27_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj27_gdrive$id, .y = proj27_gdrive$name,
+  .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+      path = file.path("data", "purgatory", .y)))
+
+# Identify sheets in data
+proj27_sheets_all <- readxl::excel_sheets(file.path("data", "purgatory", proj27_raw_name))
+(proj27_sheets <- proj27_sheets_all[stringr::str_detect(string = proj27_sheets_all, pattern = "exclosure")])
+
+# Read in data
+proj27_raw <- purrr::map(.x = proj27_sheets,
+    .f = ~ readxl::read_xlsx(path = file.path("data", "purgatory", proj27_raw_name),
+      sheet = .x)) %>% 
+  rlang::set_names(x = ., nm = proj27_sheets)
+
+# Check raw structure of one sheet/list element
+dplyr::glimpse(proj27_raw[[1]])
+
+# Do needed repairs
+proj27 <- proj27_raw %>% 
+  # Get sheet name into dataset
+  purrr::map2(.x = ., .y = names(.),
+    .f = ~ dplyr::mutate(.data = ., sheet = .y)) %>% 
+  # Collapse into a single dataframe
+  purrr::list_rbind(x = .) %>% 
+  # Identify year & fix issue with inconsistent taxa column name
+  dplyr::mutate(year = gsub("exclosure_", "", x = sheet), 
+    species = dplyr::coalesce(spp, `Plot Name`),
+    .before = dplyr::everything()) %>% 
+  # Ditch unwanted columns
+  dplyr::select(-spp, -sheet, -`Plot Name`) %>% 
+  # Reshape longer
+  tidyr::pivot_longer(cols = -year:-species,
+    names_to = "treat_rep") %>% 
+  # Separate treatment from replicate
+  dplyr::mutate(treatment = stringr::str_sub(string = treat_rep, start = 1, end = 1),
+    replicate = stringr::str_sub(string = treat_rep, start = 2, end = 2),
+    .before = treat_rep) %>% 
+  # Remove NAs
+  dplyr::filter(!is.na(value))
+
+# Re-check structure
+dplyr::glimpse(proj27)
+
+# Create good/new file name
+proj27_name <- "zamin_canadianarctic_tundra_2005-2011_caribou_vegetation.csv"
+proj27_path <- file.path("data", "drydock", proj27_name)
+
+# Export locally
+write.csv(x = proj27, file = proj27_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj27_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
