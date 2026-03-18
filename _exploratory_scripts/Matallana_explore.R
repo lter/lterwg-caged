@@ -9,7 +9,7 @@ librarian::shelf(tidyverse, googledrive, supportR, raster, ncdf4,
                  dplyr, sp, ,sf, stringr, magrittr, reshape2, tools, 
                  maps, ggplot2, cowplot, ggspatial, ggrepel,
                  rnaturalearth, rnaturalearthdata, httpuv, geodata,
-                 QBMS)
+                 QBMS, wesanderson, PerformanceAnalytics)
 
 # Set-up google drive connection & import metadata ----
 googledrive::drive_auth(email = "nicomatamej@gmail.com")
@@ -34,6 +34,7 @@ meta.tidy.simple = meta.tidy.full %>%
   distinct() %>% #collapse duplicates
   drop_na() #Remove sites with no lat/longs
 
+#
 # NPP data ----
 
 #export csv of lat/long & ID column to extract npp values from AppEEARS data access portal.
@@ -453,6 +454,8 @@ id.189 = as.data.frame(id.189)
 
 #
 # Correlations ----
+
+#Worldclim
 pairs(meta.wc.extracts[meta.wc.extracts$ppt.mm < 2000,c(4:8)])
 
 #inspect temp ~ temp.sd
@@ -471,7 +474,7 @@ plot(meta.wc.extracts$lat, meta.wc.extracts$ppt.mm, main = "precip ~ lat")
 plot(meta.wc.extracts[meta.wc.extracts$ppt.mm < 2000,]$t.avg.C, meta.wc.extracts[meta.wc.extracts$ppt.mm < 2000,]$ppt.mm, main = "ppt ~ temp")
 
 
-## Check correlation with npp data ##
+## Check correlation worldclim ~ npp data ##
 wc.npp.meta = meta.wc.extracts %>%
   left_join(meta.npp.import[,2:4], by = c("source", "exp.name")) %>%
   filter(npp.avg < 20000) %>%
@@ -500,6 +503,17 @@ colnames(meta.wc.npp.terraclim) = c("source", "exp.name", "var_aq.or.terr", "lat
 
 pairs(meta.wc.npp.terraclim[,6:12])
 
+#Pretty correlation matrix of terraclimate vars
+#Run entire chunk: Export figure .png
+png("C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Figures/terraclimate.corchart_2025-05-23.png",
+    units="in", width=8, height=6, res=300)
+#pairs(terraclimate.data[terraclimate.data$ppt.avg<2000,c(4,6:8)])
+chart.Correlation(terraclimate.data[terraclimate.data$ppt.avg<2000,c(4,6:8)])
+dev.off()
+
+
+
+#
 # Visualize maps ----
 
 # Get a world map
@@ -687,24 +701,28 @@ wc.map.ppt <- ggplot() + #NOTE: high precip outliers removed!
 
 wc.map.ppt
 
-### Sites colored by Terraclim vars ----
+### Sites colored by Terraclimate vars ----
 
-tc.map <- ggplot() +
+pal <- wes_palette("Zissou1", 100, type = "continuous") #Color palette
+
+
+
+tc.avg.temp.map <- ggplot() +
   geom_sf(data = world, fill = "antiquewhite1") +
   coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
-  annotation_scale(location = "bl", 
-                   pad_x = unit(0.4, "in"), 
-                   pad_y = unit(0.7, "in"),
-                   height = unit(0.2, "cm"), 
-                   width_hint = 0.2) +
-  annotation_north_arrow(location = "bl", which_north = "true", 
-                         pad_x = unit(0.5, "in"), 
-                         pad_y = unit(0.8, "in"),
-                         style = north_arrow_fancy_orienteering) +
-  geom_point(data = terraclim.avgs, aes(x = long, y = lat, color = ppt.avg), #color vars are t.avg, t.avg.sd, ppt.avg"
+  #annotation_scale(location = "bl", 
+                   #pad_x = unit(0.4, "in"), 
+                   #pad_y = unit(0.7, "in"),
+                   #height = unit(0.2, "cm"), 
+                   #width_hint = 0.2) +
+  #annotation_north_arrow(location = "bl", which_north = "true", 
+                         #pad_x = unit(0.5, "in"), 
+                         #pad_y = unit(0.8, "in"),
+                         #style = north_arrow_fancy_orienteering) +
+  geom_point(data = terraclim.avgs, aes(x = long, y = lat, color = t.avg), #color vars are t.avg, t.avg.sd, ppt.avg"
              shape = 19, alpha = 0.5, size = 2) +
-  scale_color_gradientn(colours = rainbow(5), trans = 'reverse') +
-  guides(color=guide_colourbar(bquote(paste("Avg. yearly precip (mm)")))) + #Avg. yearly temp (C), Avg. yearly temperature\nstandard deviation, Avg. yearly precip (mm)
+  scale_color_gradientn(colours=pal) + #colours = rainbow(5), trans = 'reverse'
+  guides(color=guide_colourbar(bquote(paste("Average\ntemperature (C)")))) + #Average temperature (C), Avg. yearly temperature\nstandard deviation, Avg. yearly precip (mm)
   #guides(size=guide_legend("Average Yearly Temperature (C)")) +
   #labs(tag = "A") +
   xlab("Longitude") + 
@@ -721,9 +739,52 @@ tc.map <- ggplot() +
     axis.text.x = element_text(size = 12, family = "Arial", color = "black"),
     axis.title = element_text(size = 14, family = "Arial", color = "black"))
 
-tc.map
+#Run entire chunk: Export figure .png
+png("C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Figures/terraclimate.avgtemp.map_2025-05-23.png",
+    units="in", width=8, height=4, res=300)
+tc.avg.temp.map
+dev.off()
 
 
+#Precip
+
+tc.ppt.map <- ggplot() +
+  geom_sf(data = world, fill = "antiquewhite1") +
+  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
+  #annotation_scale(location = "bl", 
+    #pad_x = unit(0.4, "in"), 
+    #pad_y = unit(0.7, "in"),
+    #height = unit(0.2, "cm"), 
+    #width_hint = 0.2) +
+  #annotation_north_arrow(location = "bl", which_north = "true", 
+    #pad_x = unit(0.5, "in"), 
+    #pad_y = unit(0.8, "in"),
+    #style = north_arrow_fancy_orienteering) +
+  geom_point(data = terraclim.avgs[terraclim.avgs$ppt.avg < 2000,], aes(x = long, y = lat, color = ppt.avg), #color vars are t.avg, t.avg.sd, ppt.avg"
+             shape = 19, alpha = 0.5, size = 2) +
+  scale_color_gradientn(colours = pal, trans = "reverse") + #colours = rainbow(5), trans = 'reverse'
+  guides(color=guide_colourbar(bquote(paste("Avg. yearly\ntotal precip (mm)")))) + #Average temperature (C), Avg. yearly temperature\nstandard deviation, Avg. yearly total precip (mm)
+  #guides(size=guide_legend("Average Yearly Temperature (C)")) +
+  #labs(tag = "A") +
+  xlab("Longitude") + 
+  ylab("Latitude") +
+  theme(#legend.position = "none",
+    legend.background = element_blank(),
+    legend.box.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 10, family = "Arial", color = "black"),
+    panel.grid.major = element_line(colour = gray(0.5), linetype = "dashed", size = 0.2), 
+    panel.background = element_rect(fill = "aliceblue"), 
+    panel.border = element_rect(fill = NA),
+    axis.text.y = element_text(size = 12, family = "Arial", color = "black"),
+    axis.text.x = element_text(size = 12, family = "Arial", color = "black"),
+    axis.title = element_text(size = 14, family = "Arial", color = "black"))
+
+#Run entire chunk: Export figure .png
+png("C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Figures/terraclimate.ppt-yearly-avg.map_2025-05-23.png",
+    units="in", width=8, height=4, res=300)
+tc.ppt.map
+dev.off()
 
 
 
@@ -848,4 +909,20 @@ id.189 = as.data.frame(id.189)
 
 
 
+# 10/13/2025 new experiment df simplified for ArcGIS visualization ----
+
+sites.10.13 = read.csv("C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Datasets/betadispersion_df_10.06.csv") %>%
+  dplyr::select(source, exp.name) %>%
+  distinct()
+
+sites.tidy = meta.tidy.simple %>%
+  right_join(sites.10.13, by = c("source", "exp.name")) %>% #filter by sites in 10/16 file
+  drop_na() #remove sites
+
+sites.anti = sites.10.13 %>%
+  anti_join(meta.tidy.simple, by = c("source", "exp.name")) #double check missing sites - none with lat/long
+
+write.csv(sites.tidy, "C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Datasets/sites.latlong.10.13.25.csv")
+
+#
 # End ----

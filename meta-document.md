@@ -2,11 +2,6 @@
 
 This document serves to identify macro-scale changes and judgement calls for easy revisiting / internal reminding.
 
-### First Meeting - 2025/01/27-30
-Overall Goal of this Meeting: 1) download data 2) create data key 3) harmonize data 4) create meta-data file  
-
-We were able to start each of these three tasks (we didn't finish any of them) and so have a protocol for each.  
-
 *Important Links*  
 [Meeting agenda and notes](https://docs.google.com/document/d/1948uxU_8MAEoeU_nnuD_nZiY6FS9Zrgc2DkS0F-83xc/edit?tab=t.0)  
 [Data Sources - Detailed](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)  
@@ -35,7 +30,7 @@ unique.id = exp.design<sub>N</sub> + treatment<sub>N</sub> + year + exp.name
 
 
 ### Code Workflow Notes  
-1) Download Data
+#### 1) Download Data
 - When downloading data from our list of [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit), before uploading to [google drive data folder](https://drive.google.com/drive/u/1/folders/1EOSlNF3zz-ktBQwoIt1a30dv0azJ1g5M), we renamed the files using file.name  
 file.name = organization_site_projectdescription_yearssampled_excluded_measured
 - If the file cannot be uploaded as is, put the file in purgatory and we will run boatyard scripts to clean it up (https://github.com/lter/lterwg-caged/issues/8)
@@ -43,7 +38,7 @@ file.name = organization_site_projectdescription_yearssampled_excluded_measured
  
 - when its uploaded, make sure to check Y in the [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)
  
-2) Create [Data-Key](https://docs.google.com/spreadsheets/d/1SgdqsAl_yPArCaw8dCcP0KINL3Qp2qwN0ZJqWnIxGPk/edit?gid=0#gid=0)   
+#### 2) Create [Data-Key](https://docs.google.com/spreadsheets/d/1SgdqsAl_yPArCaw8dCcP0KINL3Qp2qwN0ZJqWnIxGPk/edit?gid=0#gid=0)   
 
 - Then we will create the data-key using the expand-key.R in boatyard scripts folder (this will only add the new data rows)  
 - Then we manually fill in the data key with our knowledge
@@ -56,15 +51,36 @@ file.name = organization_site_projectdescription_yearssampled_excluded_measured
     - abundance: whatever we are using as abundance (relative, biomass, cover, etc.)
     - orig.taxa_NAMEFROMORIGINAL: if its in long format, then there will only be one column 
 
-3) Harmonize Data  
+#### 3) Harmonize Data  
 - Then we run the harmonize script (01_harmonize) and hopefully! we end up with a beautiful happy dataset :)
   - harmonization workflow (`01_harmonize.R`) that uses column key-based method (see `?ltertools::harmonize`)  
- 
-4) Fill out [Metadata](https://docs.google.com/spreadsheets/d/1vNMYj3-xO_tmIhniGyOuj1pG4DQt9fMRAuQipPE3hys/edit?gid=0#gid=0)    
+
+#### 4) Quality Control
+- 02 script is where we add the caging standardization for each group. There are some changes where we are confident (e.g., Caged vs Uncaged" and others where we have to set the caging standardization by each source.
+
+#### 5) Filtering
+- 03 script is where we filter out treatments we aren't interested in (e.g., Nutrients), identify datasets with subannual sampling and identify the last time point for each year, and identify the last year for datasets that have multiple years. For sub-annual sampling, you have to manually identify the last timepoint in a year in the code.
+- This is also where we filter out any "non-living taxa".
+
+#### 6) Zero Fill
+- 04 script zero fills our data
+
+#### 7) Calculate Beta Diversity, Gamma Diversity and Mean Diff
+- 05a script is where we calculate beta diversity. This is where you can lose datasets (and catch errors), typically because the sample size is not high enough. This is a good place to double check which papers get through the pipeline.
+- 05b script. Calculates gamma diversity for each exp.name
+- 06 script. Calculates mean difference between caged and uncaged beta dispersion
+   
+#### 8) Fill out [Metadata](https://docs.google.com/spreadsheets/d/1vNMYj3-xO_tmIhniGyOuj1pG4DQt9fMRAuQipPE3hys/edit?gid=0#gid=0)    
 
 - lastly, we will fill out metadata for each exp.name
 - follow our [instructions](https://docs.google.com/document/d/1gnFHVtSg-F6A3v3lRcJr1pGRxlhtWLQNRr4mCgxqMMQ/edit?tab=t.0)
-- when its completed leadership team check Y in the [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)  
+- when its completed leadership team check Y in the [data sources](https://docs.google.com/spreadsheets/d/1Eg1mt-TPUgXqqPe8e8nhtAmKJ0NzWDbolfSVKmQf4o8/edit)
+
+#### 9) Attach Metadata to Beta Diversity
+- 07 script, run this after you have filled out all the metadata in the google sheet
+
+#### 10) Run statistics!
+- Now you have a final dataset that you can run your statistics on.  
 
 
 
