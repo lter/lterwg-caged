@@ -22,6 +22,10 @@ sub_v1 <- read.csv(file.path("data", "02_caged_tidied.csv"))
 # Check structure
 dplyr::glimpse(sub_v1)
 
+# Check what data made it through 01
+unique(sub_v1$source) # 127
+unique(sub_v1$exp.name) # 369
+
 ## ------------------------------------------- ##
 # Drop Zero-Abundance Samples ----
 ## ------------------------------------------- ##
