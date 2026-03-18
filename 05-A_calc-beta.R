@@ -39,6 +39,11 @@ beta_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
 # Check structure
 dplyr::glimpse(beta_v1)
 
+# Check what data made it through 04
+unique(beta_v1$source) # 121
+unique(beta_v1$exp.name) # 340
+# same as 03, nothing was dropped, just zero filled so it makes sense
+
 ## ------------------------------------------- ##
 # Data Preparation ----
 ## ------------------------------------------- ##
