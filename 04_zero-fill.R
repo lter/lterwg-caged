@@ -25,6 +25,10 @@ fill_v1 <- read.csv(file.path("data", "03_caged_filtered.csv"))
 # Check structure
 dplyr::glimpse(fill_v1)
 
+# Check what data made it through 03
+unique(fill_v1$source) # 121
+unique(fill_v1$exp.name) # 340
+
 ## ------------------------------------------- ##
 # Aggregate Within Groups ----
 ## ------------------------------------------- ##
