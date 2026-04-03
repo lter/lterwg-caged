@@ -30,14 +30,14 @@ caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
-dim(caged_effectsize) # 370 rows, this increased alot?
+dim(caged_effectsize) # 399 rows, this increased alot?
 # seems like there are maybe some duplicates? shouldn't there only be 302??
 # i think its because there are different sample sizes for caged vs uncaged so then you get a duplicate row?
 # but we also decided to move forward with beta dispersion 
-dim(caged_beta) # 12339  rows
+dim(caged_beta) # 12688  rows
 
 # Check number of sources
-unique(caged_effectsize$exp.name) # 302
+unique(caged_effectsize$exp.name) # 327
 dim(caged_effectsize)
 
 
@@ -45,7 +45,7 @@ dim(caged_effectsize)
 # Latitude Models  ----
 ## ------------------------------------------- ##
 
-glimpse(caged_beta) #12,243 rows
+glimpse(caged_beta) #12,688 rows
 
 # Check distribution of values in response variable, betadisp.comm.dist
 hist(caged_beta$betadisp.comm.dist)  
@@ -198,9 +198,9 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 
 # check sample size
-dim(caged_beta2) # 12516   27
+dim(caged_beta2) # 12526    27
 unique(caged_beta2$exp.name) # 315
-unique(caged_beta2$source) # 109
+unique(caged_beta2$source) # 111
 
 # which sources and experiment names make it through the pipeline 
 test<- caged_beta2 %>% select(exp.name, source) %>% distinct()
@@ -233,10 +233,10 @@ plot(allEffects(caging.betamod))
 # this is only on the uncaged data 
 
 # Uncaged data 
-uncaged.beta2 <- caged_beta2 %>%
-  dplyr::filter(cage.treatment_std == "uncaged") %>%
-  filter(!abs.lat > 75) %>%
-  droplevels()
+# uncaged.beta2 <- caged_beta2 %>%
+#   dplyr::filter(cage.treatment_std == "uncaged") %>%
+#   filter(!abs.lat > 75) %>%
+#   droplevels()
 
 caged_beta2 %>%
   group_by(var_aq.or.terr) %>%
@@ -288,7 +288,7 @@ summary(three.way.betamod)
 car::Anova(three.way.betamod, type = "II")
 # the three way interaction is no longer significant? even without gamma richness and sample size?
 # is this because of new data? why was it significant before in october?
-
+# update april 3, now the interaction is sig (0.05)
 
 plot(allEffects(three.way.betamod))
 check_model(three.way.betamod)
