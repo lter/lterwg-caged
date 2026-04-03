@@ -30,8 +30,8 @@ caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 110
-unique(caged_v1$exp.name) # 317
+unique(caged_v1$source) # 118
+unique(caged_v1$exp.name) # 327
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion & Difference Data ---- 
@@ -64,8 +64,8 @@ supportR::diff_check(old = names(caged_v1), new = names(caged_mean))
 dplyr::glimpse(caged_mean)
 
 # Check replicates
-unique(caged_mean$source) # 110
-unique(caged_mean$exp.name) # 317
+unique(caged_mean$source) # 118
+unique(caged_mean$exp.name) # 327
 # now these are the same!
 
 # Which are lost (if any)
@@ -106,8 +106,8 @@ caged_effectsize <- caged_mean %>%
                 within.cage.treat_betadisp.mean.diff)
 
 # Check number of sources
-unique(caged_effectsize$source) # 110
-unique(caged_effectsize$exp.name) # 317
+unique(caged_effectsize$source) # 118
+unique(caged_effectsize$exp.name) # 327
 
 # Which are lost (if any)
 supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_effectsize$source))
@@ -142,8 +142,8 @@ caged_model <- caged_v1 %>%
 dplyr::glimpse(caged_model)
 
 # Check replicates
-unique(caged_model$source) # 110
-unique(caged_model$exp.name) # 317
+unique(caged_model$source) # 118
+unique(caged_model$exp.name) # 327
 
 # Which are lost (if any)
 supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_model$source))
@@ -163,8 +163,8 @@ caged_beta <- caged_model %>%
 supportR::diff_check(old = names(caged_model), new = names(caged_beta))
 
 # Check number of sources
-unique(caged_beta$source) # 110
-unique(caged_beta$exp.name) # 317
+unique(caged_beta$source) # 118
+unique(caged_beta$exp.name) # 327
 
 # Check structure
 dplyr::glimpse(caged_beta)
