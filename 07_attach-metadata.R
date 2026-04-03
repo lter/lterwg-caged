@@ -224,8 +224,8 @@ dplyr::glimpse(w.meta_v3)
 dplyr::glimpse(w.meta_v4)
 
 # How many sources and exp.name got through the pipeline?
-unique(w.meta_v4$source) # 110
-unique(w.meta_v4$exp.name) # 317
+unique(w.meta_v4$source) # 118
+unique(w.meta_v4$exp.name) # 327
 
 ## ------------------------------------------- ##
 # Export ----
