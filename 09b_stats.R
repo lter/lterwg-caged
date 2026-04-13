@@ -284,9 +284,7 @@ three.way.betamod <- glmmTMB(betadisp.comm.dist_transform ~
 AIC(three.way.betamod)
 summary(three.way.betamod)    
 car::Anova(three.way.betamod, type = "II")
-# the three way interaction is no longer significant? even without gamma richness and sample size?
-# is this because of new data? why was it significant before in october?
-# update april 3, now the interaction is sig (0.05)
+# update april 3, now the interaction is sig (0.05) - we've had some fluctuations here depending on data going in
 
 plot(allEffects(three.way.betamod))
 check_model(three.way.betamod)
@@ -321,6 +319,47 @@ check_model(two.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- i
 
 # Try the model with caged data only to see if this helps us understand why the three way interaction is not significant
 
+
+# Try running model on just late successional data
+late.data <- caged_beta2 %>%
+  filter(var_succ.vs.late == "late")
+
+three.way.betamod.late <- glmmTMB(betadisp.comm.dist_transform ~ 
+                               var_aq.or.terr * abs.lat * cage.treatment_std  +
+                               gamma.richness + betadisp.sample.size +
+                               (1|exp.name), 
+                             dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                             family = beta_family(link = "probit"),
+                             control = glmmTMBControl(optimizer = optim, 
+                                                      optArgs = list(method = "BFGS")), 
+                             # Or use nlminb, or bobyqa via nloptr
+                             data = late.data) 
+AIC(three.way.betamod.late)
+summary(three.way.betamod.late)    
+car::Anova(three.way.betamod.late, type = "II") # three way interaction is no longer sig 
+
+
+# Reduced model 
+two.way.betamod.late <- glmmTMB(betadisp.comm.dist_transform ~ 
+                                    var_aq.or.terr + 
+                                  abs.lat * cage.treatment_std  +
+                                    gamma.richness + betadisp.sample.size +
+                                    (1|exp.name), 
+                                  dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                                  family = beta_family(link = "probit"),
+                                  control = glmmTMBControl(optimizer = optim, 
+                                                           optArgs = list(method = "BFGS")), 
+                                  # Or use nlminb, or bobyqa via nloptr
+                                  data = late.data) 
+AIC(two.way.betamod.late)
+summary(two.way.betamod.late)    
+car::Anova(two.way.betamod.late, type = "II") # three way interaction is no longer sig 
+
+plot(allEffects(two.way.betamod.late))
+
+
+
+
 # Caged data
 caged.beta2 <- caged_beta2 %>%
   dplyr::filter(cage.treatment_std == "caged") %>%
@@ -350,8 +389,8 @@ plot(allEffects(caged.betamod))
 # Can we run separate models for aquatic and terrestrial?
 caged_beta2 %>%
   group_by(var_aq.or.terr) %>%
-  summarize(n()) # aquatic is only ~16% of our data
-
+  summarize(n()) # aquatic is only ~20% of our data
+2124/10402
 
 unique(aquatic.beta$exp.name) # 88
 unique(terrestrial.beta$exp.name) # 212
