@@ -30,10 +30,7 @@ caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
-dim(caged_effectsize) # 399 rows, this increased alot?
-# seems like there are maybe some duplicates? shouldn't there only be 302??
-# i think its because there are different sample sizes for caged vs uncaged so then you get a duplicate row?
-# but we also decided to move forward with beta dispersion 
+dim(caged_effectsize) # 399 rows
 dim(caged_beta) # 12688  rows
 
 # Check number of sources
@@ -201,6 +198,7 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 dim(caged_beta2) # 12526    27
 unique(caged_beta2$exp.name) # 315
 unique(caged_beta2$source) # 111
+# this is the sample size after dropping missing metadata 
 
 # which sources and experiment names make it through the pipeline 
 test<- caged_beta2 %>% select(exp.name, source) %>% distinct()
