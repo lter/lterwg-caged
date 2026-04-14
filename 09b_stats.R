@@ -239,9 +239,14 @@ plot(allEffects(caging.betamod))
 caged_beta2 %>%
   group_by(var_aq.or.terr) %>%
   summarize(n())
+
+# try running with just late succession
+uncaged.late <- caged_beta2 %>%
+  filter(cage.treatment_std == "uncaged") %>%
+  filter(var_succ.vs.late == "late")
   
 
-uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+uncaged.late.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                               var_aq.or.terr * scale(abs.lat)  +
                              # accounting for gamma richness and sample size
                              scale(gamma.richness) + scale(betadisp.sample.size) +
@@ -251,15 +256,15 @@ uncaged.betamod <- glmmTMB(betadisp.comm.dist_transform ~
                             control = glmmTMBControl(optimizer = optim, 
                                                      optArgs = list(method = "BFGS")), 
                             # Or use nlminb, or bobyqa via nloptr
-                            data = uncaged.beta2) 
+                            data = uncaged.late) 
 # scaling the continuous variables reduced multicollinearity to low from moderate
 
-AIC(uncaged.betamod)
-summary(uncaged.betamod)    
-car::Anova(uncaged.betamod, type = "II") # interaction is significant
+AIC(uncaged.late.betamod)
+summary(uncaged.late.betamod)    
+car::Anova(uncaged.late.betamod, type = "II") # interaction is significant
 
 library(effects)
-plot(allEffects(uncaged.betamod))
+plot(allEffects(uncaged.late.betamod))
 # beta dispresion increases with gamma richness and sample size
 # beta dispersion increases with latitude for aquatic, but decreases with latitude for terrestrial
 
