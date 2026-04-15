@@ -35,6 +35,7 @@ dim(caged_beta) # 12688  rows
 
 # Check number of sources
 unique(caged_effectsize$exp.name) # 327
+unique(caged_beta$exp.name) #327
 dim(caged_effectsize)
 
 
@@ -100,6 +101,7 @@ table(caged_beta$var_aq.or.terr)
 caged_beta2 <- caged_beta %>% 
   dplyr::filter(var_aq.or.terr != "") %>% 
   droplevels()
+unique(caged_beta2$exp.name) # down to 316, we lose hamilton here 
 
 table(caged_beta2$var_aq.or.terr) #Good!
 
@@ -196,7 +198,7 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 # check sample size
 dim(caged_beta2) # 12526    27
-unique(caged_beta2$exp.name) # 315
+unique(caged_beta2$exp.name) # 315, down from 327 
 unique(caged_beta2$source) # 111
 # this is the sample size after dropping missing metadata 
 
