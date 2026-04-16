@@ -111,6 +111,7 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
                      new = unique(meta_v3$source))
 
 # old = data, new = metadata
+# there will be some that are not in the metadata if we decided to exclude them 
 ## If any are in data but not *metadata*:
 ### Run "_boatyard_scripts/expand_metadata.R" and follow instructions at end of script
 
@@ -149,9 +150,14 @@ meta_v6 <- dplyr::filter(.data = meta_v5, exp.name %in% unique(c(w.meta_in_list[
 supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
                                     w.meta_in_list[[2]]$source)),
                      new = unique(meta_v6$source))
+# old = data, new = metadata
+
+
 supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                     w.meta_in_list[[2]]$exp.name)),
                                   new = unique(meta_v6$exp.name))
+# old = data, new = metadata
+
 
 ## ------------------------------------------- ##
 # Load Gamma Richness Data ----
