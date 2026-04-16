@@ -109,6 +109,8 @@ dplyr::glimpse(meta_v4)
 supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
                                     w.meta_in_list[[2]]$source)), 
                      new = unique(meta_v3$source))
+
+# old = data, new = metadata
 ## If any are in data but not *metadata*:
 ### Run "_boatyard_scripts/expand_metadata.R" and follow instructions at end of script
 
@@ -127,6 +129,8 @@ meta_v5 <- dplyr::filter(.data = meta_v4, source %in% unique(c(w.meta_in_list[[1
 supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                     w.meta_in_list[[2]]$exp.name)),
                      new = unique(meta_v5$exp.name))
+# old = data, new = metadata
+
 ## If any are in data but not *metadata*:
 ### The metadata had this info entered incorrectly
 ### Open the GoogleSheet and edit the "exp.name" column as needed
