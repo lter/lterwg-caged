@@ -196,12 +196,7 @@ sub_v6 <- sub_v5 %>%
          year == "2018" & sampling.point == "9") |
       (source == "samper-villarreal_costarica_seagrass_2018-2019_seaturtle_seagrass.csv" & 
          year == "2019" & sampling.point == "13") |
-      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
-         year == "2016" & sampling.point == "9/21/2016") |
-      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
-         year == "2017" & sampling.point == "12/12/2017") |
-      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" & 
-         year == "2018" & sampling.point == "4/18/2018") |
+
       (source == "shantz_florida_partialcages_2013-2014_fish_benthic.csv" & 
          year == "2013" & sampling.point == "Sep_13") |
       (source == "shantz_florida_partialcages_2013-2014_fish_benthic.csv" & 
@@ -210,6 +205,10 @@ sub_v6 <- sub_v5 %>%
          year == "2017" & sampling.point == "11") |
       (source == "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv" &
          year == "2018" & sampling.point == "3") |
+      # Sellers
+      # sellers has multi annual sampling within source but not within exp.name so its causing it to be dropped
+      # to make sure it goes through we have to manually keep each exp.name here
+      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv") | 
       ## V
       (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
          year == "2004" & sampling.point == "8") |
@@ -245,10 +244,11 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
-# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
+# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" 
+
+
 setdiff(x = unique(sub_v5$exp.name), y = unique(sub_v6$exp.name))
-## Experiment names like "nu16__AC" are from "sellers_..." dataset
-# why are these getting lost? 
+## fixed the sellers issue!
 
 # Re-check sampling point for same datasets that previously had more than 1
 multi.times_v2 <- sub_v6 %>% 
