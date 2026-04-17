@@ -487,8 +487,7 @@ tidy_v8 %>%
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    .groups = "keep")
-# something goes wrong here with sellers and villar 
-# villar has year which makes the character error
+# something goes wrong here with sellers- it uses sampling point instead of year?
 
 # Diagnose years/sampling points per dataset
 diagnose_years <- tidy_v8 %>% 
