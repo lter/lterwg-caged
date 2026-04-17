@@ -561,12 +561,6 @@ for(lost_exp in dropped_names){
 # Create final object name
 beta_v99 <- beta_fine_v2
 
-# fixing year character issue 
-str(beta_v99$year)
-
-beta_v99$year <- as.integer(beta_v99$year)
-# this does not fix the error that sellers has 2 as the year - but icanʻt for the life of me figure it out 
-
 # How many sources and exp.name got through the pipeline?
 unique(beta_v99$source) # 118
 unique(beta_v99$exp.name) # 348
