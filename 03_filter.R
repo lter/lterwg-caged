@@ -160,8 +160,9 @@ sub_v6 <- sub_v5 %>%
       (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
          year == "2014" & sampling.point == "7/1/14") | 
       ## L
+      # i think this one actually only has one sampling time point in 1985? 
       (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
-         year == "1985" & sampling.point == "850823") |
+          year == "1985") |
       ## LTER Andrews
       (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
          year == "1980" & sampling.point == "6/15/80") |
@@ -244,8 +245,7 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
-# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" 
-
+# i think this fixed cedar creek! 
 
 setdiff(x = unique(sub_v5$exp.name), y = unique(sub_v6$exp.name))
 ## fixed the sellers issue!
@@ -424,9 +424,14 @@ message(nrow(sub_v10) - nrow(sub_v11), " rows lost")
 
 # Lose any full datasets (we shouldn't)?
 supportR::diff_check(old = unique(sub_v10$source), new = unique(sub_v11$source))
+# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
+# [2] "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" 
 
 # Lose any experiment names?
 supportR::diff_check(old = unique(sub_v10$exp.name), new = unique(sub_v11$exp.name))
+# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
+# [2] "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv"
+# yes its ok both of these are lost - its because they have Nitrogen values 1-9 and we filter out all nutrient addition
 
 # Check structure
 dplyr::glimpse(sub_v11)
@@ -465,8 +470,8 @@ dplyr::glimpse(sub_v12)
 sub_v99 <- sub_v12
 
 # What sources/experiments made it? 
-sort(unique(sub_v99$source))
-sort(unique(sub_v99$exp.name))
+sort(unique(sub_v99$source)) #121
+sort(unique(sub_v99$exp.name)) #361
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
