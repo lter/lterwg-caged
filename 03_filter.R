@@ -160,6 +160,8 @@ sub_v6 <- sub_v5 %>%
       (source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" & 
          year == "2014" & sampling.point == "7/1/14") | 
       ## L
+      (source == "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv" &
+         year == "1985" & sampling.point == "850823") |
       ## LTER Andrews
       (source == "lter-andrewsforest_oregon_elkeclosure_1979-2007_elk_herbs.csv" &
          year == "1980" & sampling.point == "6/15/80") |
