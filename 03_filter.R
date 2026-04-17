@@ -473,6 +473,9 @@ sub_v99 <- sub_v12
 sort(unique(sub_v99$source)) #121
 sort(unique(sub_v99$exp.name)) #361
 
+unique(sub_v99$year) # "year" is in there, thats what causing this to be a character
+# its from villar but the raw data looks like it shoudl be fine
+
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
 filter_path <- file.path("data", filter_name)
