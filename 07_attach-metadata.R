@@ -131,6 +131,7 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                     w.meta_in_list[[2]]$exp.name)),
                      new = unique(meta_v5$exp.name))
 # old = data, new = metadata
+# sellers data isn't in the data? its only in the metadata as all the exp names
 
 ## If any are in data but not *metadata*:
 ### The metadata had this info entered incorrectly
