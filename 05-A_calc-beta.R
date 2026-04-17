@@ -41,7 +41,7 @@ dplyr::glimpse(beta_v1)
 
 # Check what data made it through 04
 unique(beta_v1$source) # 121
-unique(beta_v1$exp.name) # 340
+unique(beta_v1$exp.name) # 361
 # same as 03, nothing was dropped, just zero filled so it makes sense
 
 ## ------------------------------------------- ##
@@ -563,7 +563,7 @@ beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
 unique(beta_v99$source) # 118
-unique(beta_v99$exp.name) # 327
+unique(beta_v99$exp.name) # 348
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"

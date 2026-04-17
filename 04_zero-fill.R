@@ -27,7 +27,7 @@ dplyr::glimpse(fill_v1)
 
 # Check what data made it through 03
 unique(fill_v1$source) # 121
-unique(fill_v1$exp.name) # 340
+unique(fill_v1$exp.name) # 361
 
 ## ------------------------------------------- ##
 # Aggregate Within Groups ----
@@ -154,8 +154,8 @@ fill_v99 <- fill_v3
 dplyr::glimpse(fill_v99)
 
 # What sources made it? 
-unique(fill_v99$source)
-unique(fill_v99$exp.name)
+unique(fill_v99$source) #121
+unique(fill_v99$exp.name) #361
 
 # Identify tidy file name / path
 zerofill_name <- "04_caged_zero-filled.csv"
