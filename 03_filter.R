@@ -243,8 +243,10 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
+# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
 setdiff(x = unique(sub_v5$exp.name), y = unique(sub_v6$exp.name))
 ## Experiment names like "nu16__AC" are from "sellers_..." dataset
+# why are these getting lost? 
 
 # Re-check sampling point for same datasets that previously had more than 1
 multi.times_v2 <- sub_v6 %>% 
