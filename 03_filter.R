@@ -207,9 +207,9 @@ sub_v6 <- sub_v5 %>%
          year == "2018" & sampling.point == "3") |
       # Sellers
       # sellers has multi annual sampling within source but not within exp.name so its causing it to be dropped
-      # to make sure it goes through we have to manually keep each exp.name here
-      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv") | 
-      ## V
+      # had to change data key so check is the sampling point so we can just take check = 2 
+      (source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" &
+         sampling.point == "2") |
       (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
          year == "2004" & sampling.point == "8") |
       (source == "villar_brazil-est_largewildherbivores_2004-2014_largeherbivores_plants.csv" &
