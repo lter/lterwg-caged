@@ -2107,6 +2107,52 @@ googledrive::drive_upload(media = proj27_path, overwrite = T,
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
+# Purgatory 28 (Alderson Geese) ----
+## ------------------------------------------- ##
+# Reason for purgatory status
+## This experiment was conducted in separate basins and had a treatment of planting vs no planting (early vs late succession). We need a new column that is a concatenation of Planting and Basin.
+
+# Identify file(s) name(s)
+proj28_raw_name <- "Alderson-et-al-vegetation.csv"
+
+# Identify file(s) in Drive
+proj28_gdrive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/folders/1NFOhhexl0uOCkUmx0pWmskEKzvyKlA2z")) %>% 
+  dplyr::filter(name %in% c(proj28_raw_name))
+
+# Download file(s)
+purrr::walk2(.x = proj28_gdrive$id, .y = proj28_gdrive$name,
+             .f = ~ googledrive::drive_download(file = .x, overwrite = T,
+                                                path = file.path("data", "purgatory", .y)))
+
+# Read in data
+proj28_raw <- read.csv(file.path("data", "purgatory", proj28_raw_name), sep = ";")
+
+# Check structure
+dplyr::glimpse(proj28_raw)
+
+# Do needed repairs
+proj28 <- proj28_raw %>% 
+  dplyr::mutate(basin_planted = paste0(basin, "_", planted),
+    .after = basin)
+
+# Re-check structure
+dplyr::glimpse(proj28)
+
+# Create good/new file name
+proj28_name <- "alderson_netherlands_saltwaterlake_2018-2023_geese_vegetation.csv"
+proj28_path <- file.path("data", "drydock", proj28_name)
+
+# Export locally
+write.csv(x = proj28, file = proj28_path, na = '', row.names = F)
+
+# Export to Drive
+googledrive::drive_upload(media = proj28_path, overwrite = T,
+                          path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1E11bCAJQ8UzV80s1tf4KC4kiTa5fRwCX"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+## ------------------------------------------- ##
 # Purgatory TEMPLATE ----
 ## ------------------------------------------- ##
 ## Duplicate and flesh out one copy!
