@@ -566,6 +566,8 @@ beta_v99 <- beta_fine_v2
 unique(beta_v99$source) # 117
 unique(beta_v99$exp.name) # 346
 
+View(beta_v99 %>% distinct(source, exp.name))
+
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
 beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))
