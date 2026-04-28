@@ -43,6 +43,7 @@ dplyr::glimpse(meta_df)
 ## ------------------------------------------- ##
 
 # Identify quality controlled data
+# this downloads from google drive, so if you have changed anything in script 01-02 you will need to make sure you upload it first
 drive_qc <- googledrive::drive_ls(path = googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
   dplyr::filter(name == "02_caged_tidied.csv")
 
