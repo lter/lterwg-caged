@@ -24,7 +24,7 @@ dplyr::glimpse(sub_v1)
 
 # Check what data made it through 01
 unique(sub_v1$source) # 127
-unique(sub_v1$exp.name) # 369
+unique(sub_v1$exp.name) # 371
 
 ## ------------------------------------------- ##
 # Drop Zero-Abundance Samples ----
@@ -471,7 +471,7 @@ sub_v99 <- sub_v12
 
 # What sources/experiments made it? 
 sort(unique(sub_v99$source)) #121
-sort(unique(sub_v99$exp.name)) #361
+sort(unique(sub_v99$exp.name)) #363
 
 
 # Identify tidy file name / path
