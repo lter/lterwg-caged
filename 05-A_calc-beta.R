@@ -41,7 +41,7 @@ dplyr::glimpse(beta_v1)
 
 # Check what data made it through 04
 unique(beta_v1$source) # 121
-unique(beta_v1$exp.name) # 361
+unique(beta_v1$exp.name) # 363
 # same as 03, nothing was dropped, just zero filled so it makes sense
 
 ## ------------------------------------------- ##
@@ -504,6 +504,7 @@ dplyr::glimpse(beta_fine_v2)
 # Did we lose any sources?
 # these are datasets that don't have both caging treatments for at least one design level
 supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine_v2$source))
+#now alderson is getting dropped here? 
 
 # Did we lose any experiments?
 ## From sources that were not dropped
