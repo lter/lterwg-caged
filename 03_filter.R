@@ -422,16 +422,17 @@ sub_v11 <- sub_v10 %>%
 # How many rows lost?
 message(nrow(sub_v10) - nrow(sub_v11), " rows lost")
 
-# Lose any full datasets (we shouldn't)?
+# Lose any full datasets?
 supportR::diff_check(old = unique(sub_v10$source), new = unique(sub_v11$source))
-# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
-# [2] "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" 
+# Okay to lose two LTER Cedar Creek datasets because they have added Nitrogen
+## [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
+## [2] "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" 
 
 # Lose any experiment names?
 supportR::diff_check(old = unique(sub_v10$exp.name), new = unique(sub_v11$exp.name))
-# [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
-# [2] "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv"
-# yes its ok both of these are lost - its because they have Nitrogen values 1-9 and we filter out all nutrient addition
+# Okay to lose two LTER Cedar Creek datasets because they have added Nitrogen
+## [1] "lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv"
+## [2] "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv" 
 
 # Check structure
 dplyr::glimpse(sub_v11)
@@ -472,7 +473,6 @@ sub_v99 <- sub_v12
 # What sources/experiments made it? 
 sort(unique(sub_v99$source)) #121
 sort(unique(sub_v99$exp.name)) #363
-
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"
