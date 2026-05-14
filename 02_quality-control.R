@@ -387,8 +387,9 @@ tidy_v8 <- tidy_v7 %>%
   # Now do actual year fixing
   dplyr::mutate(year = dplyr::case_when(
     ## Year is a relative integer counting years from study start
-    source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" ~ as.character(supportR::force_num(sampling.point) + 1993), # column starts at 1
-    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), # column starts at 0
+    source == "alberti_netherlands_floodplainsgrassland_1994-2001_cattle_vegetation.csv" ~ as.character(supportR::force_num(sampling.point) + 1993), # starts at 1
+    source == "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv" ~ as.character(as.numeric(year) + 1989), # starts at 0
+    source == "sellers_panama_coastalupwellingseasonality_2017-2018_mollusc_microalgae.csv" ~ as.character(supportR::force_num(sampling.point) + 2016), # starts at 0
     ## Date has 2-digit year at end of date (and is from 21st century)
     source == "hensel_georgia_brackishhogs_2013-2015_hogs_plants.csv" ~ paste0("20", stringr::str_sub(sampling.point, start = nchar(sampling.point) - 1, end = nchar(sampling.point))),
     ## Date has 4-digit year at end of date but not necessarily two digits for month/day
@@ -426,32 +427,6 @@ tidy_v8 <- tidy_v7 %>%
     source == "lter-harvard_newengland_plantcover_2008-2019_moose_plants.csv" ~ "2013",
     source == "lter-mcr_moorea_grazingintensity_2010-2011_fish_benthic.csv" ~ "2011", 
     source == "mclaren_alaska_coastaltundra_1954-2018_lemmings_plants.csv" ~ "2018",
-    # # having issues with sellers, tried to code it in a better way but i kept breaking the entire code :( 
-    # exp.name == "nu16__AC" ~ "2016",
-    # exp.name == "u17__AC" ~ "2017",
-    # exp.name == "nu17__AC" ~ "2017",
-    # exp.name == "u18__AC" ~ "2018",
-    # exp.name == "nu16__DE" ~ "2016",
-    # exp.name == "u17__DE" ~ "2017",
-    # exp.name == "nu17__DE" ~ "2017",
-    # exp.name == "u18__DE" ~ "2018",
-    # exp.name == "nu16__IC" ~ "2016",
-    # exp.name == "u17__IC" ~ "2017",
-    # exp.name == "nu17__IC" ~ "2017",
-    # exp.name == "u18__IC" ~ "2018",
-    # exp.name == "nu16__PB" ~ "2016",
-    # exp.name == "u17__PB" ~ "2017",
-    # exp.name == "nu17__PB" ~ "2017",
-    # exp.name == "u18__PB" ~ "2018",
-    # exp.name == "nu16__CU" ~ "2016",
-    # exp.name == "u17__CU" ~ "2017",
-    # exp.name == "nu17__CU" ~ "2017",
-    # exp.name == "u18__CU" ~ "2018",
-    # exp.name == "nu16__PS" ~ "2016",
-    # exp.name == "u17__PS" ~ "2017",
-    # exp.name == "nu17__PS" ~ "2017",
-    # exp.name == "u18__PS" ~ "2018",
-
     ### Certain experimental units are from different years
     source == "ashton_coastalamerica_marinepredexcl_2017-2019_predators_benthic.csv" &
       exp.design.2 %in% c("BO17", "SF17", "SI17", "ST17") ~ "2017", 
@@ -487,7 +462,6 @@ tidy_v8 %>%
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
                    .groups = "keep")
-# something goes wrong here with sellers- it uses sampling point instead of year?
 
 # Diagnose years/sampling points per dataset
 diagnose_years <- tidy_v8 %>% 
