@@ -55,9 +55,8 @@ zero_abun <- beta_v1 %>%
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
                   exp.design.2, exp.design.1, cage.treatment_std) %>% 
   dplyr::summarize(tot_abundance = sum(abundance, na.rm = T),
-                   .groups = "keep") %>% 
-  dplyr::ungroup() %>% 
-  # Filter to only rows with a total abundance of zero
+                    .groups = "drop") %>% 
+# Filter to only rows with a total abundance of zero
   dplyr::filter(tot_abundance == 0) %>% 
   # Identify datasets with more than one of these zero abundance replicates
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
@@ -200,8 +199,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
         des3_pseudorep_ct <- des3_sub %>% 
           dplyr::group_by(exp.design.2) %>% 
           dplyr::summarize(des1.ct = length(unique(exp.design.1)),
-                           .groups = "keep") %>% 
-          dplyr::ungroup()
+                           .groups = "drop")
         
         # If there are X pseudoreplicates...
         if(any(des3_pseudorep_ct$des1.ct >= max_pseudoreps) & 
@@ -214,8 +212,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                 dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "keep") %>% 
-            dplyr::ungroup()
+                             .groups = "drop")
           
         } # Close conditional aggregation
         
@@ -247,8 +244,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
         des4_pseudorep_ct <- des4_sub %>% 
           dplyr::group_by(exp.design.3, exp.design.2) %>% 
           dplyr::summarize(des1.ct = length(unique(exp.design.1)),
-                           .groups = "keep")  %>% 
-          dplyr::ungroup()
+                          .groups = "drop")
         
         # If there are X pseudoreplicates...
         if(any(des4_pseudorep_ct$des1.ct >= max_pseudoreps) & 
@@ -261,8 +257,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                 dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "keep") %>% 
-            dplyr::ungroup()
+                            .groups = "drop")
           
         } # Close conditional aggregation
         
@@ -270,8 +265,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
         des4_pseudorep_ct <- des4_sub %>% 
           dplyr::group_by(exp.design.3) %>% 
           dplyr::summarize(des2.ct = length(unique(exp.design.2)),
-                           .groups = "keep")  %>% 
-          dplyr::ungroup()
+                          .groups = "drop")
         
         # If there are X pseudoreplicates...
         if(any(des4_pseudorep_ct$des2.ct >= max_pseudoreps) & 
@@ -284,8 +278,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                 dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "keep") %>% 
-            dplyr::ungroup()
+                            .groups = "drop")
           
         } # Close conditional aggregation
         
@@ -317,8 +310,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
         name_pseudorep_ct <- name_sub %>% 
           dplyr::group_by(exp.design.4, exp.design.3, exp.design.2) %>% 
           dplyr::summarize(des1.ct = length(unique(exp.design.1)),
-                           .groups = "keep")  %>% 
-          dplyr::ungroup()
+                          .groups = "drop")
         
         # If there are X pseudoreplicates...
         if(any(name_pseudorep_ct$des1.ct >= max_pseudoreps) & 
@@ -330,8 +322,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                 dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "keep") %>% 
-            dplyr::ungroup()
+                            .groups = "drop")
           
         } # Close conditional aggregation
         
@@ -339,8 +330,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
         name_pseudorep_ct <- name_sub %>% 
           dplyr::group_by(exp.design.4, exp.design.3) %>% 
           dplyr::summarize(des2.ct = length(unique(exp.design.2)),
-                           .groups = "keep")  %>% 
-          dplyr::ungroup()
+                          .groups = "drop")
         
         # If there are X pseudoreplicates...
         if(any(name_pseudorep_ct$des2.ct >= max_pseudoreps) & 
@@ -352,8 +342,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                 dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "keep") %>% 
-            dplyr::ungroup()
+                            .groups = "drop")
           
         } # Close conditional aggregation
         
@@ -361,8 +350,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
         name_pseudorep_ct <- name_sub %>% 
           dplyr::group_by(exp.design.4) %>% 
           dplyr::summarize(des3.ct = length(unique(exp.design.3)),
-                           .groups = "keep")  %>% 
-          dplyr::ungroup()
+                          .groups = "drop")
         
         # If there are X pseudoreplicates...
         if(any(name_pseudorep_ct$des3.ct >= max_pseudoreps) & 
@@ -376,8 +364,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                                       y = c("exp.design.3", "exp.design.2", 
                                             "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "keep") %>% 
-            dplyr::ungroup()
+                              .groups = "drop")
           
         } # Close conditional aggregation
         
