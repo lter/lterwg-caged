@@ -461,14 +461,13 @@ tidy_v8 %>%
   dplyr::filter(is.na(year) | !stringr::str_count(string = year, pattern = "\\d{4}")) %>% 
   dplyr::group_by(source, sampling.years) %>% 
   dplyr::summarize(years = paste(unique(year), collapse = ", "),
-                   .groups = "keep")
+                   .groups = "drop")
 
 # Diagnose years/sampling points per dataset
 diagnose_years <- tidy_v8 %>% 
   dplyr::group_by(source, exp.name, year) %>% 
   dplyr::summarize(sampling.points = paste(unique(sampling.point), collapse = "; "),
-    .groups = "keep") %>% 
-  dplyr::ungroup()
+    .groups = "drop")
 
 # Export this locally
 write.csv(x = diagnose_years, na = '', row.names = F,
