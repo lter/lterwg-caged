@@ -46,8 +46,7 @@ fill_v2 <- fill_v1 %>%
     dplyr::across(
       dplyr::all_of(setdiff(x = names(fill_v1), y = "abundance")))) %>% 
   dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                   .groups = "keep") %>% 
-  dplyr::ungroup()
+                   .groups = "drop")
 
 # Why are there duplicate values?
 ## Sometimes datasets have a blank value and an abundance value
@@ -76,8 +75,7 @@ lost_rows <- fill_v1 %>%
                    abun.vals = paste(abundance, collapse = "; "),
                    # Count the number of rows (we want this to be 1)
                    row.count = dplyr::n(),
-                   .groups = "keep") %>% 
-  dplyr::ungroup() %>%
+                   .groups = "drop") %>% 
   # Filter to only the datasets where we are losing rows
   dplyr::filter(row.count > 1)
 
