@@ -36,8 +36,7 @@ gamma_v2 <- gamma_v1 %>%
     dplyr::all_of(setdiff(x = names(.), y = c("year", "taxa", "abundance"))) 
     )) %>% 
   dplyr::summarize(gamma.richness = length(unique(taxa)),
-                   .groups = "keep") %>% 
-  dplyr::ungroup()
+                   .groups = "drop")
 
 # Do we have the expected number of values?
 nrow(gamma_v2) == length(unique(paste(gamma_v2$source, gamma_v2$exp.name)))
