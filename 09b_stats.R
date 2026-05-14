@@ -30,12 +30,12 @@ caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
-dim(caged_effectsize) # 399 rows
-dim(caged_beta) # 12688  rows
+dim(caged_effectsize) # 417 rows
+dim(caged_beta) # 12905  rows
 
 # Check number of sources
-unique(caged_effectsize$exp.name) # 327
-unique(caged_beta$exp.name) #327
+unique(caged_effectsize$exp.name) # 346
+unique(caged_beta$exp.name) #346
 dim(caged_effectsize)
 
 
@@ -43,7 +43,7 @@ dim(caged_effectsize)
 # Latitude Models  ----
 ## ------------------------------------------- ##
 
-glimpse(caged_beta) #12,688 rows
+glimpse(caged_beta) #12,905 rows
 
 # Check distribution of values in response variable, betadisp.comm.dist
 hist(caged_beta$betadisp.comm.dist)  
@@ -101,16 +101,25 @@ table(caged_beta$var_aq.or.terr)
 caged_beta2 <- caged_beta %>% 
   dplyr::filter(var_aq.or.terr != "") %>% 
   droplevels()
-unique(caged_beta2$exp.name) # down to 316, we lose hamilton here 
+unique(caged_beta2$exp.name) # 346, none are dropped
 
 table(caged_beta2$var_aq.or.terr) #Good!
 
 # Drop rows for which latitude is missing
 table(is.na(caged_beta2$lat))
 
+# which exp names are missing latitude
+caged_beta2$exp.name[is.na(caged_beta2$lat)]
+
 caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
 
 table(is.na(caged_beta2$lat)) #Good!
+
+unique(caged_beta2$exp.name) # 345
+# what did we lose here - burkepile_floridakeys_reefexclosure_20042005_fish_benthic.csv
+
+
+
 
 # Create a column for absolute value of latitude
 caged_beta2 <- caged_beta2 %>%
@@ -197,9 +206,9 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 
 # check sample size
-dim(caged_beta2) # 12526    27
-unique(caged_beta2$exp.name) # 315, down from 327 
-unique(caged_beta2$source) # 111
+dim(caged_beta2) # 12889    28
+unique(caged_beta2$exp.name) # 345 (just lost the burkepile one)
+unique(caged_beta2$source) # 116
 # this is the sample size after dropping missing metadata 
 
 # which sources and experiment names make it through the pipeline 
