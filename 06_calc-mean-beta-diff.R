@@ -53,8 +53,7 @@ for(focal_beta in beta_outs){
                      within.cage.treat_betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
                      within.cage.treat_betadisp.n = dplyr::n(),
                      within.cage.treat_betadisp.se = within.cage.treat_betadisp.sd / sqrt(within.cage.treat_betadisp.n),
-                     .groups = "keep") %>% 
-    dplyr::ungroup()
+                     .groups = "drop")
   
   # Caculate difference in means
   diff_v3 <- diff_v2 %>% 
