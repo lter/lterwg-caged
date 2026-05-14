@@ -114,8 +114,8 @@ for(diff_outs in unique(names(diff_list))){
 
 }
 
-# End ----
-
+# Count number of sources/experiments at end
 unique(diff_v99$source) # 117
 unique(diff_v99$exp.name) # 346
 
+# End ----
