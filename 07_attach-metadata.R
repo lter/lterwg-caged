@@ -151,12 +151,10 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
                      new = unique(meta_v6$source))
 # old = data, new = metadata
 
-
 supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                     w.meta_in_list[[2]]$exp.name)),
                                   new = unique(meta_v6$exp.name))
 # old = data, new = metadata
-
 
 ## ------------------------------------------- ##
 # Load Gamma Richness Data ----
