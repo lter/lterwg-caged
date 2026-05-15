@@ -218,6 +218,10 @@ write.csv(test, "data/final.data.through.pipeline.csv")
 
 
 
+caged_beta2 %>%
+  group_by(var_aq.or.terr,var_succ.vs.late) %>%
+  summarize(n())
+
 
 # Caged vs Uncaged Model
 caging.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
