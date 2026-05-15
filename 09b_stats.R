@@ -377,9 +377,32 @@ plot(allEffects(two.way.betamod.late))
 
 
 # Caged data
-caged.beta2 <- caged_beta2 %>%
-  dplyr::filter(cage.treatment_std == "caged") %>%
-  droplevels()
+# try running with just late succession
+caged.late <- caged_beta2 %>%
+  filter(cage.treatment_std == "caged") %>%
+  filter(var_succ.vs.late == "late")
+
+
+caged.late.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                                  var_aq.or.terr * scale(abs.lat)  +
+                                  # accounting for gamma richness and sample size
+                                  scale(gamma.richness) + scale(betadisp.sample.size) +
+                                  (1|exp.name), 
+                                dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                                family = beta_family(link = "probit"),
+                                control = glmmTMBControl(optimizer = optim, 
+                                                         optArgs = list(method = "BFGS")), 
+                                # Or use nlminb, or bobyqa via nloptr
+                                data = caged.late) 
+# scaling the continuous variables reduced multicollinearity to low from moderate
+
+AIC(uncaged.late.betamod)
+summary(uncaged.late.betamod)    
+car::Anova(caged.late.betamod, type = "II") # interaction is significant
+
+
+plot(allEffects(caged.late.betamod))
+
 
 caged.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
                              var_aq.or.terr * abs.lat  +
