@@ -344,6 +344,10 @@ check_model(two.way.betamod) # NOTE -- THIS DOESN'T RUN ON MAX'S MACHINE, JMI- i
 late.data <- caged_beta2 %>%
   filter(var_succ.vs.late == "late")
 
+late.data %>%
+  group_by(var_aq.or.terr) %>%
+  summarize(n()) # aquatic is only ~20% of our data
+
 three.way.betamod.late <- glmmTMB(betadisp.comm.dist_transform ~ 
                                var_aq.or.terr * abs.lat * cage.treatment_std  +
                                gamma.richness + betadisp.sample.size +
