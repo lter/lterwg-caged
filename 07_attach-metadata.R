@@ -7,6 +7,7 @@
 ## This script accomplishes both that joining operation and some minor QC
 
 # Note: "source" and "exp.name" columns in metadata are created by "_boatyard_scripts/expand_metadata.R"
+# Note: Make sure to redownload site level metadata if it has changed in script 000
 
 ## ------------------------------------------- ##
 # Housekeeping ----
