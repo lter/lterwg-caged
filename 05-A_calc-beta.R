@@ -491,7 +491,7 @@ dplyr::glimpse(beta_fine_v2)
 # Did we lose any sources?
 # these are datasets that don't have both caging treatments for at least one design level
 supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine_v2$source))
-#now alderson is getting dropped here? 
+#now alderson is getting dropped here because it only has n=3 now that we split it up
 
 # Did we lose any experiments?
 ## From sources that were not dropped
