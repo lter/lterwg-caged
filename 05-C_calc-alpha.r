@@ -17,83 +17,105 @@ source(file = file.path("00_setup.R"))
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
-# Load needed tool(s)
-purrr::walk(.x = dir(path = "tools", pattern = "fxn_"),
-            .f = ~ source(file.path("tools", .x)) )
-
-# Define the minimum number of replicates for which we want to calculate beta dispersion
-## Inclusive of this number (so 5 becomes >= 5)
-min_reps <- 4
-
-# Define maximum number of allowed pseudoreps _without_ averaging across them
-## Necessary for preserving pseudoreps when there are few and averaging across them when there are many
-## Inclusive of this number (so 5 is >= 5)
-max_pseudoreps <- 5
-
-# What distance method do we want to use?
-pref_dist_method <- "bray"
-
 # Read in data
 alpha_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
+
+# Check what data made it through 04
+unique(alpha_v1$source)
+unique(alpha_v1$exp.name)
 
 # Check structure
 dplyr::glimpse(alpha_v1)
 
-# Check what data made it through 04
-unique(alpha_v1$source) # 121
-unique(alpha_v1$exp.name) # 363
-# same as 03, nothing was dropped, just zero filled so it makes sense
-
 ## ------------------------------------------- ##
-# Data Preparation ----
+# Calculate Alpha Diversity (Design 1) ----
 ## ------------------------------------------- ##
 
-# Bray-Curtis doesn't work for 2 or more replicates with a total abundance of zero
-## For datasets with that problem then, we need to pick one (at random) and drop the other
-zero_abun <- alpha_v1 %>% 
-  # Calculate total abundance within design 1
-  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-                  exp.design.2, exp.design.1, cage.treatment_std) %>% 
-  dplyr::summarize(tot_abundance = sum(abundance, na.rm = T),
-                    .groups = "drop") %>% 
-# Filter to only rows with a total abundance of zero
-  dplyr::filter(tot_abundance == 0) %>% 
-  # Identify datasets with more than one of these zero abundance replicates
-  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-                  exp.design.2, cage.treatment_std) %>% 
-  dplyr::mutate(rep_ct = seq_along(along.with = unique(exp.design.1))) %>% 
-  dplyr::ungroup() %>%
-  # Filter to only instances with more than one replicate with a total abundance of 0
-  dplyr::filter(rep_ct > 1)
+# Calculate alpha diversity for "exp.design.1"
+alpha_des1 <- alpha_v1 %>% 
+  dplyr::filter(abundance > 0) %>% 
+  dplyr::group_by(dplyr::across(
+    dplyr::all_of(setdiff(x = names(.), y = c("year", "taxa", "abundance"))) 
+    )) %>% 
+  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+    .groups = "drop") %>% 
+  dplyr::mutate(alpha.diversity_design.level = "exp.design.1",
+    .after = cage.treatment_orig)
 
 # Check structure
-dplyr::glimpse(zero_abun)
+dplyr::glimpse(alpha_des1)
 
-# Create a dataframe of fake abundances for those replicates
-fake_abun <- alpha_v1 %>%
-  # Filter to only reps flagged in above pipe
-  dplyr::filter(source %in% c(zero_abun$source) & exp.name %in% c(zero_abun$exp.name)) %>%
-  # Overwrite the taxa and abundance columns with hard-coded values
-  dplyr::mutate(taxa = "FAKE.SPECIES_added.to.solve.BC.algebra.problem",
-                abundance = 0.01) %>%
-  # Drop non-unique rows
-  dplyr::distinct()
+## ------------------------------------------- ##
+# Calculate Alpha Diversity (Design 2) ----
+## ------------------------------------------- ##
+
+# Calculate alpha diversity for "exp.design.1"
+alpha_des2 <- alpha_v1 %>% 
+  dplyr::filter(abundance > 0) %>% 
+  dplyr::group_by(dplyr::across(
+    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "year", "taxa", "abundance"))) 
+    )) %>% 
+  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+    .groups = "drop") %>% 
+  dplyr::mutate(alpha.diversity_design.level = "exp.design.2",
+    .after = cage.treatment_orig)
 
 # Check structure
-dplyr::glimpse(fake_abun)
+dplyr::glimpse(alpha_des2)
 
-# Attach the fake abundances to the real data
-## This means experiments that would have had two (or more) zero-abundance reps now have one non-zero abundance
-## (i.e., the fake species/abundance that we just added!)
-alpha_v2 <- dplyr::bind_rows(alpha_v1, fake_abun)
+## ------------------------------------------- ##
+# Calculate Alpha Diversity (Design 3) ----
+## ------------------------------------------- ##
 
-# Re-check structure
-dplyr::glimpse(alpha_v2)
+# Calculate alpha diversity for "exp.design.1"
+alpha_des3 <- alpha_v1 %>% 
+  dplyr::filter(abundance > 0) %>% 
+  dplyr::group_by(dplyr::across(
+    dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:2), 
+      "year", "taxa", "abundance"))))) %>% 
+  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+    .groups = "drop") %>% 
+  dplyr::mutate(alpha.diversity_design.level = "exp.design.3",
+    .after = cage.treatment_orig)
 
-# How many fake abundances were inserted?
-message(nrow(fake_abun), " fake abundances added (", 
-        round(nrow(fake_abun) / nrow(alpha_v2) * 100, digits = 2), 
-        "% of the total)")
+# Check structure
+dplyr::glimpse(alpha_des3)
+
+## ------------------------------------------- ##
+# Calculate Alpha Diversity (Design 4) ----
+## ------------------------------------------- ##
+
+# Calculate alpha diversity for "exp.design.1"
+alpha_des4 <- alpha_v1 %>% 
+  dplyr::filter(abundance > 0) %>% 
+  dplyr::group_by(dplyr::across(
+    dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:3), 
+      "year", "taxa", "abundance"))))) %>% 
+  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+    .groups = "drop") %>% 
+  dplyr::mutate(alpha.diversity_design.level = "exp.design.4",
+    .after = cage.treatment_orig)
+
+# Check structure
+dplyr::glimpse(alpha_des4)
+
+## ------------------------------------------- ##
+# Calculate Alpha Diversity (Exp Name) ----
+## ------------------------------------------- ##
+
+# Calculate alpha diversity for "exp.design.1"
+alpha_name <- alpha_v1 %>% 
+  dplyr::filter(abundance > 0) %>% 
+  dplyr::group_by(dplyr::across(
+    dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:4), 
+      "year", "taxa", "abundance"))))) %>% 
+  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+    .groups = "drop") %>% 
+  dplyr::mutate(alpha.diversity_design.level = "exp.name",
+    .after = cage.treatment_orig)
+
+# Check structure
+dplyr::glimpse(alpha_name)
 
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
@@ -107,7 +129,7 @@ alpha_des4_list <- list()
 alpha_name_list <- list()
 
 # Loop across original data source
-for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
+for(focal_src in setdiff(x = sort(unique(alpha_v1$source)),
                          # Manually (temporarily) removing datasets as/if needed
                          y = c(""))){
   # focal_src <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv"
@@ -116,7 +138,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
   message("Processing source '", focal_src, "'")
   
   # Subset data
-  src_sub <- alpha_v2 %>% 
+  src_sub <- alpha_v1 %>% 
     dplyr::filter(source == focal_src)
   
   # Loop across treatments
@@ -141,7 +163,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
       
       # Loop across most granular level of experimental design
       for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "CSF__1"
+        # focal_des1 <- "PA__1"
         
         # Subset yet again
         des1_sub <- yr_sub %>% 
