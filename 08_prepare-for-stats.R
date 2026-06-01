@@ -101,13 +101,22 @@ dplyr::glimpse(na.diff)
 # Data for modeling beta dispersion effect size
 caged_effectsize <- caged_mean %>% 
   # Only columns we need and have
-  dplyr::select(source, exp.name, lat, starts_with("var"), 
-                betadisp.sample.size, gamma.richness,
-                within.cage.treat_betadisp.mean.diff)
+  dplyr::select(source, exp.name, lat,  
+               # betadisp.sample.size, gamma.richness,
+                within.cage.treat_betadisp.mean.diff) %>%
+  unique()
 
 # Check number of sources
 unique(caged_effectsize$source) # 117
 unique(caged_effectsize$exp.name) # 346
+
+dim(caged_effectsize) #347 
+
+caged_effectsize %>%
+  dplyr::count(exp.name) %>%
+  dplyr::filter(n > 1)
+
+
 
 # Which are lost (if any)
 supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_effectsize$source))
