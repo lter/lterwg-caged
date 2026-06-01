@@ -240,7 +240,11 @@ for(focal_w.meta in w.meta_outs){
                                          "exp.name", "cage.treatment_std",
                                          "year", "betadisp.design.level")) %>%
   # now attach log response ratio
-  dplyr::left_join(lrr_v1, by= c("source", "organization", "site", 
+  dplyr::left_join(lrr_v1 %>%
+                     select("within.cage.treat_betadisp.mean.lrr", "source", "organization", "site", 
+                            "excluded.group", "measured.group",
+                            "exp.name", "cage.treatment_std",
+                            "year", "betadisp.design.level"), by= c("source", "organization", "site", 
                                  "excluded.group", "measured.group",
                                  "exp.name", "cage.treatment_std",
                                  "year", "betadisp.design.level"))
