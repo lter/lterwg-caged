@@ -1,7 +1,9 @@
 ## --------------------------------------------------------------- ##
                         # CAGED Filtering
 ## --------------------------------------------------------------- ##
-# Written by: Nick J Lyon, Tyler Coverdale, Jamie McDevitt-Irwin, Kelly Speare ...
+# Purpose:
+## Filter out data that are not likely to be usable for the first paper's analysis
+## E.g, confounding treatments, 'bad' data, multi-annual sampling
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -245,10 +247,7 @@ message(nrow(sub_v5) - nrow(sub_v6), " rows lost")
 
 # Identify any datasets dropped entirely (shouldn't be any)
 setdiff(x = unique(sub_v5$source), y = unique(sub_v6$source))
-# i think this fixed cedar creek! 
-
 setdiff(x = unique(sub_v5$exp.name), y = unique(sub_v6$exp.name))
-## fixed the sellers issue!
 
 # Re-check sampling point for same datasets that previously had more than 1
 multi.times_v2 <- sub_v6 %>% 
@@ -274,7 +273,6 @@ dplyr::glimpse(sub_v7)
 ## ------------------------------------------- ##
 # These are datasets that have more than one year of data
 # we just want to take the final year
-
 
 # How many datasets have more than one year of data?
 sub_v7 %>% 
