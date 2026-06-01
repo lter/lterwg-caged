@@ -27,7 +27,7 @@ caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv")
 
 # View(caged_effectsize) 
 # View(caged_beta) 
-dim(caged_effectsize)# 417 rows
+dim(caged_effectsize)# 347 rows
 dim(caged_beta)# 12905  rows
 
 ## ------------------------------------------- ##
@@ -237,6 +237,20 @@ caged_effectsize %>%
  # scale_color_manual(values= c("royalblue","darkgreen"))+
   labs(x= "Absolute latitude",
        y= "Effect size\n(uncaged - caged mean)",
+       colour = "Biome") +
+  geom_hline(yintercept=0)
+
+
+caged_effectsize %>%
+  ggplot(aes(x=abs(lat), 
+             y=within.cage.treat_betadisp.mean.lrr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  geom_smooth(method = "loess", se = FALSE, col="red") +
+  theme_pubr(base_size=16) +
+  # scale_color_manual(values= c("royalblue","darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "LRR(uncaged/caged)",
        colour = "Biome") +
   geom_hline(yintercept=0)
   
