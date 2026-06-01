@@ -196,6 +196,10 @@ diff_v1 <- read.csv(file = file.path("data", "06_caged_mean-beta-diff_all-scales
 # Check structure of one
 dplyr::glimpse(diff_v1)
 
+# Read in log response ratio
+lrr_v1 <- read.csv(file = file.path("data", "06_caged_mean-lrr_all-scales.csv"))
+
+
 ## ------------------------------------------- ##
 # Attach *EVERYTHING* to Data ----
 ## ------------------------------------------- ##
@@ -234,8 +238,13 @@ for(focal_w.meta in w.meta_outs){
     dplyr::left_join(y = diff_v1, by = c("source", "organization", "site", 
                                          "excluded.group", "measured.group",
                                          "exp.name", "cage.treatment_std",
-                                         "year", "betadisp.design.level"))
-
+                                         "year", "betadisp.design.level")) %>%
+  # now attach log response ratio
+  dplyr::left_join(lrr_v1, by= c("source", "organization", "site", 
+                                 "excluded.group", "measured.group",
+                                 "exp.name", "cage.treatment_std",
+                                 "year", "betadisp.design.level"))
+  
   # Add this to the output list
   w.meta_out_list[[focal_w.meta]] <- w.meta_v4
   
