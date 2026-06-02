@@ -56,7 +56,7 @@ caged_beta %>%
 bd.prep = caged_beta[,c(2, 5, 20, 4, 6:19)] #simplify and reorder dataframe for plotting
 
 # vector of colors for categorical variables
-col_vector <- c("#CC6677", "#332288", "#DDCC77", "#117733", "#88CCEE","#882255", "#44AA99", "#AA4499")
+col_vector <- c("#CC6677", "#332288", "#DDCC77", "#88CCEE", "#117733","#882255", "#44AA99", "#999933", "#AA4499", "#CCDDAA", "#555555", "#FFCCCC", "#DDDDDD")
 
 #colnames(beta.disper)
 
