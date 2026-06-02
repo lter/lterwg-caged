@@ -23,6 +23,7 @@ Principal Investigators:
 - `05-A_calc-beta` -- Calculate beta dispersion at various spatial/temporal scales
 - `05-B_calc-gamma` -- Calculate gamma diversity within experiment across and within treatment
 - `05-C_calc-alpha` -- Calculate alpha diversity (richness) at all design levels
+- `05-D_calc-dominance` -- Calculate dominance (Berger Parker) at all design levels
 - `06_calc-mean-beta-diff` -- Summarize beta dispersion within experiments and calculate difference between mean _caged_ beta dispersion and mean _uncaged_ beta dispersion
 - `07_attach-metadata` -- Join site-level metadata with data as well as join outputs of all `05` scripts and script `06`
 - `08_prepare-for-stats` -- Calculate effect size and streamline data to only bits needed for current analysis
