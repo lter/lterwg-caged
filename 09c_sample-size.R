@@ -50,14 +50,13 @@ caged_beta %>%
   select(starts_with("var")) %>% 
   sapply(class)
 
-
-# vector of colors for categorical variables
-col_vector <- c("#CC6677", "#332288", "#DDCC77", "#117733", "#88CCEE","#882255", "#44AA99", "#AA4499")
-
 # draft for loop for predictor sample sizes ----
 
 
 bd.prep = caged_beta[,c(2, 5, 20, 4, 6:19)] #simplify and reorder dataframe for plotting
+
+# vector of colors for categorical variables
+col_vector <- c("#CC6677", "#332288", "#DDCC77", "#117733", "#88CCEE","#882255", "#44AA99", "#AA4499")
 
 #colnames(beta.disper)
 
@@ -154,6 +153,16 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
 
 length(fig.list)
 
-plot_grid(plotlist = fig.list, ncol = 3, nrow = 5)
+grid.list = list()
+
+for(i in 1:5){
+  for (j in 1:3) {
+    
+  grid.list[[i]] = plot_grid(plotlist = fig.list, ncol = 3, nrow = i)
+  
+  }
+}
+
+grid.list[[1]]
 
 #
