@@ -37,34 +37,68 @@ alp.diff_v02 <- alp.diff_v01 %>%
 # Check structure
 dplyr::glimpse(alp.diff_v02)
 
+# Average across caged and uncaged 
+
+# Identify the grouping columns 
+diff_groupcols <- c("source", "organization", "site", 
+                    "excluded.group", "measured.group", 
+                    "exp.name", "alpha.diversity_design.level", 
+                    "alpha.diversity_caged", "alpha.diversity_uncaged")
+
+# Do some needed preparatory calculatation
+alp.diff_v03 <- alp.diff_v02 %>% 
+  # Summarize within treatments/etc.
+  dplyr::group_by(dplyr::across(
+    dplyr::all_of(c(diff_groupcols)))) %>%  
+  dplyr::summarize(alpha.diversity_caged.mean = mean(alpha.diversity_caged, na.rm = TRUE),
+                   alpha.diversity_uncaged.mean = mean(alpha.diversity_uncaged, na.rm = TRUE),
+                   .groups = "drop") %>%
+  dplyr::select(-alpha.diversity_caged, -alpha.diversity_uncaged)
+
+dim(alp.diff_v03)
+  
+
+# minimum value of alpha diversity
+range(alp.diff_v03$alpha.diversity_uncaged.mean) # has NA's because some scales you can't calculate? 
+
+alp.diff_v03 %>% 
+  summarise(min_val = min(alpha.diversity_uncaged.mean, na.rm = TRUE)) # 1
+
+alp.diff_v03 %>% 
+  summarise(min_val = min(alpha.diversity_caged.mean, na.rm = TRUE)) # 1
+
 ## ------------------------------------------- ##
-# Calculate Difference & LRR ----
+# Calculate LRR ----
 ## ------------------------------------------- ##
 
-# Calculate difference and LRR
-alp.diff_v03 <- alp.diff_v02 %>% 
-  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
-    .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
-  # need to change this to the minimum average value of mean alpha diversity (replace 0.005)
-  dplyr::mutate(caged = alpha.diversity_caged + 0.005,
-    uncaged = alpha.diversity_uncaged + 0.005) %>% 
-  dplyr::mutate(within.cage.treat_alpha.diff = uncaged - caged,
-    within.cage.treat_alpha.lrr = log2(uncaged / caged)) %>% 
-  dplyr::select(-caged, -uncaged)
+# Calculate LRR
+alp.diff_v04 <- alp.diff_v03 %>% 
+  # dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
+  #   .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
+  # add minimum value of alpha diversity - 1
+  dplyr::mutate(caged = alpha.diversity_caged.mean + 1,
+    uncaged = alpha.diversity_uncaged.mean + 1) %>% 
+  # create log response ratio
+  dplyr::mutate(within.cage.treat_alpha.mean.lrr = log2(uncaged / caged)) %>% 
+  dplyr::select(-caged, -uncaged) %>%
+  # remove NA's
+  drop_na(within.cage.treat_alpha.mean.lrr)
+
+dim(alp.diff_v04)
 
 # Check structure
-dplyr::glimpse(alp.diff_v03)
+dplyr::glimpse(alp.diff_v04)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-alp.diff_v99 <- alp.diff_v03
+alp.diff_v99 <- alp.diff_v04
 
 # Count number of sources/experiments at end
-unique(alp.diff_v99$source) # 121
-unique(alp.diff_v99$exp.name) # 367
+unique(alp.diff_v99$source) # 120
+unique(alp.diff_v99$exp.name) # 363
 
 # Identify tidy file name / path
 alp.diff_name <- "06-C_caged_alpha-div-diff_all-scales.csv"
