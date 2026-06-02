@@ -27,8 +27,7 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 
-caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
-
+caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
 
 dim(caged_effectsize) # 417 rows
 dim(caged_beta) # 12905  rows
