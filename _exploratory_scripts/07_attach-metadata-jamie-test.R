@@ -191,13 +191,14 @@ dplyr::glimpse(gamma_v1)
 ## ------------------------------------------- ##
 
 # Read in the mean difference files too
-diff_v1 <- read.csv(file = file.path("data", "06_caged_mean-beta-diff_all-scales.csv"))
+diff_v1 <- read.csv(file = file.path("data", "06-A_caged_mean-beta-diff_all-scales.csv"))
 
 # Check structure of one
 dplyr::glimpse(diff_v1)
 
-# Read in log response ratio
-lrr_v1 <- read.csv(file = file.path("data", "06_caged_mean-lrr_all-scales.csv"))
+# Read in log response ratio of beta diversity
+lrr_alpha_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div_all-scales.csv"))
+
 
 
 ## ------------------------------------------- ##
@@ -230,7 +231,7 @@ for(focal_w.meta in w.meta_outs){
                                           "project.name", "sampling.years",
                                           "excluded.group", "measured.group", 
                                           "exp.name")) %>% 
-    dplyr::relocate(gamma.richness, .before = exp.name)
+    dplyr::relocate(gamma.richness_exp.name, .before = exp.name)
   
   # Now attach summarized beta disp and mean difference
   w.meta_v4 <- w.meta_v3 %>% 
@@ -240,11 +241,13 @@ for(focal_w.meta in w.meta_outs){
                                          "exp.name", "cage.treatment_std",
                                          "year", "betadisp.design.level")) %>%
     # now attach log response ratio
-    dplyr::left_join(lrr_v1, by= c("source", "organization", "site", 
-                                   "excluded.group", "measured.group",
-                                   "exp.name", "cage.treatment_std",
-                                   "year", "betadisp.design.level"))
-  
+    dplyr::left_join(lrr_alpha_v1 %>%
+                       select(),
+                     by= c("source", "organization", "site",
+                           "excluded.group", "measured.group",
+                           "exp.name"
+                           ))
+
   # Add this to the output list
   w.meta_out_list[[focal_w.meta]] <- w.meta_v4
   
@@ -262,7 +265,7 @@ dplyr::glimpse(w.meta_v4)
 
 # How many sources and exp.name got through the pipeline?
 unique(w.meta_v4$source) # 117
-unique(w.meta_v4$exp.name) # 346
+unique(w.meta_v4$exp.name) # 347
 
 ## ------------------------------------------- ##
 # Export ----
