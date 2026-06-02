@@ -41,9 +41,6 @@ dplyr::glimpse(alp.diff_v02)
 # Calculate Difference & LRR ----
 ## ------------------------------------------- ##
 
-
-# need to calculate mean across caged and uncaged for each source/exp name combination
-
 # Calculate difference and LRR
 alp.diff_v03 <- alp.diff_v02 %>% 
   dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
