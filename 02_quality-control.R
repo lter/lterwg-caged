@@ -243,6 +243,14 @@ tidy_v3b <- tidy_v3 %>%
 # Check for 'new' experiment names
 supportR::diff_check(old = unique(tidy_v3$exp.name), new = unique(tidy_v3b$exp.name))
 
+# Check for non-unique experiment names across sources
+(dup.names <- tidy_v3b %>% 
+  dplyr::group_by(exp.name) %>% 
+    dplyr::summarize(source.ct = length(unique(source)),
+    source = paste(unique(source), collapse = "; "),
+    .groups = "drop") %>% 
+  dplyr::filter(source.ct > 1))
+
 # Then, if there is a fire treatment, we want to add that to the experiment name
 tidy_v4 <- tidy_v3b %>%
   dplyr::mutate(exp.name = ifelse(nchar(treat.fire) == 0 | is.na(treat.fire),
@@ -251,10 +259,27 @@ tidy_v4 <- tidy_v3b %>%
   # While we're here, fix any casing/typo issues in experiment names
   dplyr::mutate(exp.name = dplyr::case_when(
     exp.name == "Camano_protected-Warm" ~ "Camano_Protected-Warm",
-    T ~ exp.name))
+    T ~ exp.name)) %>% 
+  # Also fix any non-unique experiment names (within sources)
+  dplyr::mutate(exp.name = ifelse(
+    source %in% c("gilson_southafrica_intertidalexclusion_2021_grazers_algae.csv",     
+      "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv",
+      "lter-harvard_newengland_plantcover_2008-2019_moose_plants.csv",  
+      "lter-harvard_newengland_plantcover_2008-2019_moose_treeseedling.csv",
+      "mcdevittirwin_palmyra_palmyratiles_2014_fish_benthic.csv",           
+      "mcdevittirwin_palmyra_palmyratiles_2016_fish_benthic.csv"),
+    yes = paste0(source, "-", exp.name), no = exp.name))
 
 # Check again
 supportR::diff_check(old = unique(tidy_v3b$exp.name), new = unique(tidy_v4$exp.name))
+
+# Re-check for non-unique experiment names across sources
+tidy_v4 %>% 
+  dplyr::group_by(exp.name) %>% 
+    dplyr::summarize(source.ct = length(unique(source)),
+    source = paste(unique(source), collapse = "; "),
+    .groups = "drop") %>% 
+  dplyr::filter(source.ct > 1)
 
 # Check structure
 dplyr::glimpse(tidy_v4)
@@ -498,8 +523,8 @@ tidy_v99 <- tidy_v9
 dplyr::glimpse(tidy_v99)
 
 # What sources made it? 
-unique(tidy_v99$source)
-unique(tidy_v99$exp.name)
+unique(tidy_v99$source) # 127
+unique(tidy_v99$exp.name) # 379
 
 # Identify tidy file name / path
 tidy_name <- "02_caged_tidied.csv"
