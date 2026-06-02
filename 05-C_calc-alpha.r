@@ -132,14 +132,14 @@ unique(alpha_allscales$source) # 121
 unique(alpha_allscales$exp.name) # 367
 
 # Identify tidy file name / path
-alpha_name <- "05-C_caged_alpha-div"
+alpha_name <- "05-C_caged_alpha-div_all-scales.csv"
 
 # Re-check 'all scales' structure
 dplyr::glimpse(alpha_allscales)
 
 # Export locally
-write.csv(x = alpha_allscales, na = '', row.names = F,
-  file = file.path("data", paste0(alpha_name, "_all-scales.csv")))
+write.csv(x = alpha_allscales, na = '', row.names = F, 
+  file = file.path("data", alpha_name))
 
 # End ----
 

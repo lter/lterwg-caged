@@ -152,7 +152,7 @@ dplyr::glimpse(dom_allscales)
 ## ------------------------------------------- ##
 
 # Identify tidy file name / path
-dom_name <- "05-D_caged_dominance"
+dom_name <- "05-D_caged_dominance_all-scales.csv"
 
 # How many make it through (should be all but there's subsetting happening)
 sort(unique(dom_allscales$source)) #121
@@ -163,6 +163,6 @@ dplyr::glimpse(dom_allscales)
 
 # Export locally
 write.csv(x = dom_allscales, na = '', row.names = F,
-  file = file.path("data", paste0(dom_name, "_all-scales.csv")))
+  file = file.path("data", dom_name))
 
 # End ----
