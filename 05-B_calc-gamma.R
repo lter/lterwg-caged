@@ -9,7 +9,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, vegan, supportR)
+librarian::shelf(tidyverse)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
