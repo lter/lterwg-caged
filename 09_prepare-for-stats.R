@@ -32,40 +32,27 @@ effectsizes_v1 <- read.csv(file.path("data", "08_caged_experiment-level-everythi
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(effectsizes_v1$source) # 118
-unique(effectsizes_v1$exp.name) # 356
+unique(effectsizes_v1$source) # 117
+unique(effectsizes_v1$exp.name) # 347
 
 unique(betadisp_v1$source) # 117
 unique(betadisp_v1$exp.name) # 347
 
-# filter out NA's for beta dispersion
+# Check number of rows and dataframe
+dim(effectsizes_v1) # 1286
+dim(effectsizes_v1) # 1286 
+# so the effect size needs to be set to only unique 
+
+colnames(effectsizes_v2)
+
+effectsizes_v2 <- effectsizes_v1 %>%
+  select(source, exp.name, contains("lrr")) %>%
+distinct()
 
 
 
-## ------------------------------------------- ##
-# Create Beta Dispersion & Difference Data ---- 
-## ------------------------------------------- ##
 
-# Do needed wrangling
-caged_mean <- caged_v1 %>% 
-  # Select the variables we want
-  dplyr::select(source:exp.name, starts_with("var"), 
-                lat:long, cage.treatment_std, 
-                # This (v) is the average beta dispersion for each caging treatment
-                within.cage.treat_betadisp.mean, betadisp.sample.size,
-                excluded.group, consumer.trophic.level, gamma.richness,
-                # This is the uncaged minus caged betadisp (both averaged within exp.name)
-                within.cage.treat_betadisp.mean.diff, within.cage.treat_betadisp.mean.lrr) %>% 
-  # Drop columns where there beta dispersion differences weren't calculated
-  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
-  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.lrr)) %>% 
-  # Drop any duplicate rows
-  dplyr::distinct() %>% 
-  # Pivot treatments to wide (makes needed duplicates of other columns)
-  tidyr::pivot_wider(names_from = cage.treatment_std,
-                     values_from = within.cage.treat_betadisp.mean) %>%
-  # Remove the caging treatment-specific columns (we only care about the _difference_)
-  dplyr::select(-caged, -uncaged)
+
 
 # What columns are lost/gained?
 supportR::diff_check(old = names(caged_v1), new = names(caged_mean))
