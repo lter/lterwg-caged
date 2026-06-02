@@ -196,8 +196,16 @@ diff_v1 <- read.csv(file = file.path("data", "06_caged_mean-beta-diff_all-scales
 # Check structure of one
 dplyr::glimpse(diff_v1)
 
-# Read in log response ratio
+# Read in log response ratio of beta diversity
 lrr_v1 <- read.csv(file = file.path("data", "06_caged_mean-lrr_all-scales.csv"))
+
+
+# Read in log response ratio of alpha diversity
+apha_lrr_v1 <- read.csv(file = file.path("data", "06_caged_mean-lrr_all-scales.csv"))
+
+# Read in log response ratio of dominance
+dom_lrr_v1 <- read.csv(file = file.path("data", "06_caged_mean-lrr_all-scales.csv"))
+
 
 
 ## ------------------------------------------- ##
