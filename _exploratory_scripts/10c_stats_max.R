@@ -10,7 +10,7 @@
 
 # Load libraries (performance might be within easystats)
 librarian::shelf(tidyverse, ltertools, lme4, lmerTest, glmmTMB, DHARMa,
-                 performance, easystats, lubridate, car, broom.mixed,
+                 performance, lubridate, car, broom.mixed, #easystats, 
                  njlyon0/supportR, MuMIn, visreg, grid, gridExtra,
                  emmeans, tidymodels, qqplotr, sjPlot) #, update_all= TRUE) 
 
@@ -20,23 +20,27 @@ source(file = file.path("00_setup.R"))
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
-
 ## ------------------------------------------- ##
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
-
 caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
 
 dim(caged_effectsize) # 417 rows
-dim(caged_beta) # 12905  rows
+dim(caged_beta) # 13,964  rows
 
 # Check number of sources
 unique(caged_effectsize$exp.name) # 346
-unique(caged_beta$exp.name) #346
-dim(caged_effectsize)
+unique(caged_beta$exp.name) #347
+dim(caged_effectsize) #417
 
+
+# Drop partial and uncertain levels for column 'cage.treatment_std'
+caged_beta <- caged_beta %>%
+  dplyr::filter(cage.treatment_std != 'partial') %>%
+  dplyr::filter(cage.treatment_std != 'uncertain') %>%
+  droplevels()
 
 ## ------------------------------------------- ##
 # Latitude Models  ----
@@ -100,7 +104,7 @@ table(caged_beta$var_aq.or.terr)
 caged_beta2 <- caged_beta %>% 
   dplyr::filter(var_aq.or.terr != "") %>% 
   droplevels()
-unique(caged_beta2$exp.name) # 346, none are dropped
+unique(caged_beta2$exp.name) # 347, none are dropped
 
 table(caged_beta2$var_aq.or.terr) #Good!
 
@@ -114,11 +118,7 @@ caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
 
 table(is.na(caged_beta2$lat)) #Good!
 
-unique(caged_beta2$exp.name) # 345
-# what did we lose here - burkepile_floridakeys_reefexclosure_20042005_fish_benthic.csv
-
-
-
+unique(caged_beta2$exp.name) # 347
 
 # Create a column for absolute value of latitude
 caged_beta2 <- caged_beta2 %>%
@@ -138,15 +138,6 @@ uncaged.df <- caged_beta2 %>%
 caged.df <- caged_beta2 %>%
   filter(cage.treatment_std == "caged") %>%
   droplevels()
-
-# Check data: Collinearity between x1 and x2?
-ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
-  geom_boxplot()
-
-ggplot(data = caged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
-  geom_boxplot()
-
-# Note that terrestrial locations are higher in latitude than aquatic ones, on average, by about 10-20 degrees
 
 # Check data: General relationships between y and x1 or x2
 ggplot(data = caged_beta2, aes(x = lat, y = betadisp.comm.dist_transform)) +
