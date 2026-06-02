@@ -46,9 +46,10 @@ caged_mean <- caged_v1 %>%
                 within.cage.treat_betadisp.mean, betadisp.sample.size,
                 excluded.group, consumer.trophic.level, gamma.richness,
                 # This is the uncaged minus caged betadisp (both averaged within exp.name)
-                within.cage.treat_betadisp.mean.diff) %>% 
+                within.cage.treat_betadisp.mean.diff, within.cage.treat_betadisp.mean.lrr) %>% 
   # Drop columns where there beta dispersion differences weren't calculated
   dplyr::filter(!is.na(within.cage.treat_betadisp.mean.diff)) %>% 
+  dplyr::filter(!is.na(within.cage.treat_betadisp.mean.lrr)) %>% 
   # Drop any duplicate rows
   dplyr::distinct() %>% 
   # Pivot treatments to wide (makes needed duplicates of other columns)
@@ -88,7 +89,7 @@ na.diff <- caged_v1 %>%
 
 # What's in that?
 unique(na.diff$source)
-unique(na.diff$cage.treatment_std) # partial and uncertain
+unique(na.diff$cage.treatment_std) # partial and uncertain so that makes sense
 
 # Glimpse it
 dplyr::glimpse(na.diff)
@@ -101,9 +102,10 @@ dplyr::glimpse(na.diff)
 # Data for modeling beta dispersion effect size
 caged_effectsize <- caged_mean %>% 
   # Only columns we need and have
-  dplyr::select(source, exp.name, lat,  
+  dplyr::select(source, exp.name, lat, var_aq.or.terr, var_succ.vs.late,
                # betadisp.sample.size, gamma.richness,
-                within.cage.treat_betadisp.mean.diff) %>%
+                within.cage.treat_betadisp.mean.diff,
+               within.cage.treat_betadisp.mean.lrr) %>%
   unique()
 
 # Check number of sources
@@ -111,10 +113,13 @@ unique(caged_effectsize$source) # 117
 unique(caged_effectsize$exp.name) # 346
 
 dim(caged_effectsize) #347 
+# i canʻt figure out why this has an extra duplicate? we need to figure this out
+
 
 caged_effectsize %>%
   dplyr::count(exp.name) %>%
   dplyr::filter(n > 1)
+# could this be the issue? 
 
 
 

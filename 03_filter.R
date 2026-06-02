@@ -24,9 +24,9 @@ sub_v1 <- read.csv(file.path("data", "02_caged_tidied.csv"))
 # Check structure
 dplyr::glimpse(sub_v1)
 
-# Check what data made it through 01
+# Check what data made it through 02
 unique(sub_v1$source) # 127
-unique(sub_v1$exp.name) # 371
+unique(sub_v1$exp.name) # 379
 
 ## ------------------------------------------- ##
 # Drop Zero-Abundance Samples ----
@@ -470,7 +470,7 @@ sub_v99 <- sub_v12
 
 # What sources/experiments made it? 
 sort(unique(sub_v99$source)) #121
-sort(unique(sub_v99$exp.name)) #363
+sort(unique(sub_v99$exp.name)) #367
 
 # Identify tidy file name / path
 filter_name <- "03_caged_filtered.csv"

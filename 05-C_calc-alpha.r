@@ -2,14 +2,14 @@
 # CAGED Alpha Diversity Calculation
 ## --------------------------------------------------------------- ##
 # Purpose:
-## Calculate alpha diversity (i.e., richness) within experiment and within caging treatment
+## Calculate alpha diversity (i.e., richness) at all design levels
 
 ## ------------------------------------------- ##
 # Housekeeping ----
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, vegan, supportR)
+librarian::shelf(tidyverse)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -19,10 +19,6 @@ rm(list = ls()); gc()
 
 # Read in data
 alpha_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
-
-# Check what data made it through 04
-unique(alpha_v1$source)
-unique(alpha_v1$exp.name)
 
 # Check structure
 dplyr::glimpse(alpha_v1)
@@ -35,12 +31,12 @@ dplyr::glimpse(alpha_v1)
 alpha_des1 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("year", "taxa", "abundance"))) 
-    )) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("year", "cage.treatment_orig", 
+    "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.1",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des1)
@@ -53,12 +49,12 @@ dplyr::glimpse(alpha_des1)
 alpha_des2 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "year", "taxa", "abundance"))) 
-    )) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "year", "cage.treatment_orig", 
+    "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.2",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des2)
@@ -72,11 +68,11 @@ alpha_des3 <- alpha_v1 %>%
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:2), 
-      "year", "taxa", "abundance"))))) %>% 
+      "year", "cage.treatment_orig", "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.3",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des3)
@@ -90,11 +86,11 @@ alpha_des4 <- alpha_v1 %>%
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:3), 
-      "year", "taxa", "abundance"))))) %>% 
+    "year", "cage.treatment_orig", "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.4",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des4)
@@ -108,11 +104,11 @@ alpha_name <- alpha_v1 %>%
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:4), 
-      "year", "taxa", "abundance"))))) %>% 
+      "year", "cage.treatment_orig", "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.name",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_name)
@@ -121,11 +117,8 @@ dplyr::glimpse(alpha_name)
 # Process Outputs
 ## ------------------------------------------- ##
 
-# Add these to a list (useful later)
-alpha_deslists <- list(alpha_des1, alpha_des2, alpha_des3, alpha_des4, alpha_name)
-
-# Unlist them to create an 'all scales' table
-alpha_allscales <- purrr::list_rbind(x = alpha_deslists)
+# Create an 'all scales' table
+alpha_allscales <- dplyr::bind_rows(alpha_des1, alpha_des2, alpha_des3, alpha_des4, alpha_name)
 
 # Check structure
 dplyr::glimpse(alpha_allscales)
@@ -135,18 +128,18 @@ dplyr::glimpse(alpha_allscales)
 ## ------------------------------------------- ##
 
 # How many sources and exp.name got through the pipeline?
-unique(alpha_allscales$source) # 117
-unique(alpha_allscales$exp.name) # 346
+unique(alpha_allscales$source) # 121
+unique(alpha_allscales$exp.name) # 367
 
 # Identify tidy file name / path
-alpha_name <- "05-C_caged_alpha-div"
+alpha_name <- "05-C_caged_alpha-div_all-scales.csv"
 
 # Re-check 'all scales' structure
 dplyr::glimpse(alpha_allscales)
 
 # Export locally
-write.csv(x = alpha_allscales, na = '', row.names = F,
-          file = file.path("data", paste0(alpha_name, "_all-scales.csv")))
+write.csv(x = alpha_allscales, na = '', row.names = F, 
+  file = file.path("data", alpha_name))
 
 # End ----
 

@@ -63,7 +63,8 @@ for(focal_beta in beta_outs){
     tidyr::pivot_wider(names_from = cage.treatment_std,
                        values_from = within.cage.treat_betadisp.mean) %>% 
     # Calculate difference between uncaged & caged
-    dplyr::mutate(within.cage.treat_betadisp.mean.llr = log(uncaged/caged))
+    # adding the minimum value to each to get rid of dividing by zero problem 0.005
+    dplyr::mutate(within.cage.treat_betadisp.mean.lrr = log2((uncaged + 0.005)/(caged + 0.005)))
   
   # Tidy up that output slightly
   diff_v4 <- diff_v3 %>% 
@@ -82,6 +83,8 @@ for(focal_beta in beta_outs){
   
 } # Close loop
 
+
+
 # Check the structure at various stages
 ## Starting version
 dplyr::glimpse(diff_v1)
@@ -93,6 +96,8 @@ dplyr::glimpse(diff_v3)
 dplyr::glimpse(diff_v4)
 ## After joining the summarized data with the diffs
 dplyr::glimpse(diff_v5)
+
+
 
 ## ------------------------------------------- ##
 # Export ----
@@ -117,5 +122,16 @@ for(diff_outs in unique(names(diff_list))){
 # Count number of sources/experiments at end
 unique(diff_v99$source) # 117
 unique(diff_v99$exp.name) # 346
+
+range(diff_v99$within.cage.treat_betadisp.mean.lrr)
+
+
+
+# We are having issues where ~5 studies have uncaged treatments with 0 beta dispersion - we think because just nothing grew at all there so they are all the same? 
+# so this makes the LRR infinity - so we need to add the minimum value above in the code to fix this
+diff_v99 %>%
+  filter(within.cage.treat_betadisp.mean != 0) %>%
+  summarise(min_val = min(within.cage.treat_betadisp.mean, na.rm = TRUE))
+#0.005
 
 # End ----

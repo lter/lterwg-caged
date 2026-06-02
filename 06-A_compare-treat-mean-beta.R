@@ -59,11 +59,15 @@ for(focal_beta in beta_outs){
   diff_v3 <- diff_v2 %>% 
     # Dump unwanted columns
     dplyr::select(-within.cage.treat_betadisp.sd, -within.cage.treat_betadisp.n, -within.cage.treat_betadisp.se) %>% 
+    # Bump beta dispersion to get rid of dividing by zero problem
+    dplyr::mutate(within.cage.treat_betadisp.bump = within.cage.treat_betadisp.mean + 0.005) %>% 
+    dplyr::select(-within.cage.treat_betadisp.mean) %>% 
     # Pivot wider
     tidyr::pivot_wider(names_from = cage.treatment_std,
-                       values_from = within.cage.treat_betadisp.mean) %>% 
+                       values_from = within.cage.treat_betadisp.bump) %>% 
     # Calculate difference between uncaged & caged
-    dplyr::mutate(within.cage.treat_betadisp.mean.diff = uncaged - caged)
+    dplyr::mutate(within.cage.treat_betadisp.mean.diff = uncaged - caged,
+      within.cage.treat_betadisp.mean.lrr = log2(uncaged / caged))
   
   # Tidy up that output slightly
   diff_v4 <- diff_v3 %>% 
@@ -106,7 +110,7 @@ for(diff_outs in unique(names(diff_list))){
   
   # Generate tidy name / path
   diff_name <- gsub(pattern = "05-A_caged_beta-disp", 
-                    replacement = "06_caged_mean-beta-diff", x = diff_outs)
+                    replacement = "06-A_caged_mean-beta-diff", x = diff_outs)
   diff_path <- file.path("data", diff_name)
   
   # Export locally
@@ -116,6 +120,6 @@ for(diff_outs in unique(names(diff_list))){
 
 # Count number of sources/experiments at end
 unique(diff_v99$source) # 117
-unique(diff_v99$exp.name) # 346
+unique(diff_v99$exp.name) # 347
 
 # End ----

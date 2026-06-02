@@ -1,5 +1,5 @@
 ## --------------------------------------------------------------- ##
-# CAGED Attach Metadata
+# CAGED Attach Metadata - jmi test to add log response ratio
 ## --------------------------------------------------------------- ##
 # Purpose:
 ## Group members collectively filled out a metadata GoogleSheet manually
@@ -111,7 +111,7 @@ dplyr::glimpse(meta_v4)
 meta_v4 %>% 
   dplyr::group_by(source, exp.name) %>% 
   dplyr::summarize(ct = dplyr::n(),
-    .groups = "drop") %>% 
+                   .groups = "drop") %>% 
   dplyr::filter(ct > 1)
 
 # If this returns anything other than the following:
@@ -173,7 +173,7 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
 
 supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
                                     w.meta_in_list[[2]]$exp.name)),
-                                  new = unique(meta_v6$exp.name))
+                     new = unique(meta_v6$exp.name))
 # old = data, new = metadata
 
 ## ------------------------------------------- ##
@@ -239,15 +239,11 @@ for(focal_w.meta in w.meta_outs){
                                          "excluded.group", "measured.group",
                                          "exp.name", "cage.treatment_std",
                                          "year", "betadisp.design.level")) %>%
-  # now attach log response ratio
-  dplyr::left_join(lrr_v1 %>%
-                     select("within.cage.treat_betadisp.mean.lrr", "source", "organization", "site", 
-                            "excluded.group", "measured.group",
-                            "exp.name", "cage.treatment_std",
-                            "year", "betadisp.design.level"), by= c("source", "organization", "site", 
-                                 "excluded.group", "measured.group",
-                                 "exp.name", "cage.treatment_std",
-                                 "year", "betadisp.design.level"))
+    # now attach log response ratio
+    dplyr::left_join(lrr_v1, by= c("source", "organization", "site", 
+                                   "excluded.group", "measured.group",
+                                   "exp.name", "cage.treatment_std",
+                                   "year", "betadisp.design.level"))
   
   # Add this to the output list
   w.meta_out_list[[focal_w.meta]] <- w.meta_v4
@@ -261,7 +257,7 @@ dplyr::glimpse(w.meta_v1)
 dplyr::glimpse(w.meta_v2)
 ## After adding gamma richness
 dplyr::glimpse(w.meta_v3)
-## After adding summarized beta disp + mean diff
+## After adding summarized beta disp + mean diff + lrr
 dplyr::glimpse(w.meta_v4)
 
 # How many sources and exp.name got through the pipeline?
@@ -281,12 +277,11 @@ for(w.meta_outs in unique(names(w.meta_out_list))){
   
   # Generate tidy name / path
   w.meta_name <- gsub(pattern = "05-A_caged_beta-disp", 
-                    replacement = "07_caged_w.meta", x = w.meta_outs)
+                      replacement = "07_caged_w.meta-test", x = w.meta_outs)
   w.meta_path <- file.path("data", w.meta_name)
   
   # Export locally
   write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
 }
 
-colnames(w.meta_v99)
 # End ----
