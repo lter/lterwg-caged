@@ -9,7 +9,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, supportR)
+librarian::shelf(tidyverse)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -153,6 +153,10 @@ dplyr::glimpse(dom_allscales)
 
 # Identify tidy file name / path
 dom_name <- "05-D_caged_dominance"
+
+# How many make it through (should be all but there's subsetting happening)
+sort(unique(dom_allscales$source)) #121
+sort(unique(dom_allscales$exp.name)) #367
 
 # Re-check 'all scales' structure
 dplyr::glimpse(dom_allscales)
