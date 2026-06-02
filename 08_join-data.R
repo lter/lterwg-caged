@@ -18,6 +18,10 @@ source(file = file.path("00_setup.R"))
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
+## ------------------------------------------- ##
+# Load Beta Dispersion ----
+## ------------------------------------------- ##
+
 # Identify data files we want to add stuff to
 (w.meta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp_"))
 w.meta_in_list <- purrr::map(.x = w.meta_outs,
@@ -38,28 +42,100 @@ meta_v1 <- read.csv(file.path("data", "07_tidy-sitelevel-metadata.csv"))
 dplyr::glimpse(meta_v1)
 
 ## ------------------------------------------- ##
-# Load Gamma/Alpha/Dominance LRRs  ----
+# Load Gamma Diffs & LRRs  ----
 ## ------------------------------------------- ##
 # Note we can skip (for now) 05 B-D outputs...
 ## ...because the 06 variants have all relevant info plus LRRs
 
 # Read in gamma richness diffs
-gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv"))
+gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv")) %>% 
+  dplyr::rename(gamma.richness_cage.treat.diff = within.cage.treat_gamma.diff,
+    gamma.richness_cage.treat.lrr = within.cage.treat_gamma.lrr)
 
 # Check structure
 dplyr::glimpse(gam.diff_v1)
 
+## ------------------------------------------- ##
+# Load Alpha Diffs & LRRs  ----
+## ------------------------------------------- ##
+
 # Load alpha diversity diffs
-alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_all-scales.csv"))
+alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_all-scales.csv")) %>% 
+  dplyr::rename(design.level = alpha.diversity_design.level,
+    alpha.diversity_cage.treat.diff = within.cage.treat_alpha.diff,
+    alpha.diversity_cage.treat.lrr = within.cage.treat_alpha.lrr)
 
 # Check structure
 dplyr::glimpse(alp.diff_v1)
 
+## ------------------------------------------- ##
+# Load Dominance Diffs & LRRs  ----
+## ------------------------------------------- ##
+
 # Load alpha diversity diffs
-dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_all-scales.csv"))
+dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_all-scales.csv")) %>% 
+  dplyr::rename(design.level = dominance_design.level,
+    dominance_cage.treat.diff = within.cage.treat_dominance.diff,
+    dominance_cage.treat.lrr = within.cage.treat_dominance.lrr)
 
 # Check structure
 dplyr::glimpse(dom.diff_v1)
+
+## ------------------------------------------- ##
+# Load Mean Beta Diffs & LRRs ----
+## ------------------------------------------- ##
+
+# Read in the mean difference files too
+beta.diff_v1 <- read.csv(file = file.path("data", "06-A_caged_mean-beta-diff_all-scales.csv")) %>% 
+  dplyr::rename(design.level = betadisp.design.level) %>% 
+  dplyr::rename_with(.cols = dplyr::starts_with("within.cage.treat"),
+    .fn = ~ gsub("within.cage.treat_", "", x = .))
+
+# Check structure of one
+dplyr::glimpse(beta.diff_v1)
+
+# Do some post-processing here to get the format to match alpha/dominance LRR data
+beta.diff_v2 <- beta.diff_v1 %>% 
+  tidyr::pivot_longer(cols = dplyr::starts_with("betadisp")) %>% 
+  dplyr::mutate(new.name = paste0(name, "_", cage.treatment_std)) %>% 
+  dplyr::select(-name, -cage.treatment_std) %>% 
+  tidyr::pivot_wider(names_from = new.name, values_from = value) %>% 
+  dplyr::relocate(dplyr::contains("mean_"), dplyr::contains("n_"),
+    dplyr::contains("sd_"), dplyr::contains("se_"), 
+    dplyr::contains("diff_"), dplyr::contains("lrr_"),
+    .after = design.level)
+
+# Check structure of one
+dplyr::glimpse(beta.diff_v2)
+
+## ------------------------------------------- ##
+# Join Gamma & Metadata ----
+## ------------------------------------------- ##
+
+# Join data at 'exp.name' resolution
+join_v1 <- meta_v1 %>% 
+  dplyr::left_join(x = ., y = gam.diff_v1,
+    by = dplyr::join_by(source, exp.name))
+
+# Check structure
+dplyr::glimpse(join_v1)
+
+## ------------------------------------------- ##
+# Join Alpha & Dominance ----
+## ------------------------------------------- ##
+
+# Join data available at all/multiple design levels
+join_v2 <- meta_v1 %>% 
+  dplyr::left_join(x = ., y = gam.diff_v1,
+    by = dplyr::join_by(source, exp.name))
+
+# Check structure
+dplyr::glimpse(join_v1)
+
+## ------------------------------------------- ##
+
+
+
 
 ## ------------------------------------------- ##
 # Combine Gamma/Alpha/Dominance LRRs ----
