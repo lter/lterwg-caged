@@ -9,7 +9,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, vegan, supportR)
+librarian::shelf(tidyverse)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -19,10 +19,6 @@ rm(list = ls()); gc()
 
 # Read in data
 alpha_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
-
-# Check what data made it through 04
-unique(alpha_v1$source)
-unique(alpha_v1$exp.name)
 
 # Check structure
 dplyr::glimpse(alpha_v1)
@@ -121,11 +117,8 @@ dplyr::glimpse(alpha_name)
 # Process Outputs
 ## ------------------------------------------- ##
 
-# Add these to a list (useful later)
-alpha_deslists <- list(alpha_des1, alpha_des2, alpha_des3, alpha_des4, alpha_name)
-
-# Unlist them to create an 'all scales' table
-alpha_allscales <- purrr::list_rbind(x = alpha_deslists)
+# Create an 'all scales' table
+alpha_allscales <- dplyr::bind_rows(alpha_des1, alpha_des2, alpha_des3, alpha_des4, alpha_name)
 
 # Check structure
 dplyr::glimpse(alpha_allscales)
@@ -135,8 +128,8 @@ dplyr::glimpse(alpha_allscales)
 ## ------------------------------------------- ##
 
 # How many sources and exp.name got through the pipeline?
-unique(alpha_allscales$source) # 117
-unique(alpha_allscales$exp.name) # 346
+unique(alpha_allscales$source) # 121
+unique(alpha_allscales$exp.name) # 367
 
 # Identify tidy file name / path
 alpha_name <- "05-C_caged_alpha-div"
@@ -146,7 +139,7 @@ dplyr::glimpse(alpha_allscales)
 
 # Export locally
 write.csv(x = alpha_allscales, na = '', row.names = F,
-          file = file.path("data", paste0(alpha_name, "_all-scales.csv")))
+  file = file.path("data", paste0(alpha_name, "_all-scales.csv")))
 
 # End ----
 
