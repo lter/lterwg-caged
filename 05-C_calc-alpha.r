@@ -2,7 +2,7 @@
 # CAGED Alpha Diversity Calculation
 ## --------------------------------------------------------------- ##
 # Purpose:
-## Calculate alpha diversity (i.e., richness) within experiment and within caging treatment
+## Calculate alpha diversity (i.e., richness) at all design levels
 
 ## ------------------------------------------- ##
 # Housekeeping ----
