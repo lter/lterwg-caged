@@ -178,4 +178,7 @@ for (i in 1:5){
 #grid.list[[1]]
 
 
-#
+# calculate number of studies in each ecotype for pie charts
+pie_chart_data <- caged_beta %>% select(var_aq.or.terr, exp.name, var_ecotype1) %>% unique() %>% group_by(var_aq.or.terr, var_ecotype1) %>% summarize(n_studies = n())
+
+#View(pie_chart_data)
