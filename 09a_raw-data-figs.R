@@ -79,6 +79,83 @@ caged_beta %>%
 
 
 
+
+## ------------------------------------------- ##
+# Paper 1 Raw Data Plots ---- 
+## ------------------------------------------- ##
+
+# Effect Size 
+caged_effectsize %>%
+  filter(var_succ.vs.late == "late") %>%
+  ggplot(aes(x=abs(lat), 
+             y=within.cage.treat_betadisp.mean.diff)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  #geom_smooth(method = "loess", se = FALSE, col="red") +
+  theme_pubr(base_size=16) +
+  # scale_color_manual(values= c("royalblue","darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "Effect size\n(uncaged - caged mean)",
+       colour = "Biome") +
+  geom_hline(yintercept=0)
+
+
+# Log Response Ratio -beta dispersion
+caged_effectsize %>%
+  filter(var_succ.vs.late == "late") %>%
+  ggplot(aes(x=abs(lat), 
+             y=within.cage.treat_betadisp.mean.lrr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  #geom_smooth(method = "loess", se = FALSE, col="red") +
+  theme_pubr(base_size=16) +
+  # scale_color_manual(values= c("royalblue","darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "LRR(uncaged/caged)") +
+  geom_hline(yintercept=0) #+
+# geom_hline(yintercept=0.69)
+
+
+# Log Response Ratio - alpha diversity
+caged_effectsize %>%
+  filter(var_succ.vs.late == "late") %>%
+  ggplot(aes(x=abs(lat), 
+             y=within.cage.treat_betadisp.mean.lrr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  #geom_smooth(method = "loess", se = FALSE, col="red") +
+  theme_pubr(base_size=16) +
+  # scale_color_manual(values= c("royalblue","darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "LRR(uncaged/caged)") +
+  geom_hline(yintercept=0) #+
+# geom_hline(yintercept=0.69)
+
+
+
+# Log Response Ratio - dominance
+caged_effectsize %>%
+  filter(var_succ.vs.late == "late") %>%
+  ggplot(aes(x=abs(lat), 
+             y=within.cage.treat_betadisp.mean.lrr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  #geom_smooth(method = "loess", se = FALSE, col="red") +
+  theme_pubr(base_size=16) +
+  # scale_color_manual(values= c("royalblue","darkgreen"))+
+  labs(x= "Absolute latitude",
+       y= "LRR(uncaged/caged)") +
+  geom_hline(yintercept=0) #+
+# geom_hline(yintercept=0.69)
+
+
+
+
+
+
+
+
+
 # Beta dispersion by caging treatment
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
@@ -217,45 +294,6 @@ caged_beta %>%
        colour = "Biome") +
   ggtitle("Caged data only")
 
-
-# Diff by latitude
-
-caged_beta <- caged_beta %>%
-  filter(var_aq.or.terr != "") %>%
-  droplevels()
-
-dim(caged_effectsize)
-
-
-caged_effectsize %>%
-  filter(var_succ.vs.late == "late") %>%
-  ggplot(aes(x=abs(lat), 
-             y=within.cage.treat_betadisp.mean.diff)) +
-  geom_point() +
-  geom_smooth(method="lm") +
-  #geom_smooth(method = "loess", se = FALSE, col="red") +
-  theme_pubr(base_size=16) +
- # scale_color_manual(values= c("royalblue","darkgreen"))+
-  labs(x= "Absolute latitude",
-       y= "Effect size\n(uncaged - caged mean)",
-       colour = "Biome") +
-  geom_hline(yintercept=0)
-
-
-caged_effectsize %>%
-  filter(var_succ.vs.late == "late") %>%
-  ggplot(aes(x=abs(lat), 
-             y=within.cage.treat_betadisp.mean.lrr)) +
-  geom_point() +
-  geom_smooth(method="lm") +
-  #geom_smooth(method = "loess", se = FALSE, col="red") +
-  theme_pubr(base_size=16) +
-  # scale_color_manual(values= c("royalblue","darkgreen"))+
-  labs(x= "Absolute latitude",
-       y= "LRR(uncaged/caged)",
-       colour = "Biome") +
-  geom_hline(yintercept=0)#+
- # geom_hline(yintercept=0.69)
 
   
 # Absolute diff by latitude

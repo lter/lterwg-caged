@@ -45,9 +45,8 @@ dplyr::glimpse(meta_v1)
 # Standardize Lat/Long Format ----
 ## ------------------------------------------- ##
 
-# Look for non-numbers in the current lat/long columns
-supportR::num_check(data = meta_v1, col = "var_lat")
-supportR::num_check(data = meta_v1, col = "var_long")
+# Look for non-numbers in lat/long columns
+supportR::num_check(data = meta_v1, col = c("var_lat", "var_long"))
 
 # Do needed repairs
 meta_v2 <- meta_v1 %>% 
@@ -58,8 +57,7 @@ meta_v2 <- meta_v1 %>%
                               .fns = ~ gsub(pattern = "−", replacement = "-", x = .)))
 
 # Re-check for non-numbers
-supportR::num_check(data = meta_v2, col = "lat")
-supportR::num_check(data = meta_v2, col = "long")
+supportR::num_check(data = meta_v2, col = c("lat", "long"))
 
 # Check structure more generally
 dplyr::glimpse(meta_v2)
@@ -91,8 +89,11 @@ meta_v4 <- meta_v3 %>%
   # Drop rows without either a source name or an experiment names
   dplyr::filter(!is.na(source) | !is.na(exp.name)) %>% 
   # Remove unwanted columns
-  dplyr::select(-dplyr::contains("notes"), -assigned.to, -dropped.reason,
-                -dplyr::starts_with("second.round.")) %>% 
+  dplyr::select(source, exp.name, lat, long, dplyr::starts_with("var")) %>% 
+  dplyr::select(-dplyr::contains("note")) %>% 
+  # Make lat/long data numeric
+  dplyr::mutate(lat = as.numeric(lat),
+    long = as.numeric(long)) %>% 
   # Drop any columns that are entirely empty
   dplyr::select(-dplyr::where(fn = ~ all(is.na(.))))
 
