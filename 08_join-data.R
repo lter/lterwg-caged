@@ -1,3 +1,41 @@
+## --------------------------------------------------------------- ##
+# CAGED Join Data
+## --------------------------------------------------------------- ##
+# Purpose:
+## A number of scripts' outputs need to all be in the same table for analysis/visualization
+## This script does the necessary joining
+
+## ------------------------------------------- ##
+# Housekeeping ----
+## ------------------------------------------- ##
+
+# Load libraries
+librarian::shelf(tidyverse, supportR)
+
+# Create needed folders
+source(file = file.path("00_setup.R"))
+
+# Clear environment + collect garbage
+rm(list = ls()); gc()
+
+# Identify data files we want to add stuff to
+(w.meta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp_"))
+w.meta_in_list <- purrr::map(.x = w.meta_outs,
+                             .f = ~ read.csv(file = file.path("data", .x)))
+names(w.meta_in_list) <- w.meta_outs
+
+# Check structure of one
+dplyr::glimpse(w.meta_in_list[[1]])
+
+## ------------------------------------------- ##
+# Load Tidy Metadata ----
+## ------------------------------------------- ##
+
+# Grab the tidy metadata
+meta_v1 <- read.csv(file.path("data", "07_tidy-sitelevel-metadata.csv"))
+
+# Check structure
+dplyr::glimpse(meta_v1)
 
 ## ------------------------------------------- ##
 # Load Gamma/Alpha/Dominance LRRs  ----
