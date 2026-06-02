@@ -171,7 +171,76 @@ join_v4 <- join_v3 %>%
 dplyr::glimpse(join_v4)
 
 ## ------------------------------------------- ##
-# Join Beta (Actual) & Metadata ----
+# Generate Finest-Scales Experiment-Level Data ----
+## ------------------------------------------- ##
+
+# Make a list for outputs
+join_list <- list()
+
+# The prior object includes all calculable scales, let's make a 'finest scales' variant
+for(join_src.name in sort(unique(join_v4$source))){
+  # join_src.name <- "gex_junnerkoeland_bakkerjunnerkoeland_2001_cattle_plants.csv"
+  
+  # Subset to that source
+  join_src <- dplyr::filter(join_v4, source == join_src.name)
+  
+  for(join_exp.name in sort(unique(join_src$exp.name))){
+    # join_exp.name <- "gex_junnerkoeland_bakkerjunnerkoeland_2001_cattle_plants.csv"
+    
+    # Progress message
+    message("Identifying finest scale for '", join_exp.name, "'")
+    
+    # Subset to this experiment
+    join_exp <- dplyr::filter(join_src, exp.name == join_exp.name)
+    
+    # Make another subset for each design level
+    join_des1 <- dplyr::filter(join_exp, design.level == "exp.design.1")
+    join_des2 <- dplyr::filter(join_exp, design.level == "exp.design.2")
+    join_des3 <- dplyr::filter(join_exp, design.level == "exp.design.3")
+    join_des4 <- dplyr::filter(join_exp, design.level == "exp.design.4")
+    join_name <- dplyr::filter(join_exp, design.level == "exp.name")
+    
+    # Work through the design levels sequentially (lowest to highest) to identify finest
+    if(all(c("caged", "uncaged") %in% unique(join_des1$cage.treatment_std))){
+      
+      # Add to list
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des1
+    
+    # Do the same for design 2
+    } else if(all(c("caged", "uncaged") %in% unique(join_des2$cage.treatment_std))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des2 }
+    
+    # And design 3
+    else if(all(c("caged", "uncaged") %in% unique(join_des3$cage.treatment_std))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des3 }
+    
+    # And design 4
+    else if(all(c("caged", "uncaged") %in% unique(join_des4$cage.treatment_std))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des4 }
+    
+    # And the experiment name
+    else if(all(c("caged", "uncaged") %in% unique(join_name$cage.treatment_std))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_name }
+    
+  } # Close 'exp.name' loop
+} # Close 'source' loop
+
+# Unlist to a dataframe
+join_v5 <- purrr::list_rbind(x = join_list)
+
+# Did that work?
+join_v5 %>% 
+  dplyr::group_by(source, exp.name) %>% 
+  dplyr::summarize(design.ct = length(unique(design.level)),
+    designs = paste(design.level, collapse = " & "),
+    .groups = "drop") %>% 
+  dplyr::filter(design.ct != 1)
+
+# Check structure
+dplyr::glimpse(join_v5)
+
+## ------------------------------------------- ##
+# Join Beta (Un-Averaged) & Metadata ----
 ## ------------------------------------------- ##
 # Make a list for storing outputs
 w.meta_out_list <- list()
@@ -233,14 +302,19 @@ for(w.meta_outs in unique(names(w.meta_out_list))){
 # Structure check of that
 dplyr::glimpse(w.meta_v99)
 
-# Make a final  treatment/experiment level joined data (incl, LRRs)
-join_v99 <- join_v4
+# Make final treatment/experiment level joined data (incl, LRRs)
+join_all <- join_v4
+join_fine <- join_v5
 
-# Check that structure
-dplyr::glimpse(join_v99)
+# Check their structure
+dplyr::glimpse(join_all)
+dplyr::glimpse(join_fine)
 
-# Also export that
-write.csv(x = join_v99, na = '', row.names = FALSE,
+# Also export these
+write.csv(x = join_all, na = '', row.names = FALSE,
   file = file.path("data", "08_caged_experiment-level-everything_all-scales.csv"))
+
+write.csv(x = join_fine, na = '', row.names = FALSE,
+  file = file.path("data", "08_caged_experiment-level-everything_fine-scales.csv"))
 
 # End ----
