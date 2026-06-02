@@ -9,7 +9,7 @@
 
 # Load libraries
 librarian::shelf(tidyverse, njlyon0/supportR,
-                 ggpubr) #, update_all= TRUE) 
+                 ggpubr, cowplot) #, update_all= TRUE) 
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -51,7 +51,8 @@ caged_beta %>%
   sapply(class)
 
 
-
+# vector of colors for categorical variables
+col_vector <- c("#CC6677", "#332288", "#DDCC77", "#117733", "#88CCEE","#882255", "#44AA99", "#AA4499")
 
 # draft for loop for predictor sample sizes ----
 
@@ -98,8 +99,12 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
       group_by(var_aq.or.terr, cage.treatment_std, .[i]) %>%
       summarise(n = n()) %>%
       group_by(var_aq.or.terr, .[i]) %>%
-      summarise(avg.n = mean(n))
+      summarise(avg.n = mean(n)) %>% 
+      ungroup()
     
+    # number of categories for colors
+    #n_cols <- bd.factor.df %>% select(.[i]) %>% unique() %>% nrow()
+    n_cols <- length(unique(bd.factor.df[[i]]))
     
     fig.list[[i]] = ggplot(bd.factor.df) +
       geom_bar(aes(y = avg.n, x = var_aq.or.terr, fill = .data[[i]]), stat = "identity", position = position_dodge()) +
@@ -107,7 +112,8 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
       theme(panel.background = element_blank(),
             panel.border = element_rect(fill = NA, colour = "grey30"),
             axis.title.x = element_blank() 
-      )
+      ) +
+      scale_fill_manual(values= col_vector[1:n_cols]) +
     fig.list[[i]]
     
   } else {
