@@ -64,7 +64,7 @@ for(focal_beta in beta_outs){
                        values_from = within.cage.treat_betadisp.mean) %>% 
     # Calculate difference between uncaged & caged
     # adding the minimum value to each to get rid of dividing by zero problem 0.005
-    dplyr::mutate(within.cage.treat_betadisp.mean.lrr = log((uncaged + 0.005)/(caged + 0.005)))
+    dplyr::mutate(within.cage.treat_betadisp.mean.lrr = log2((uncaged + 0.005)/(caged + 0.005)))
   
   # Tidy up that output slightly
   diff_v4 <- diff_v3 %>% 
