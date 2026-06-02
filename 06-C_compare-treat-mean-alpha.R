@@ -1,8 +1,8 @@
 ## --------------------------------------------------------------- ##
-# CAGED *Mean* Difference in Gamma Diversity Calculation
+# CAGED *Mean* Difference in Alpha Diversity Calculation
 ## --------------------------------------------------------------- ##
 # Purpose
-## Calculate mean differences and log response ratios (LRR) for gamma richness
+## Calculate mean differences and log response ratios (LRR) for alpha diversity
 
 ## ------------------------------------------- ##
 # Housekeeping ----
