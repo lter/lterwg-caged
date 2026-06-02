@@ -23,6 +23,7 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv")) #if you use this DF, you could get in big trouble with Jamie FYI
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
+caged_newbeta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
 
 
 # View(caged_effectsize) 
