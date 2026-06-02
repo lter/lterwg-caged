@@ -42,7 +42,7 @@ meta_v1 <- read.csv(file = file.path("data", "sitelevel-metadata.csv"))
 dplyr::glimpse(meta_v1)
 
 ## ------------------------------------------- ##
-# Meta - Standardize Lat/Long ----
+# Standardize Lat/Long ----
 ## ------------------------------------------- ##
 
 # Look for non-numbers in lat/long columns
@@ -63,7 +63,7 @@ supportR::num_check(data = meta_v2, col = c("lat", "long"))
 dplyr::glimpse(meta_v2)
 
 ## ------------------------------------------- ##
-# Meta - Standardize Free Text ----
+# Standardize Free Text ----
 ## ------------------------------------------- ##
 
 # This is harder to do extensively but some coarse stuff makes sense
@@ -77,7 +77,7 @@ meta_v3 <- meta_v2 %>%
 dplyr::glimpse(meta_v3)
 
 ## ------------------------------------------- ##
-# Meta - Remove Unwanted Info ----
+# Remove Unwanted Info ----
 ## ------------------------------------------- ##
 
 # Needed processing
@@ -104,7 +104,7 @@ supportR::diff_check(old = names(meta_v3), new = names(meta_v4))
 dplyr::glimpse(meta_v4)
 
 ## ------------------------------------------- ##
-# Meta - Check for Duplicate Rows ----
+# Check for Duplicate Rows ----
 ## ------------------------------------------- ##
 
 # The join approach _requires_ that every source-exp.name combination have _ONLY one row!_
@@ -123,7 +123,7 @@ meta_v4 %>%
 ## And delete/synonymize one of the two rows
 
 ## ------------------------------------------- ##
-# Meta - Check Join Keys for Mismatches ----
+# Check Join Keys for Mismatches ----
 ## ------------------------------------------- ##
 
 # Check for mismatches in which datasets are in the data but not metadata (or vice versa)
