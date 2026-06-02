@@ -41,10 +41,14 @@ dplyr::glimpse(alp.diff_v02)
 # Calculate Difference & LRR ----
 ## ------------------------------------------- ##
 
+
+# need to calculate mean across caged and uncaged for each source/exp name combination
+
 # Calculate difference and LRR
 alp.diff_v03 <- alp.diff_v02 %>% 
   dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
     .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
+  # need to change this to the minimum average value of mean alpha diversity (replace 0.005)
   dplyr::mutate(caged = alpha.diversity_caged + 0.005,
     uncaged = alpha.diversity_uncaged + 0.005) %>% 
   dplyr::mutate(within.cage.treat_alpha.diff = uncaged - caged,
