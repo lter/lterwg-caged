@@ -121,83 +121,58 @@ join_v1 <- meta_v1 %>%
 dplyr::glimpse(join_v1)
 
 ## ------------------------------------------- ##
-# Join Alpha & Dominance ----
+# Join Beta (Means), Alpha & Dominance ----
 ## ------------------------------------------- ##
 
 # Join data available at all/multiple design levels
-join_v2 <- meta_v1 %>% 
-  dplyr::left_join(x = ., y = gam.diff_v1,
-    by = dplyr::join_by(source, exp.name))
-
-# Check structure
-dplyr::glimpse(join_v1)
-
-## ------------------------------------------- ##
-
-
-
-
-## ------------------------------------------- ##
-# Combine Gamma/Alpha/Dominance LRRs ----
-## ------------------------------------------- ##
-
-# Join these three together (to make later joins easier)
-diff_v1 <- gam.diff_v1 %>% 
+join_v2 <- beta.diff_v2 %>% 
   dplyr::left_join(x = ., y = alp.diff_v1,
-    by = c("source", "organization", "site", "project.name", "sampling.years", 
-      "excluded.group", "measured.group", "exp.name")) %>% 
+    by = dplyr::join_by(source, organization, site, excluded.group, 
+      measured.group, exp.name, design.level)) %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
-    by = c("source", "organization", "site", "project.name", "sampling.years", 
-    "excluded.group", "measured.group", "exp.name", "exp.design.4",
-    "exp.design.3", "exp.design.2", "exp.design.1",
-    "alpha.diversity_design.level" = "dominance_design.level")) %>% 
-  dplyr::relocate(dplyr::all_of(c(paste0("exp.design.", 1:4))), 
-    .after = exp.name) %>% 
-  dplyr::rename(betadisp.design.level = alpha.diversity_design.level)
+    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
+      excluded.group, measured.group, exp.name, design.level, 
+      exp.design.4, exp.design.3, exp.design.2, exp.design.1)) %>% 
+  dplyr::relocate(project.name, sampling.years, dplyr::starts_with("exp.design."),
+    .before = design.level)
 
 # Check structure
-dplyr::glimpse(diff_v1)
+dplyr::glimpse(join_v2)
 
 ## ------------------------------------------- ##
-# Beta - Load Mean Differences ----
+# Join Alpha, Beta (Means), Gamma, Dominance, & Meta ----
 ## ------------------------------------------- ##
 
-# Read in the mean difference files too
-beta.diff_v1 <- read.csv(file = file.path("data", "06-A_caged_mean-beta-diff_all-scales.csv"))
-
-# Check structure of one
-dplyr::glimpse(beta.diff_v1)
-
-## ------------------------------------------- ##
-# Beta - Reformat Data ----
-## ------------------------------------------- ##
-
-# Get this data into a comparable format to the gamma/alpha/dominance data
-beta.diff_v2 <- beta.diff_v1 %>% 
-  tidyr::pivot_longer(cols = dplyr::starts_with("within.cage.treat")) %>% 
-  dplyr::mutate(name = gsub("within.cage.treat_", "", name)) %>% 
-  dplyr::mutate(new.name = paste0(name, "_", cage.treatment_std)) %>% 
-  dplyr::select(-name, -cage.treatment_std) %>% 
-  tidyr::pivot_wider(names_from = new.name, values_from = value) %>% 
-  dplyr::relocate(dplyr::contains(".mean"), dplyr::contains(".n"), 
-    dplyr::contains(".sd"), dplyr::contains(".se"), 
-    .after = dplyr::everything()) %>% 
-  dplyr::relocate(dplyr::contains("mean_"), dplyr::contains("mean.diff"), 
-    dplyr::contains("mean.lrr"),
-    .after = year) %>% 
-  dplyr::relocate(exp.name, betadisp.design.level, .after = year) %>% 
-  dplyr::select(-betadisp.mean.diff_uncaged, -betadisp.mean.lrr_uncaged) %>% 
-  dplyr::rename(betadisp.mean.treat.diff = betadisp.mean.diff_caged,
-    betadisp.mean.lrr = betadisp.mean.lrr_caged)
+# Join all preceding data
+join_v3 <- join_v1 %>% 
+  dplyr::left_join(x = ., y = join_v2,
+    by = dplyr::join_by(source, exp.name, organization, site, project.name, 
+      sampling.years, excluded.group, measured.group)) %>% 
+  dplyr::relocate(year:design.level,
+    .after = measured.group)
 
 # Check structure
-dplyr::glimpse(beta.diff_v2)
+dplyr::glimpse(join_v3)
 
 ## ------------------------------------------- ##
-# Attach *EVERYTHING* to Data ----
+# Reshape to Long Format ----
 ## ------------------------------------------- ##
-## https://tenor.com/view/everyone-the-professional-shout-gif-12696023
 
+# Get a long-format version to join on beta dispersion (non-averaged)
+join_v4 <- join_v3 %>% 
+  tidyr::pivot_longer(cols = dplyr::ends_with("caged")) %>% 
+  tidyr::separate_wider_delim(cols = name, delim = "_",
+    names = c("metric", "cage.treatment_std"), cols_remove = TRUE) %>% 
+  tidyr::pivot_wider(names_from = metric, values_from = value) %>% 
+  dplyr::relocate(cage.treatment_std,
+    .after = exp.design.1)
+
+# Check structure
+dplyr::glimpse(join_v4)
+
+## ------------------------------------------- ##
+# Join Beta (Actual) & Metadata ----
+## ------------------------------------------- ##
 # Make a list for storing outputs
 w.meta_out_list <- list()
 
@@ -209,57 +184,31 @@ for(focal_w.meta in w.meta_outs){
   message("Attaching ancillary data to ", focal_w.meta)
   
   # Grab just that file out of the list of inputs
-  w.meta_v1 <- w.meta_in_list[[focal_w.meta]]
+  w.meta_v1 <- w.meta_in_list[[focal_w.meta]] %>% 
+    dplyr::rename(design.level = betadisp.design.level)
   
-  # Now attach true metadata GoogleSheet & reorder columns
+  # Attach 'all other data' pre-joined object
   w.meta_v2 <- w.meta_v1 %>% 
-    dplyr::left_join(y = meta_v6, by = c("source", "exp.name")) %>% 
-    dplyr::relocate(exp.design.4:betadisp.comm.dist, 
+    dplyr::left_join(x = ., y = join_v1,
+      by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
+        excluded.group, measured.group, exp.name)) %>% 
+      dplyr::relocate(exp.design.4:betadisp.comm.dist, 
                     .after = dplyr::everything())
   
-  # Now attach gamma richness & reorder columns
-  w.meta_v3 <- w.meta_v2 %>% 
-    dplyr::left_join(x = ., y = diff_v1, 
-      by = c("source", "organization", "site", "project.name", "sampling.years",
-      "excluded.group", "measured.group", "exp.name", "betadisp.design.level",
-      "exp.design.4", "exp.design.3", "exp.design.2", "exp.design.1")) 
-    dplyr::relocate(gamma.richness, .before = exp.name)
-  
-  # Now attach summarized beta disp and mean difference
-  w.meta_v4 <- w.meta_v3 %>% 
-    ## No column re-ordering needed (want these at end)
-    dplyr::left_join(y = diff_v1, by = c("source", "organization", "site", 
-                                         "excluded.group", "measured.group",
-                                         "exp.name", "cage.treatment_std",
-                                         "year", "betadisp.design.level")) %>%
-  # now attach log response ratio
-  dplyr::left_join(lrr_v1 %>%
-                     select("within.cage.treat_betadisp.mean.lrr", "source", "organization", "site", 
-                            "excluded.group", "measured.group",
-                            "exp.name", "cage.treatment_std",
-                            "year", "betadisp.design.level"), by= c("source", "organization", "site", 
-                                 "excluded.group", "measured.group",
-                                 "exp.name", "cage.treatment_std",
-                                 "year", "betadisp.design.level"))
-  
   # Add this to the output list
-  w.meta_out_list[[focal_w.meta]] <- w.meta_v4
+  w.meta_out_list[[focal_w.meta]] <- w.meta_v2
   
 } # Close loop
 
 # Check the structure at various points
 ## Starting (no metadata added)
 dplyr::glimpse(w.meta_v1)
-## After adding metadata GoogleSheet
+## After adding metadata GoogleSheet & gamma richness
 dplyr::glimpse(w.meta_v2)
-## After adding gamma richness
-dplyr::glimpse(w.meta_v3)
-## After adding summarized beta disp + mean diff
-dplyr::glimpse(w.meta_v4)
 
 # How many sources and exp.name got through the pipeline?
-unique(w.meta_v4$source) # 117
-unique(w.meta_v4$exp.name) # 346
+unique(w.meta_v2$source) # 117
+unique(w.meta_v2$exp.name) # 347
 
 ## ------------------------------------------- ##
 # Export ----
@@ -273,13 +222,25 @@ for(w.meta_outs in unique(names(w.meta_out_list))){
   w.meta_v99 <- w.meta_out_list[[w.meta_outs]]
   
   # Generate tidy name / path
-  w.meta_name <- gsub(pattern = "05-A_caged_beta-disp", 
-                    replacement = "07_caged_w.meta", x = w.meta_outs)
+  w.meta_name <- gsub(pattern = "05-A_caged_", 
+                    replacement = "08_caged_w.meta-", x = w.meta_outs)
   w.meta_path <- file.path("data", w.meta_name)
   
   # Export locally
   write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
 }
 
-colnames(w.meta_v99)
+# Structure check of that
+dplyr::glimpse(w.meta_v99)
+
+# Make a final  treatment/experiment level joined data (incl, LRRs)
+join_v99 <- join_v4
+
+# Check that structure
+dplyr::glimpse(join_v99)
+
+# Also export that
+write.csv(x = join_v99, na = '', row.names = FALSE,
+  file = file.path("data", "08_caged_experiment-level-everything_all-scales.csv"))
+
 # End ----
