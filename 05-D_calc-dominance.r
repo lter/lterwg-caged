@@ -26,7 +26,7 @@ dplyr::glimpse(dom_v01)
 # Sum across years
 dom_v02 <- dom_v01 %>% 
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("year", "abundance"))))) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("year", "cage.treatment_orig", "abundance"))))) %>% 
   dplyr::summarize(abundance = sum(abundance, na.rm = TRUE),
     .groups = "drop")
 
@@ -46,7 +46,7 @@ dom_des1 <- dom_v02 %>%
     .groups = "drop") %>% 
   dplyr::ungroup() %>% 
   dplyr::mutate(dominance = max.abundance / total.abundance,
-    .after = cage.treatment_orig) %>% 
+    .after = cage.treatment_std) %>% 
   dplyr::mutate(dominance_design.level = "exp.design.1",
     .before = dominance)
 
@@ -67,7 +67,7 @@ dom_des2 <- dom_v02 %>%
     .groups = "drop") %>% 
   dplyr::ungroup() %>% 
   dplyr::mutate(dominance = max.abundance / total.abundance,
-    .after = cage.treatment_orig) %>% 
+    .after = cage.treatment_std) %>% 
   dplyr::mutate(dominance_design.level = "exp.design.2",
     .before = dominance)
 
@@ -88,7 +88,7 @@ dom_des3 <- dom_v02 %>%
     .groups = "drop") %>% 
   dplyr::ungroup() %>% 
   dplyr::mutate(dominance = max.abundance / total.abundance,
-    .after = cage.treatment_orig) %>% 
+    .after = cage.treatment_std) %>% 
   dplyr::mutate(dominance_design.level = "exp.design.3",
     .before = dominance)
 
@@ -109,7 +109,7 @@ dom_des4 <- dom_v02 %>%
     .groups = "drop") %>% 
   dplyr::ungroup() %>% 
   dplyr::mutate(dominance = max.abundance / total.abundance,
-    .after = cage.treatment_orig) %>% 
+    .after = cage.treatment_std) %>% 
   dplyr::mutate(dominance_design.level = "exp.design.4",
     .before = dominance)
 
@@ -130,7 +130,7 @@ dom_name <- dom_v02 %>%
     .groups = "drop") %>% 
   dplyr::ungroup() %>% 
   dplyr::mutate(dominance = max.abundance / total.abundance,
-    .after = cage.treatment_orig) %>% 
+    .after = cage.treatment_std) %>% 
   dplyr::mutate(dominance_design.level = "exp.name",
     .before = dominance)
 

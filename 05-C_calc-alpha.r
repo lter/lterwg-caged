@@ -31,12 +31,12 @@ dplyr::glimpse(alpha_v1)
 alpha_des1 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("year", "taxa", "abundance"))) 
-    )) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("year", "cage.treatment_orig", 
+    "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.1",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des1)
@@ -49,12 +49,12 @@ dplyr::glimpse(alpha_des1)
 alpha_des2 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "year", "taxa", "abundance"))) 
-    )) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "year", "cage.treatment_orig", 
+    "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.2",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des2)
@@ -68,11 +68,11 @@ alpha_des3 <- alpha_v1 %>%
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:2), 
-      "year", "taxa", "abundance"))))) %>% 
+      "year", "cage.treatment_orig", "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.3",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des3)
@@ -86,11 +86,11 @@ alpha_des4 <- alpha_v1 %>%
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:3), 
-      "year", "taxa", "abundance"))))) %>% 
+    "year", "cage.treatment_orig", "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.design.4",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_des4)
@@ -104,11 +104,11 @@ alpha_name <- alpha_v1 %>%
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:4), 
-      "year", "taxa", "abundance"))))) %>% 
+      "year", "cage.treatment_orig", "taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.diversity_design.level = "exp.name",
-    .after = cage.treatment_orig)
+    .after = cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alpha_name)
