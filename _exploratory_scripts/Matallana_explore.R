@@ -18,15 +18,26 @@ googledrive::drive_auth(email = "nicomatamej@gmail.com")
 meta.drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
   dplyr::filter(name == "07_caged_w.meta_finest-scales.csv")
 
+#import beta dispersion dataset
+beta.disper.drive = googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
+  dplyr::filter(name == "08_caged_prepped-beta-dispersion.csv")
+
 # Check that worked
 meta.drive
+beta.disper.drive
 
 # Download it
 googledrive::drive_download(file = meta.drive$id, type = "csv", overwrite = T,
                             path = file.path("data", meta.drive$name))
 
-# Read it in (latest run: 5/12/2025)
+# Download it
+googledrive::drive_download(file = beta.disper.drive$id, type = "csv", overwrite = T,
+                            path = file.path("data", beta.disper.drive$name))
+
+# Read it in (latest run: 6/01/2025)
 meta.tidy.full <- read.csv(file = file.path("data", "07_caged_w.meta_finest-scales.csv"))
+
+beta.disper = read.csv(file = file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 # Extract basic row identifiers & lat/long
 meta.tidy.simple = meta.tidy.full %>%
@@ -923,6 +934,102 @@ sites.anti = sites.10.13 %>%
   anti_join(meta.tidy.simple, by = c("source", "exp.name")) #double check missing sites - none with lat/long
 
 write.csv(sites.tidy, "C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Datasets/sites.latlong.10.13.25.csv")
+
+#
+# Predictor exploratory vars ----
+
+# Initial dataset is 08_caged_prepped-beta-dispersion.csv
+colnames(beta.disper)
+
+c(4, 6, 7, 8, 9)
+
+# column 4
+unique(beta.disper[4])
+
+col4.sum = beta.disper %>%
+  dplyr::select(exp.name, var_aq.or.terr,var_climate.zone) %>%
+  distinct() %>%
+  group_by(var_aq.or.terr,var_climate.zone) %>%
+  summarise(n = n())
+
+ggplot(col4.sum) +
+  geom_bar(aes(y = n, x = var_aq.or.terr, fill = var_climate.zone), stat = "identity", position = position_dodge()) +
+  labs(y = "Number of studies", fill = "Climate Zone") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        axis.title.x = element_blank() 
+        )
+
+# column 6
+unique(beta.disper[6])
+
+col6.sum = beta.disper %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_ecotype1) %>%
+  distinct() %>%
+  group_by(var_aq.or.terr,var_ecotype1) %>%
+  summarise(n = n())
+
+ggplot(col6.sum) +
+  geom_bar(aes(y = n, x = var_aq.or.terr, fill = var_ecotype1), stat = "identity", position = position_dodge()) +
+  labs(y = "Number of studies", fill = "Ecotype") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        axis.title.x = element_blank() 
+  )
+
+# column 7
+
+unique(beta.disper[7])
+
+col7.sum = beta.disper %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_consumer.taxonomy) %>%
+  distinct() %>%
+  group_by(var_aq.or.terr,var_consumer.taxonomy) %>%
+  summarise(n = n())
+
+ggplot(col7.sum) +
+  geom_bar(aes(y = n, x = var_aq.or.terr, fill = var_consumer.taxonomy), stat = "identity", position = position_dodge()) +
+  labs(y = "Number of studies", fill = "Consumer\nTaxonomy") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        axis.title.x = element_blank() 
+  )
+
+# column 8
+unique(beta.disper[8])
+
+col8.sum = beta.disper %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_consumer.taxonomy) %>%
+  distinct() %>%
+  group_by(var_aq.or.terr,var_consumer.taxonomy) %>%
+  summarise(n = n())
+
+ggplot(col8.sum) +
+  geom_bar(aes(y = n, x = var_aq.or.terr, fill = var_consumer.taxonomy), stat = "identity", position = position_dodge()) +
+  labs(y = "Number of studies", fill = "Consumer\nMetabolism") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        axis.title.x = element_blank() 
+  )
+
+#Column 9
+unique(beta.disper[9])
+
+col9.sum = beta.disper %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_resource.type.category) %>%
+  distinct() %>%
+  group_by(var_aq.or.terr,var_resource.type.category) %>%
+  summarise(n = n())
+
+ggplot(col9.sum) +
+  geom_bar(aes(y = n, x = var_aq.or.terr, fill = var_resource.type.category), stat = "identity", position = position_dodge()) +
+  labs(y = "Number of studies", fill = "Resource\nType") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        axis.title.x = element_blank() 
+  )
+
+
 
 #
 # End ----
