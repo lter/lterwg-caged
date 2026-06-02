@@ -107,12 +107,12 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
     
     fig.list[[i]] = ggplot(bd.factor.df) +
       geom_bar(aes(y = avg.n, x = var_aq.or.terr, fill = .data[[i]]), stat = "identity", position = position_dodge()) +
-      #labs(y = "Number of studies", fill = "Ecotype") +
+      labs(y = "Number of studies", fill = "", title = paste(i)) +
       theme(panel.background = element_blank(),
             panel.border = element_rect(fill = NA, colour = "grey30"),
             axis.title.x = element_blank() 
       ) +
-      scale_fill_manual(values= col_vector[1:n_cols]) +
+      scale_fill_manual(values= col_vector[1:n_cols])
     fig.list[[i]]
     
   } else {
@@ -155,15 +155,27 @@ plot_grid(plotlist = fig.list, ncol = 3, nrow = 5)
 
 length(fig.list)
 
-    
-    plot_grid(fig.list[[1]], fig.list[[2]], fig.list[[3]], ncol = 3, nrow = 1)
-    plot_grid(fig.list[[4]], fig.list[[5]], fig.list[[6]], ncol = 3, nrow = 1)
-    plot_grid(fig.list[[7]], fig.list[[8]], fig.list[[9]], ncol = 3, nrow = 1)
-    plot_grid(fig.list[[10]], fig.list[[11]], fig.list[[12]], ncol = 3, nrow = 1)
-    plot_grid(fig.list[[13]], fig.list[[14]], fig.list[[15]], ncol = 3, nrow = 1)
+grid.plots = list()
 
+grid.plots[[1]] = plot_grid(fig.list[[1]], fig.list[[2]], fig.list[[3]], ncol = 3, nrow = 1)
+grid.plots[[2]] = plot_grid(fig.list[[4]], fig.list[[5]], fig.list[[6]], ncol = 3, nrow = 1)
+grid.plots[[3]] = plot_grid(fig.list[[7]], fig.list[[8]], fig.list[[9]], ncol = 3, nrow = 1)
+grid.plots[[4]] = plot_grid(fig.list[[10]], fig.list[[11]], fig.list[[12]], ncol = 3, nrow = 1)
+grid.plots[[5]] = plot_grid(fig.list[[13]], fig.list[[14]], fig.list[[15]], ncol = 3, nrow = 1)
+
+
+for (i in 1:5){
   
+  jpeg(paste0("./graphs/09c_predictor.sample.size.plot.grid.", i, ".jpeg"), width = 15, height = 5, units = "in",
+       res = 300)   
+  
+  print(grid.plots[[i]])
+  
+  dev.off()
+  
+}
 
 #grid.list[[1]]
+
 
 #
