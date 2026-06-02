@@ -303,8 +303,16 @@ for(w.meta_outs in unique(names(w.meta_out_list))){
 dplyr::glimpse(w.meta_v99)
 
 # Make final treatment/experiment level joined data (incl, LRRs)
-join_all <- join_v4
-join_fine <- join_v5
+join_all <- join_v4 %>% 
+  dplyr::filter(source %in% w.meta_v99$source &
+    exp.name %in% w.meta_v99$exp.name)
+join_fine <- join_v5 %>% 
+  dplyr::filter(source %in% w.meta_v99$source &
+    exp.name %in% w.meta_v99$exp.name)
+
+# How many sources/experiments
+length(unique(join_all$source)); length(unique(join_all$exp.name))
+length(unique(join_fine$source)); length(unique(join_fine$exp.name))
 
 # Check their structure
 dplyr::glimpse(join_all)
