@@ -67,7 +67,7 @@ unique(dom.diff_v99$source) # 121
 unique(dom.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-dom.diff_name <- "06-D_caged_dominance_all-scales.csv"
+dom.diff_name <- "06-D_caged_dominance-diff_all-scales.csv"
 dom.diff_path <- file.path("data", dom.diff_name)
 
 # Export locally

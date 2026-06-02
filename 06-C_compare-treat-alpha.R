@@ -67,7 +67,7 @@ unique(alp.diff_v99$source) # 121
 unique(alp.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-alp.diff_name <- "06-C_caged_alpha-div_all-scales.csv"
+alp.diff_name <- "06-C_caged_alpha-div-diff_all-scales.csv"
 alp.diff_path <- file.path("data", alp.diff_name)
 
 # Export locally
