@@ -228,11 +228,12 @@ dim(caged_effectsize)
 
 
 caged_effectsize %>%
+  filter(var_succ.vs.late == "late") %>%
   ggplot(aes(x=abs(lat), 
              y=within.cage.treat_betadisp.mean.diff)) +
   geom_point() +
   geom_smooth(method="lm") +
-  geom_smooth(method = "loess", se = FALSE, col="red") +
+  #geom_smooth(method = "loess", se = FALSE, col="red") +
   theme_pubr(base_size=16) +
  # scale_color_manual(values= c("royalblue","darkgreen"))+
   labs(x= "Absolute latitude",
@@ -247,7 +248,7 @@ caged_effectsize %>%
              y=within.cage.treat_betadisp.mean.lrr)) +
   geom_point() +
   geom_smooth(method="lm") +
- # geom_smooth(method = "loess", se = FALSE, col="red") +
+  #geom_smooth(method = "loess", se = FALSE, col="red") +
   theme_pubr(base_size=16) +
   # scale_color_manual(values= c("royalblue","darkgreen"))+
   labs(x= "Absolute latitude",
