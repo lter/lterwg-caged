@@ -41,8 +41,7 @@ dplyr::glimpse(beta_v1)
 
 # Check what data made it through 04
 unique(beta_v1$source) # 121
-unique(beta_v1$exp.name) # 363
-# same as 03, nothing was dropped, just zero filled so it makes sense
+unique(beta_v1$exp.name) # 367
 
 ## ------------------------------------------- ##
 # Data Preparation ----
@@ -489,12 +488,10 @@ beta_fine_v2 <- purrr::list_rbind(beta_finelist)
 dplyr::glimpse(beta_fine_v2)
 
 # Did we lose any sources?
-# these are datasets that don't have both caging treatments for at least one design level
 supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine_v2$source))
-#now alderson is getting dropped here because it only has n=3 now that we split it up
+## These are datasets that don't have both caging treatments for at least one design level
 
-# Did we lose any experiments?
-## From sources that were not dropped
+# Did we lose any experiments (from sources that were not completely dropped)?
 beta_test <- dplyr::filter(beta_allscales, source %in% beta_fine_v2$source)
 supportR::diff_check(old = unique(beta_test$exp.name), new = unique(beta_fine_v2$exp.name))
 
@@ -551,7 +548,7 @@ beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
 unique(beta_v99$source) # 117
-unique(beta_v99$exp.name) # 346
+unique(beta_v99$exp.name) # 347
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
