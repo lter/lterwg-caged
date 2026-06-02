@@ -100,6 +100,7 @@ caged_effectsize %>%
   geom_hline(yintercept=0)
 
 
+
 # Log Response Ratio -beta dispersion
 caged_effectsize %>%
   filter(var_succ.vs.late == "late") %>%
@@ -114,6 +115,8 @@ caged_effectsize %>%
        y= "LRR(uncaged/caged)") +
   geom_hline(yintercept=0) #+
 # geom_hline(yintercept=0.69)
+
+
 
 
 # Log Response Ratio - alpha diversity
