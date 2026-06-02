@@ -151,17 +151,18 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
   
 }
 
+plot_grid(plotlist = fig.list, ncol = 3, nrow = 5)
+
 length(fig.list)
 
-grid.list = list()
-
-for(i in 1:5){
-  for (j in 1:3) {
     
-  grid.list[[i]] = plot_grid(plotlist = fig.list, ncol = 3, nrow = i)
+    plot_grid(fig.list[[1]], fig.list[[2]], fig.list[[3]], ncol = 3, nrow = 1)
+    plot_grid(fig.list[[4]], fig.list[[5]], fig.list[[6]], ncol = 3, nrow = 1)
+    plot_grid(fig.list[[7]], fig.list[[8]], fig.list[[9]], ncol = 3, nrow = 1)
+    plot_grid(fig.list[[10]], fig.list[[11]], fig.list[[12]], ncol = 3, nrow = 1)
+    plot_grid(fig.list[[13]], fig.list[[14]], fig.list[[15]], ncol = 3, nrow = 1)
+
   
-  }
-}
 
 grid.list[[1]]
 
