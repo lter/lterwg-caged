@@ -43,11 +43,16 @@ dim(effectsizes_v1) # 1286
 dim(effectsizes_v1) # 1286 
 # so the effect size needs to be set to only unique 
 
-colnames(effectsizes_v2)
 
 effectsizes_v2 <- effectsizes_v1 %>%
   select(source, exp.name, contains("lrr")) %>%
 distinct()
+
+dim(effectsizes_v2) # why does this have 651 rows? should only have 347? 
+# i think its because dominance and alpha diversity LRR are not calculated at mean caged/uncaged so they have more unique values than they should
+
+colnames(effectsizes_v2)
+
 
 
 
