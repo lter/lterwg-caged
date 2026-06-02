@@ -110,7 +110,7 @@ for(diff_outs in unique(names(diff_list))){
   
   # Generate tidy name / path
   diff_name <- gsub(pattern = "05-A_caged_beta-disp", 
-                    replacement = "06_caged_mean-beta-diff", x = diff_outs)
+                    replacement = "06-A_caged_mean-beta-diff", x = diff_outs)
   diff_path <- file.path("data", diff_name)
   
   # Export locally
