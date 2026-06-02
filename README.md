@@ -24,7 +24,10 @@ Principal Investigators:
 - `05-B_calc-gamma` -- Calculate gamma diversity within experiment across and within treatment
 - `05-C_calc-alpha` -- Calculate alpha diversity (richness) at all design levels
 - `05-D_calc-dominance` -- Calculate dominance (Berger Parker) at all design levels
-- `06_compare-treat-mean-beta` -- Calculate mean difference and log response ratios (LRR) between caging treatment beta dispersions
+- `06-A_compare-treat-mean-beta` -- Calculate mean difference and log response ratios (LRR) between caging treatment beta dispersions
+- `06-B_compare-treat-gamma` -- Calculate difference & LRR for between caging treatment gamma richness
+- `06-C_compare-treat-alpha` -- Calculate difference & LRR for between caging treatment alpha diversity (i.e., richness)
+- `06-D_compare-treat-dominance` -- Calculate difference & LRR for between caging treatment dominance
 - `07_attach-metadata` -- Join site-level metadata with data as well as join outputs of all `05` scripts and script `06`
 - `08_prepare-for-stats` -- Calculate effect size and streamline data to only bits needed for current analysis
 
