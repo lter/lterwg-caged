@@ -118,9 +118,6 @@ table(is.na(caged_beta2$lat)) #Good!
 unique(caged_beta2$exp.name) # 345
 # what did we lose here - burkepile_floridakeys_reefexclosure_20042005_fish_benthic.csv
 
-
-
-
 # Create a column for absolute value of latitude
 caged_beta2 <- caged_beta2 %>%
   mutate(abs.lat = abs(lat))
@@ -154,20 +151,31 @@ ggplot(data = caged_beta2, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) +
   facet_grid(cage.treatment_std ~ var_aq.or.terr) 
+
+ggplot(data = caged_beta2, aes(x = abs(lat), y = betadisp.comm.dist_transform, color = cage.treatment_std)) +
+  geom_point(alpha = 0.2, size = 1) +
+  geom_smooth(method = 'lm', formula = y ~ poly(x, 2), 
+              linewidth = 2) +
+  facet_wrap(~var_aq.or.terr)
+
 ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
+
 ggplot(data = caged_beta2, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
+
 ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
   geom_boxplot() +
-  facet_wrap( ~ var_aq.or.terr) 
+  facet_wrap(~ var_aq.or.terr) 
 
 ggplot(data = uncaged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) 
+
 ggplot(data = uncaged.df, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm') 
+
 ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
 
@@ -179,9 +187,11 @@ ggplot(data = uncaged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
 ggplot(data = caged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) 
+
 ggplot(data = caged.df, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm')
+
 ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
 
@@ -242,7 +252,7 @@ library(effects)
 plot(allEffects(caging.betamod))
 
 
-# MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
+# MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) ####
 # this is only on the uncaged data 
 
 # Uncaged data 
@@ -262,7 +272,7 @@ uncaged.late <- caged_beta2 %>%
 
 
 uncaged.late.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
-                                  var_aq.or.terr * scale(abs.lat)  +
+                                  var_aq.or.terr * scale(abs(lat))  +
                                   # accounting for gamma richness and sample size
                                   scale(gamma.richness) + scale(betadisp.sample.size) +
                                   (1|exp.name), 

@@ -1,7 +1,7 @@
 ## --------------------------------------------------------------- ##
-# CAGED Raw data figures
+# CAGED Figures
 ## --------------------------------------------------------------- ##
-# Written by: Jamie McDevitt-Irwin
+# Written by: Marc
 
 ## ------------------------------------------- ##
 # Housekeeping ----
@@ -9,7 +9,7 @@
 
 # Load libraries
 librarian::shelf(tidyverse, njlyon0/supportR,
-                 ggpubr) #, update_all= TRUE) 
+                 ggpubr, patchwork) #, update_all= TRUE) 
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -21,7 +21,7 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
-caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
+caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv")) #if you use this DF, you could get in big trouble with Jamie FYI
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
 
@@ -65,6 +65,7 @@ caged_beta %>%
        y="Proportion",
        fill = "Ecotype")
 
+#successional stage####
 # Proportion of experiments in aquatic and terrestrial that are successional vs late 
 caged_beta %>%
   dplyr::count(exp.name, var_aq.or.terr, var_succ.vs.late) %>%
@@ -78,6 +79,19 @@ caged_beta %>%
        y="Proportion",
        fill = "Assembly")
 
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  filter(var_succ.vs.late != "") %>%
+  ggplot(aes(x= var_succ.vs.late, 
+             y = betadisp.comm.dist, 
+             color = var_aq.or.terr)) +
+  geom_jitter(alpha = 0.3, width = 0.1) +
+  stat_summary(geom = "pointrange") +
+  theme_pubr(base_size=16) +
+  labs(x= "study duration (years)", 
+       y = "Beta dispersion")
+
+#study duration ####
 caged_beta %>%
  # dplyr::count(exp.name, var_aq.or.terr) %>%
  # filter(var_aq.or.terr != "") %>%
@@ -102,15 +116,6 @@ caged_beta %>%
 
 caged_beta %>%
   # dplyr::count(exp.name, var_aq.or.terr) %>%
-  filter(var_exclusion.duration.continuousyears != "", 
-         var_exclusion.duration.continuousyears < 1) %>%
-  ggplot(aes(x= var_exclusion.duration.continuousyears)) +
-  geom_histogram() +
-  theme_pubr(base_size=16) +
-  labs(x= "study duration (years)")
-
-caged_beta %>%
-  # dplyr::count(exp.name, var_aq.or.terr) %>%
   filter(var_exclusion.duration.continuousyears != "") %>%
   ggplot(aes(x= var_exclusion.duration.continuousyears, 
              y = betadisp.comm.dist)) +
@@ -119,8 +124,100 @@ caged_beta %>%
   labs(x= "study duration (years)", 
        y = "Beta dispersion")
 
+#just under 1 year studies
+caged_beta %>%
+  # dplyr::count(exp.name, var_aq.or.terr) %>%
+  filter(var_exclusion.duration.continuousyears != "", 
+         var_exclusion.duration.continuousyears < 1) %>%
+  ggplot(aes(x= var_exclusion.duration.continuousyears)) +
+  geom_histogram() +
+  theme_pubr(base_size=16) +
+  labs(x= "study duration (years)")
+
+caged_beta %>%
+  filter(var_exclusion.duration.continuousyears != "", 
+         var_exclusion.duration.continuousyears < 1) %>%
+  ggplot(aes(x= var_exclusion.duration.continuousyears, 
+             y = betadisp.comm.dist)) +
+  geom_point() +
+  theme_pubr(base_size=16) +
+  labs(x= "study duration (years)", 
+       y = "Beta dispersion")
 
 
+caged_effectsize %>% 
+  # dplyr::count(exp.name, var_aq.or.terr) %>%
+  filter(var_exclusion.duration.continuousyears != "") %>%
+  ggplot(aes(x= var_exclusion.duration.continuousyears, 
+             y = within.cage.treat_betadisp.mean.diff)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "black") +
+  theme_pubr(base_size=16) +
+  labs(x= "study duration (years)", 
+       y = "Beta dispersion")
+
+#consumer richness by latitude####
+consrich.lat = 
+  caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  droplevels() %>%
+  ggplot(aes(x=abs(lat), 
+             y=var_consumer.richness.number,
+             col=var_aq.or.terr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  stat_cor(label.y = 20)+ 
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen")) +
+  labs(x="Absolute latitude",
+       y="Consumer richness",
+       colour="Biome") + 
+  facet_wrap(~var_aq.or.terr)
+
+
+# Gamma richness by latitude####
+gammarich.lat = 
+caged_beta %>%
+  filter(var_aq.or.terr != "") %>%
+  droplevels() %>%
+  ggplot(aes(x=abs(lat), 
+             y=gamma.richness,
+             col=var_aq.or.terr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  stat_cor(label.y = 200)+ 
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen")) +
+  labs(x="Absolute latitude",
+       y="Gamma richness",
+       colour="Biome") + 
+  facet_wrap(~var_aq.or.terr)
+
+consrich.lat / gammarich.lat 
+
+otherrich = 
+caged_beta %>%
+  filter(var_taxonomic.level != "") %>%
+  droplevels() %>%
+  ggplot(aes(x=abs(lat), 
+             y=gamma.richness,
+             col=var_aq.or.terr)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  #stat_cor(label.y = 200)+ 
+  theme_pubr(base_size=16) +
+  scale_color_manual(values= c("royalblue",
+                               "darkgreen")) +
+  labs(x="Absolute latitude",
+       y="Gamma richness",
+       colour="Biome") + 
+  facet_wrap(~var_taxonomic.level, scales = "free_y")
+
+otherrich / gammarich.lat 
+
+##
 # Beta dispersion by caging treatment
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
@@ -134,20 +231,6 @@ caged_beta %>%
   labs(x= "Caging treatment",
        y= "Beta dispersion") 
 
-# Beta dispersion by caging * aquatic.terrestrial
-caged_beta %>%
-  filter(var_aq.or.terr != "") %>%
-  ggplot(aes(x=var_aq.or.terr, 
-             y=betadisp.comm.dist,
-             color=cage.treatment_std,)) +
-  geom_boxplot(size=1.1) +
-  geom_point(position= position_jitterdodge(), alpha= 0.05) +
-  theme_pubr(base_size=16) +
-  scale_color_manual(values= c("royalblue",
-                               "darkturquoise")) +
-  labs(x= "Biome",
-       y= "Beta dispersion",
-       colour = "Caging treatment") 
 
 # Beta dispersion by caging treatment * succession
 caged_beta %>%
@@ -319,21 +402,6 @@ caged_effectsize %>%
 
 
 
-# Gamma richness by latitude
-caged_effectsize %>%
-  filter(var_aq.or.terr != "") %>%
-  droplevels() %>%
-  ggplot(aes(x=abs(lat), 
-             y=gamma.richness,
-             col=var_aq.or.terr)) +
-  geom_point() +
-  geom_smooth(method="lm") +
-  theme_pubr(base_size=16) +
-  scale_color_manual(values= c("royalblue",
-                               "darkgreen")) +
-  labs(x="Absolute latitude",
-       y="Gamma richness",
-       colour="Biome")
 
 
 # Plot size for aquatic vs terrestrial 
