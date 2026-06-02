@@ -102,7 +102,7 @@ dplyr::glimpse(na.diff)
 # Data for modeling beta dispersion effect size
 caged_effectsize <- caged_mean %>% 
   # Only columns we need and have
-  dplyr::select(source, exp.name, lat,  
+  dplyr::select(source, exp.name, lat, var_aq.or.terr, var_succ.vs.late,
                # betadisp.sample.size, gamma.richness,
                 within.cage.treat_betadisp.mean.diff,
                within.cage.treat_betadisp.mean.lrr) %>%
