@@ -24,14 +24,23 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 
 # Read in relevant data file
-caged_v1 <- read.csv(file.path("data", "07_caged_w.meta_finest-scales.csv"))
+betadisp_v1 <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
+effectsizes_v1 <- read.csv(file.path("data", "08_caged_experiment-level-everything_fine-scales.csv"))
+
 
 # Check structure
 dplyr::glimpse(caged_v1)
 
 # Check number of sources
-unique(caged_v1$source) # 117
-unique(caged_v1$exp.name) # 346
+unique(effectsizes_v1$source) # 118
+unique(effectsizes_v1$exp.name) # 356
+
+unique(betadisp_v1$source) # 117
+unique(betadisp_v1$exp.name) # 347
+
+# filter out NA's for beta dispersion
+
+
 
 ## ------------------------------------------- ##
 # Create Beta Dispersion & Difference Data ---- 
