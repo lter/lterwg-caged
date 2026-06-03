@@ -181,7 +181,7 @@ caged_beta2$var_aq.or.terr <- factor(caged_beta2$var_aq.or.terr)
 # In the end, the probit model had the lowest AIC by at least 10-20 units and was best behaved in DHARMa diagnostics.
 
 
-# Beta disprer
+
 
 
 late.df <- caged_beta2 %>%
@@ -211,17 +211,58 @@ plot(allEffects(mod1))
 # beta dispresion increases with gamma richness and sample size
 # beta dispersion increases with latitude for aquatic, but decreases with latitude for terrestrial
 
-alpha.late.df <- late.df %>%
-  drop_na(alpha.diversity_richness)
 
-dim(alpha.late.df)
+
+
+### Linear Models - alpha diversity
+
+alpha.late.df <- late.df %>%
+  drop_na(alpha.diversity_richness) #%>%
+  #filter(var_ecotype1 == "grassland")
+
+range(alpha.late.df$alpha.diversity_richness)
+
+
+dim(alpha.late.df) # 10077    46
 
 mod2 <- lmer(alpha.diversity_richness ~ 
                  cage.treatment_std * scale(abs.lat)  +
                  # accounting for gamma richness and sample size
-                 scale(gamma.richness) + scale(betadisp.sample.size) +
+                 scale(gamma.richness) + #scale(betadisp.sample.size) +
                  (1|exp.name), 
-               data = late.df) 
+               data = alpha.late.df) 
+
+car::Anova(mod2, type=2)
+
+summary(mod2)
+
+plot(allEffects(mod2))
+
+
+
+### Linear Models - dominance
+
+dom.late.df <- late.df %>%
+  drop_na(dominance)# %>%
+ # filter(var_ecotype1 == "grassland")
+
+range(dom.late.df$dominance) # same as alpha 
+
+
+dim(dom.late.df) # 10077    46
+
+mod3 <- lmer(dominance ~ 
+               cage.treatment_std * scale(abs.lat)  +
+               # accounting for gamma richness and sample size
+               scale(gamma.richness) +# scale(betadisp.sample.size) +
+               (1|exp.name), 
+             data = dom.late.df) 
+
+summary(mod3)
+car::Anova(mod3, type=2)
+
+plot(allEffects(mod3))
+
 
 
 
