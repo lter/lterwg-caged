@@ -60,10 +60,7 @@ dplyr::glimpse(gam.diff_v1)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_all-scales.csv")) %>% 
-  dplyr::rename(design.level = alpha.diversity_design.level,
-    #alpha.diversity_cage.treat.diff = within.cage.treat_alpha.diff,
-    alpha.diversity_cage.treat.lrr = within.cage.treat_alpha.mean.lrr)
+alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv"))
 
 # Check structure
 dplyr::glimpse(alp.diff_v1) #4705
@@ -73,10 +70,7 @@ dplyr::glimpse(alp.diff_v1) #4705
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_all-scales.csv")) %>% 
-  dplyr::rename(design.level = dominance_design.level,
-   # dominance_cage.treat.diff = within.cage.treat_dominance.diff,
-    dominance_cage.treat.lrr = within.cage.treat_dom.mean.lrr)
+dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_expname.csv"))
 
 # Check structure
 dplyr::glimpse(dom.diff_v1) # 6336
