@@ -49,25 +49,23 @@ for(focal_beta in beta_outs){
     dplyr::group_by(dplyr::across(
       dplyr::all_of(c(diff_groupcols, "cage.treatment_std"))
       )) %>% 
-    dplyr::summarize(within.cage.treat_betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
-                     within.cage.treat_betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
-                     within.cage.treat_betadisp.n = dplyr::n(),
-                     within.cage.treat_betadisp.se = within.cage.treat_betadisp.sd / sqrt(within.cage.treat_betadisp.n),
+    dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
+                    #  betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
+                    #  betadisp.n = dplyr::n(),
+                    #  betadisp.se = within.cage.treat_betadisp.sd / sqrt(betadisp.n),
                      .groups = "drop")
   
   # Caculate difference in means
   diff_v3 <- diff_v2 %>% 
-    # Dump unwanted columns
-    dplyr::select(-within.cage.treat_betadisp.sd, -within.cage.treat_betadisp.n, -within.cage.treat_betadisp.se) %>% 
     # Bump beta dispersion to get rid of dividing by zero problem
-    dplyr::mutate(within.cage.treat_betadisp.bump = within.cage.treat_betadisp.mean + 0.005) %>% 
-    dplyr::select(-within.cage.treat_betadisp.mean) %>% 
+    dplyr::mutate(betadisp.bump = betadisp.mean + 0.005) %>% 
+    dplyr::select(-betadisp.mean) %>% 
     # Pivot wider
     tidyr::pivot_wider(names_from = cage.treatment_std,
-                       values_from = within.cage.treat_betadisp.bump) %>% 
+                       values_from = betadisp.bump) %>% 
     # Calculate difference between uncaged & caged
-    dplyr::mutate(within.cage.treat_betadisp.mean.diff = uncaged - caged,
-      within.cage.treat_betadisp.mean.lrr = log2(uncaged / caged))
+    dplyr::mutate(betadisp.mean.diff = uncaged - caged,
+      betadisp.mean.lrr = log2(uncaged / caged))
   
   # Tidy up that output slightly
   diff_v4 <- diff_v3 %>% 
@@ -79,7 +77,9 @@ for(focal_beta in beta_outs){
   # Attach that back on the summarized version of the output
   diff_v5 <- diff_v2 %>% 
     # ALWAYS CHECK THE 'Y' OBJECT IS CORRECT IF UPDATING SCRIPT
-    dplyr::left_join(y = diff_v4,  by = diff_groupcols)
+    dplyr::left_join(y = diff_v4,  by = diff_groupcols) %>% 
+    dplyr::select(-betadisp.mean) %>% 
+    dplyr::distinct()
   
   # Add this to the output list
   diff_list[[focal_beta]] <- diff_v5
@@ -107,7 +107,8 @@ dplyr::glimpse(diff_v5)
 for(diff_outs in unique(names(diff_list))){
   
   # Create a final object
-  diff_v99 <- diff_list[[diff_outs]]
+  diff_v99 <- diff_list[[diff_outs]] %>% 
+    dplyr::distinct()
   
   # Generate tidy name / path
   diff_name <- gsub(pattern = "05-A_caged_beta-disp", 

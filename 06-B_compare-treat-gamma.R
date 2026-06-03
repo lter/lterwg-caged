@@ -50,8 +50,8 @@ gam.diff_v03 <- gam.diff_v02 %>%
     .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
   dplyr::mutate(caged = gamma.richness_caged + 0.005,
     uncaged = gamma.richness_uncaged + 0.005) %>% 
-  dplyr::mutate(within.cage.treat_gamma.diff = uncaged - caged,
-    within.cage.treat_gamma.lrr = log2(uncaged / caged)) %>% 
+  dplyr::mutate(gamma.diff = uncaged - caged,
+    gamma.lrr = log2(uncaged / caged)) %>% 
   dplyr::select(-caged, -uncaged)
 
 # Check structure

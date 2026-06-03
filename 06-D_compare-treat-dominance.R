@@ -29,10 +29,8 @@ dplyr::glimpse(dom.diff_v01)
 
 # Filter to only experiment name-level, desired treatments, and average across replicates
 dom.diff_v02 <- dom.diff_v01 %>% 
-  dplyr::filter(dominance_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-  dplyr::mutate(cage.treatment_std = paste0("dominance_", cage.treatment_std)) %>% 
-  dplyr::select(-dominance_design.level)
+  dplyr::mutate(cage.treatment_std = paste0("dominance_", cage.treatment_std))
 
 # Check structure
 dplyr::glimpse(dom.diff_v02)
@@ -81,10 +79,21 @@ unique(dom.diff_v99$source) # 121
 unique(dom.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-dom.diff_name <- "06-D_caged_dominance-diff_expname.csv"
+dom.diff_name <- "06-D_caged_dominance-diff_allscales.csv"
 dom.diff_path <- file.path("data", dom.diff_name)
 
 # Export locally
 write.csv(x = dom.diff_v99, row.names = F, na = '', file = dom.diff_path)
+
+# Make an 'experiment name' only
+dom.diff_exp <- dplyr::filter(dom.diff_v99, dominance_design.level == "exp.name") %>% 
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
+
+# Check structure
+dplyr::glimpse(dom.diff_exp)
+
+# Export
+write.csv(x = dom.diff_exp, row.names = F, na = '', 
+  file = file.path("data", "06-D_caged_dominance-diff_expname.csv"))
 
 # End ----
