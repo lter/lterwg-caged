@@ -107,7 +107,7 @@ caged_effectsize %>%
   ggplot(aes(x=abs(lat), 
              y=betadisp.mean.lrr)) +
   geom_point() +
-  geom_smooth(method="lm") +
+  geom_smooth(method="loess") +
   #geom_smooth(method = "loess", se = FALSE, col="red") +
   theme_pubr(base_size=16) +
   # scale_color_manual(values= c("royalblue","darkgreen"))+
