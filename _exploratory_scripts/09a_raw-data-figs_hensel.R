@@ -22,8 +22,47 @@ rm(list = ls()); gc()
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv")) #if you use this DF, you could get in big trouble with Jamie FYI
-caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
-caged_newbeta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
+caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
+
+caged_beta <- caged_beta %>%
+  dplyr::filter(cage.treatment_std != 'partial') %>%
+  dplyr::filter(cage.treatment_std != 'uncertain') %>%
+  droplevels()
+
+## ------------------------------------------- ##
+## Create new dataframes for models to follow ----
+## ------------------------------------------- ##
+# Drop rows for which there is no terrestrial or aquatic categorization
+table(caged_beta$var_aq.or.terr)
+
+caged_beta2 <- caged_beta %>% 
+  dplyr::filter(var_aq.or.terr != "") %>% 
+  droplevels()
+unique(caged_beta2$exp.name) # 347, none are dropped
+
+table(caged_beta2$var_aq.or.terr) #Good!
+
+# Drop rows for which latitude is missing
+table(is.na(caged_beta2$lat))
+
+# which exp names are missing latitude
+caged_beta2$exp.name[is.na(caged_beta2$lat)]
+
+caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
+
+table(is.na(caged_beta2$lat)) #Good!
+
+unique(caged_beta2$exp.name) # 347
+
+# Create a column for absolute value of latitude
+caged_beta2 <- caged_beta2 %>%
+  mutate(abs.lat = abs(lat))
+
+# Make sure there are no NAs for the experiment name
+table(is.na(caged_beta2$exp.name)) #Good!
+
+# Make aquatic/terrestrial a factor
+caged_beta2$var_aq.or.terr <- factor(caged_beta2$var_aq.or.terr)
 
 
 # View(caged_effectsize) 
@@ -218,7 +257,7 @@ caged_beta %>%
 
 otherrich / gammarich.lat 
 
-##
+#Graph Beta ####
 # Beta dispersion by caging treatment
 caged_beta %>%
   filter(var_aq.or.terr != "") %>%
@@ -400,9 +439,6 @@ caged_effectsize %>%
        y= "Absolute value of effect size\n(uncaged - caged mean)",
        colour = "Biome")
 # absolute value= doesnt matter which direction, is just showing a big difference betweeen caged and uncaged beta dispersion
-
-
-
 
 
 # Plot size for aquatic vs terrestrial 
