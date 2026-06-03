@@ -24,40 +24,25 @@ alp.diff_v01 <- read.csv(file.path("data", "05-C_caged_alpha-div_all-scales.csv"
 dplyr::glimpse(alp.diff_v01)
 
 ## ------------------------------------------- ##
-# Streamline / Prepare Data ----
+# Filter to Experiment Name ----
 ## ------------------------------------------- ##
 
-# Filter to only desired treatments and average across replicates
+# Filter to only experiment name-level, desired treatments, and average across replicates
 alp.diff_v02 <- alp.diff_v01 %>% 
   dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-  dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "alpha.diversity_richness"))))) %>% 
-  dplyr::summarize(alpha.div = mean(alpha.diversity_richness, na.rm = TRUE),
-    .groups = "drop") %>% 
   dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std))
 
 # Check structure
 dplyr::glimpse(alp.diff_v02)
 
 ## ------------------------------------------- ##
-# Summarize to Experiment Name ----
+# Streamline Data ----
 ## ------------------------------------------- ##
 
-# Average (in order) across design replicates up to experiment name
+# Drop columns that are completely empty (i.e., "exp.design.#" columns)
 alp.diff_v03 <- alp.diff_v02 %>% 
-  dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.2", "alpha.div"))))) %>% 
-  dplyr::summarize(alpha.div2 = mean(alpha.div, na.rm = TRUE),
-    .groups = "drop") %>% 
-  dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.3", "alpha.div2"))))) %>% 
-  dplyr::summarize(alpha.div3 = mean(alpha.div2, na.rm = TRUE),
-    .groups = "drop") %>% 
-  dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.4", "alpha.div3"))))) %>% 
-  dplyr::summarize(alpha.diversity_richness = mean(alpha.div3, na.rm = TRUE),
-    .groups = "drop")
+  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.))))
 
 # Check structure
 dplyr::glimpse(alp.diff_v03)
@@ -89,11 +74,11 @@ dplyr::glimpse(alp.diff_v04)
 alp.diff_v99 <- alp.diff_v04
 
 # Count number of sources/experiments at end
-unique(alp.diff_v99$source) # 120
-unique(alp.diff_v99$exp.name) # 363
+unique(alp.diff_v99$source) # 121
+unique(alp.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-alp.diff_name <- "06-C_caged_alpha-div-diff_all-scales.csv"
+alp.diff_name <- "06-C_caged_alpha-div-diff_expname.csv"
 alp.diff_path <- file.path("data", alp.diff_name)
 
 # Export locally
