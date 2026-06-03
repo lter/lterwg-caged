@@ -45,9 +45,7 @@ dplyr::glimpse(meta_v1)
 # Load Gamma Diffs & LRRs  ----
 ## ------------------------------------------- ##
 # Read in gamma richness diffs
-gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv")) %>% 
-  dplyr::rename(gamma.richness_cage.treat.diff = within.cage.treat_gamma.diff,
-    gamma.richness_cage.treat.lrr = within.cage.treat_gamma.lrr)
+gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv"))
 
 # Check structure
 dplyr::glimpse(gam.diff_v1)
@@ -64,11 +62,7 @@ dplyr::glimpse(gamma_v1)
 
 # Do some necessary wrangling
 gamma_v2 <- gamma_v1 %>% 
-  dplyr::select(-gamma.richness_uncertain, -gamma.richness_partial) %>% 
-  tidyr::pivot_longer(cols = dplyr::ends_with("caged"),
-    names_to = "cage.treatment_std", values_to = "gamma.richness") %>% 
-  dplyr::filter(!is.na(gamma.richness)) %>% 
-  dplyr::mutate(cage.treatment_std = gsub("gamma\\.richness_", "", cage.treatment_std))
+  dplyr::filter(!is.na(gamma.richness))
 
 # Check structure
 dplyr::glimpse(gamma_v2)
@@ -78,7 +72,8 @@ dplyr::glimpse(gamma_v2)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv"))
+alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv")) %>% 
+  dplyr::rename(betadisp.design.level = alpha.diversity_design.level)
 
 # Check structure
 dplyr::glimpse(alp.diff_v1)
@@ -95,6 +90,7 @@ dplyr::glimpse(alpha_v1)
 
 # Do needed wrangling
 alpha_v2 <- alpha_v1 %>% 
+  dplyr::relocate(cage.treatment_orig, .after = cage.treatment_std) %>% 
   dplyr::rename(betadisp.design.level = alpha.diversity_design.level)
 
 # Check structure
@@ -123,6 +119,7 @@ dplyr::glimpse(dom_v1)
 # Do needed wrangling
 dom_v2 <- dom_v1 %>% 
   dplyr::select(-dplyr::ends_with("abundance")) %>% 
+  dplyr::relocate(cage.treatment_orig, .after = cage.treatment_std) %>% 
   dplyr::filter(!is.na(dominance)) %>% 
   dplyr::rename(betadisp.design.level = dominance_design.level)
 
@@ -172,10 +169,14 @@ dplyr::glimpse(join_v1)
 # Join Beta (Means), Alpha & Dominance ----
 ## ------------------------------------------- ##
 
+glimpse(beta.diff_v2)
+glimpse(alp.diff_v1)
+
 # Join data available at all/multiple design levels
 join_v2 <- beta.diff_v2 %>% 
-  dplyr::left_join(x = ., y = alp.diff_v1,
-    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, exp.name)) %>% 
+  dplyr::left_join(x = ., y = alp.diff_v1)
+
+
   dplyr::left_join(x = ., y = dom.diff_v1,
     by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
       excluded.group, measured.group, exp.name)) %>% 
