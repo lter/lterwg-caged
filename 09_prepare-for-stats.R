@@ -29,7 +29,9 @@ effectsizes_v1 <- read.csv(file.path("data", "08_caged_experiment-level-everythi
 
 
 # Check structure
-dplyr::glimpse(caged_v1)
+dplyr::glimpse(betadisp_v1)
+dplyr::glimpse(effectsizes_v1)
+
 
 # Check number of sources
 unique(effectsizes_v1$source) # 117
@@ -43,9 +45,11 @@ dim(effectsizes_v1) # 1286
 dim(effectsizes_v1) # 1286 
 # so the effect size needs to be set to only unique 
 
+colnames(effectsizes_v1)
 
 effectsizes_v2 <- effectsizes_v1 %>%
-  select(source, exp.name, contains("lrr")) %>%
+  select(source, exp.name, lat,var_succ.vs.late,
+         contains("lrr")) %>%
 distinct()
 
 dim(effectsizes_v2) # 347
