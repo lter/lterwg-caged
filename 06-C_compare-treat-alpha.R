@@ -24,7 +24,7 @@ alp.diff_v01 <- read.csv(file.path("data", "05-C_caged_alpha-div_all-scales.csv"
 dplyr::glimpse(alp.diff_v01)
 
 ## ------------------------------------------- ##
-# Filter to Experiment Name ----
+# Filter to Experiment Name Level ----
 ## ------------------------------------------- ##
 
 # Filter to only experiment name-level, desired treatments, and average across replicates
