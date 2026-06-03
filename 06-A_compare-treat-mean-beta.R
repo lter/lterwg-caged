@@ -107,7 +107,8 @@ dplyr::glimpse(diff_v5)
 for(diff_outs in unique(names(diff_list))){
   
   # Create a final object
-  diff_v99 <- diff_list[[diff_outs]]
+  diff_v99 <- diff_list[[diff_outs]] %>% 
+    dplyr::distinct()
   
   # Generate tidy name / path
   diff_name <- gsub(pattern = "05-A_caged_beta-disp", 
