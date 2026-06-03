@@ -132,14 +132,14 @@ for(focal_w.meta in w.meta_outs){
     dplyr::left_join(x = ., y = alpha_v2,
       by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
         excluded.group, measured.group, exp.name, exp.design.4, exp.design.3, 
-        exp.design.2, exp.design.1, cage.treatment_std, cage.treatment_orig, design.level))
+        exp.design.2, exp.design.1, cage.treatment_std, cage.treatment_orig))
 
   # Attach dominance
   w.meta_v5 <- w.meta_v4 %>% 
     dplyr::left_join(x = ., y = dom_v2,
       by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
         excluded.group, measured.group, exp.name, exp.design.4, exp.design.3,
-        exp.design.2, exp.design.1, cage.treatment_std, cage.treatment_orig, design.level))
+        exp.design.2, exp.design.1, cage.treatment_std, cage.treatment_orig))
   
   # Add this to the output list
   w.meta_out_list[[focal_w.meta]] <- w.meta_v5
@@ -162,6 +162,7 @@ supportR::diff_check(old = names(w.meta_v4), new = names(w.meta_v5))
 # How many sources and exp.name got through the pipeline?
 unique(w.meta_v5$source) # 117
 unique(w.meta_v5$exp.name) # 347
+dim(w.meta_v5) # 13964    44
 
 ## ------------------------------------------- ##
 # Export ----
