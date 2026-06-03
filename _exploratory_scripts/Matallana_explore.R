@@ -12,6 +12,15 @@ librarian::shelf(tidyverse, googledrive, supportR, raster, ncdf4,
                  QBMS, wesanderson, PerformanceAnalytics, svglite)
 
 # Set-up google drive connection & import metadata ----
+### import metadata - RAW ----
+
+raw.meta = read_xlsx("./data/2026.06.03 sitelevel-metadata.xlsx")
+
+# Read in raw metadata
+#raw.meta = read_xlsx("./data/sitelevel-metadata.xlsx")
+
+#
+### import metadata - 07 ----
 googledrive::drive_auth(email = "nicomatamej@gmail.com")
 
 #import tidy metadata
@@ -46,8 +55,26 @@ meta.tidy.simple = meta.tidy.full %>%
   drop_na() #Remove sites with no lat/longs
 
 
-# Read in raw metadata
-raw.meta = read.csv("./data/sitelevel-metadata.csv")
+
+
+
+### import meta-data - 08 ----
+
+googledrive::drive_auth(email = "nicomatamej@gmail.com")
+
+#import tidy metadata
+meta.drive <- googledrive::drive_ls(googledrive::as_id("https://drive.google.com/drive/u/0/folders/1Acv2ybcpOd_8jEohzgVWcm5qRmgDb4Od")) %>% 
+  dplyr::filter(name == "08-A_caged_w.meta-beta-disp_all-scales.csv")
+
+# Check that worked
+meta.drive
+
+# Download it
+googledrive::drive_download(file = meta.drive$id, type = "csv", overwrite = T,
+                            path = file.path("data", meta.drive$name))
+
+# Read it in (latest run: 6/01/2025)
+meta.tidy.26.06 <- read.csv(file = file.path("data", "08-A_caged_w.meta-beta-disp_all-scales.csv"))
 
 
 #
@@ -1039,11 +1066,30 @@ ggplot(col9.sum) +
 #
 # Basic mapping 2026.06 ----
 
-# prep df
+# RAW metadata - prep df
 meta.filt = raw.meta %>%
   filter(included.in.final.dataset == "y" &
            var_succ.vs.late == "late") %>%
   dplyr::select(exp.name, var_aq.or.terr, var_long, var_lat) %>%
+  distinct()
+
+unique(meta.filt$var_aq.or.terr)
+
+# QAQC'd metadata
+meta.filt = meta.tidy.26.06 %>%
+  filter(var_succ.vs.late == "late") %>%
+  rename("var_lat" = "lat") %>%
+  rename("var_long" = "long") %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_long, var_lat) %>%
+  #filter(var_long < 120 & var_long > 60) %>%
+  distinct()
+
+
+# no plots filtered out
+meta.filt = raw.meta %>%
+  filter(included.in.final.dataset == "y") %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_long, var_lat) %>%
+  #filter(var_long < 120 & var_long > 60) %>%
   distinct()
 
 # make map
@@ -1064,9 +1110,9 @@ sites.map <- ggplot() +
                          style = north_arrow_fancy_orienteering) +
   geom_point(data = meta.filt, aes(x = var_long, y = var_lat, color = var_aq.or.terr),
              shape = 19, alpha = 0.5, size = 4) +
-  scale_color_manual(values=c('#0072B2','#D55E00'),
-                     breaks = c("aquatic","terrestrial"),
-                     labels = c("Aquatic","Terrestrial")) +
+  scale_color_manual(values=c("#023E8A",'#D55E00',"#009E73"), # "#009E73"), "#8D4585", "#E6E6FA" "#023E8A"
+                     breaks = c("aquatic","terrestrial", "transitional"),
+                     labels = c("Aquatic","Terrestrial", "Transitional")) +
   guides(color=guide_legend(bquote(paste("Systems")))) +
   #guides(size=guide_legend("")) +
   #labs(tag = "A") +
@@ -1087,13 +1133,38 @@ sites.map <- ggplot() +
 sites.map
 
 ggsave(
-  filename = "./graphs/map.aq.terr.late.succession.svg",
+  filename = "./graphs/map.aq.terr.all.exp.svg",
   plot = sites.map,
   device = "svg",
   width = 10,
   height = 8.5,
   units = "in"
 )
+
+#
+
+# Beta format & figures for new ecotypes ----
+
+beta.meta = read_xlsx("./data/2026.06.03 sitelevel-metadata.xlsx") %>%
+  dplyr::select(-1, -c(21:63)) %>%
+  filter(included.in.final.dataset == "y") %>%
+  distinct() %>%
+  group_by(var_aq.or.terr, var_ecotype1) %>%
+  summarise(n = n())
+
+ecotypes.26.06.03 = ggplot(beta.meta) +
+  geom_bar(aes(x = var_aq.or.terr, y = n, fill = var_ecotype1), stat = "identity", position = "dodge") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        #axis.title.x = element_blank() 
+  )
+
+jpeg("./graphs/new.ecotype.counts.2026-06-03.jpeg", width = 7, height = 5, units = "in",
+     res = 300)
+
+ecotypes.26.06.03
+
+dev.off()
 
 #
 # End ----

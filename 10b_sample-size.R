@@ -23,6 +23,8 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
+#caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
+
 
 # View(caged_beta) 
 dim(caged_beta)# 12905  rows
@@ -53,7 +55,19 @@ caged_beta %>%
 # draft for loop for predictor sample sizes ----
 
 
-bd.prep = caged_beta[,c(2, 5, 20, 4, 6:19)] #simplify and reorder dataframe for plotting
+# bd.prep = caged_beta[,c(2, 5, 20, 4, 6:19)] #simplify and reorder dataframe for plotting
+
+# names of columns that we want to include:
+use_columns <- c("exp.name","var_aq.or.terr", "cage.treatment_std", "var_climate.zone", 
+                 "var_ecotype1", "var_consumer.taxonomy","var_consumer.metabolism",
+                 "var_resource.type.category","var_consumer.richness.number", 
+                 "var_consumer.richness.category", "var_max.consumer.size.category", 
+                 "var_dominant.consumer.species.category", "var_consumer.native.domestic", 
+                 "var_succ.vs.late","var_exclusion.duration.continuousyears", "var_taxonomic.level", 
+                 "var_exclosure.area.m2","var_whereisthecage")
+
+# bd.prep = caged_beta[,c(2, 5, 20, 4, 6:19)] #simplify and reorder dataframe for plotting
+bd.prep = caged_beta[,which(colnames(caged_beta) %in% use_columns)]
 
 # vector of colors for categorical variables
 col_vector <- c("#CC6677", "#332288", "#DDCC77", "#88CCEE", "#117733","#882255", "#44AA99", "#999933", "#AA4499", "#CCDDAA", "#555555", "#FFCCCC", "#DDDDDD")
@@ -66,7 +80,10 @@ fig.list = list()
 
 #hist(bd.temp$var_exclosure.area.m2)
 
-for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
+# columns with performance metrics to plot
+
+# for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
+for(i in use_columns[4:length(use_columns)]){
   
   #diagnostics, hash out before running
   #i = colnames(bd.prep)[17]
@@ -188,7 +205,8 @@ fig.list = list()
 
 #hist(bd.temp$var_exclosure.area.m2)
 
-for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
+#for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
+for(i in use_columns[4:length(use_columns)]){
   
   #diagnostics, hash out before running
   #i = colnames(bd.prep)[17]
@@ -295,7 +313,7 @@ grid.plots[[5]] = plot_grid(fig.list[[13]], fig.list[[14]], fig.list[[15]], ncol
 
 for (i in 1:5){
   
-  jpeg(paste0("./graphs/09c_predictor.exp.name.plots/09c_predictor.exp.name.plot.grid.", i, ".jpeg"), width = 15, height = 5, units = "in",
+  jpeg(paste0("./graphs/09c_predictor.exp.name.plot.grid.", i, ".jpeg"), width = 15, height = 5, units = "in",
        res = 300)   
   
   print(grid.plots[[i]])
