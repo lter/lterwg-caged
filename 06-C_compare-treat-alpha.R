@@ -31,7 +31,8 @@ dplyr::glimpse(alp.diff_v01)
 alp.diff_v02 <- alp.diff_v01 %>% 
   dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-  dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std))
+  dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std)) %>% 
+  dplyr::select(-alpha.diversity_design.level)
 
 # Check structure
 dplyr::glimpse(alp.diff_v02)
