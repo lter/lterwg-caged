@@ -29,10 +29,10 @@ dplyr::glimpse(alp.diff_v01)
 
 # Filter to only experiment name-level, desired treatments, and average across replicates
 alp.diff_v02 <- alp.diff_v01 %>% 
-  dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
+  dplyr::select(-dplyr::starts_with("exp.design.")) %>% 
+  # dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-  dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std)) %>% 
-  dplyr::select(-alpha.diversity_design.level)
+  dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std))
 
 # Check structure
 dplyr::glimpse(alp.diff_v02)
@@ -43,7 +43,11 @@ dplyr::glimpse(alp.diff_v02)
 
 # Drop columns that are completely empty (i.e., "exp.design.#" columns)
 alp.diff_v03 <- alp.diff_v02 %>% 
-  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.))))
+  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.)))) %>% 
+  dplyr::group_by(dplyr::across(dplyr::all_of(
+    setdiff(x = names(.), y = c("alpha.diversity_richness"))))) %>% 
+  dplyr::summarize(alpha.diversity_richness = mean(alpha.diversity_richness, na.rm = TRUE),
+    .groups = "drop")
 
 # Check structure
 dplyr::glimpse(alp.diff_v03)
