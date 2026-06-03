@@ -86,7 +86,8 @@ dom.diff_path <- file.path("data", dom.diff_name)
 write.csv(x = dom.diff_v99, row.names = F, na = '', file = dom.diff_path)
 
 # Make an 'experiment name' only
-dom.diff_exp <- dplyr::filter(dom.diff_v99, dominance_design.level == "exp.name")
+dom.diff_exp <- dplyr::filter(dom.diff_v99, dominance_design.level == "exp.name") %>% 
+  dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
 
 # Check structure
 dplyr::glimpse(dom.diff_exp)
