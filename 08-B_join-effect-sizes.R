@@ -19,19 +19,6 @@ source(file = file.path("00_setup.R"))
 rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
-# Load Beta Dispersion ----
-## ------------------------------------------- ##
-
-# Identify data files we want to add stuff to
-(w.meta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp_"))
-w.meta_in_list <- purrr::map(.x = w.meta_outs,
-                             .f = ~ read.csv(file = file.path("data", .x)))
-names(w.meta_in_list) <- w.meta_outs
-
-# Check structure of one
-dplyr::glimpse(w.meta_in_list[[1]])
-
-## ------------------------------------------- ##
 # Load Tidy Metadata ----
 ## ------------------------------------------- ##
 
@@ -51,80 +38,26 @@ gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv"))
 dplyr::glimpse(gam.diff_v1)
 
 ## ------------------------------------------- ##
-# Load Gamma 'Raw' ----
-## ------------------------------------------- ##
-
-# Read in the data
-gamma_v1 <- read.csv(file.path("data", "05-B_caged_gamma-rich.csv"))
-
-# Check structure
-dplyr::glimpse(gamma_v1)
-
-# Do some necessary wrangling
-gamma_v2 <- gamma_v1 %>% 
-  dplyr::filter(!is.na(gamma.richness))
-
-# Check structure
-dplyr::glimpse(gamma_v2)
-
-## ------------------------------------------- ##
 # Load Alpha Diffs & LRRs  ----
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
 alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv")) %>% 
-  dplyr::rename(betadisp.design.level = alpha.diversity_design.level)
+  dplyr::rename(design.level = alpha.diversity_design.level)
 
 # Check structure
 dplyr::glimpse(alp.diff_v1)
-
-## ------------------------------------------- ##
-# Load Alpha 'Raw' ----
-## ------------------------------------------- ##
-
-# Read in the data
-alpha_v1 <- read.csv(file.path("data", "05-C_caged_alpha-div_all-scales.csv"))
-
-# Check structure
-dplyr::glimpse(alpha_v1)
-
-# Do needed wrangling
-alpha_v2 <- alpha_v1 %>% 
-  dplyr::relocate(cage.treatment_orig, .after = cage.treatment_std) %>% 
-  dplyr::rename(betadisp.design.level = alpha.diversity_design.level)
-
-# Check structure
-dplyr::glimpse(alpha_v2)
 
 ## ------------------------------------------- ##
 # Load Dominance Diffs & LRRs  ----
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_expname.csv"))
+dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_expname.csv")) %>% 
+  dplyr::rename(design.level = dominance_design.level)
 
 # Check structure
 dplyr::glimpse(dom.diff_v1)
-
-## ------------------------------------------- ##
-# Load Dominance 'Raw' ----
-## ------------------------------------------- ##
-
-# Read in the data
-dom_v1 <- read.csv(file.path("data", "05-D_caged_dominance_all-scales.csv"))
-
-# Check structure
-dplyr::glimpse(dom_v1)
-
-# Do needed wrangling
-dom_v2 <- dom_v1 %>% 
-  dplyr::select(-dplyr::ends_with("abundance")) %>% 
-  dplyr::relocate(cage.treatment_orig, .after = cage.treatment_std) %>% 
-  dplyr::filter(!is.na(dominance)) %>% 
-  dplyr::rename(betadisp.design.level = dominance_design.level)
-
-# Check structure
-dplyr::glimpse(dom_v2)
 
 ## ------------------------------------------- ##
 # Load Mean Beta Diffs & LRRs ----
@@ -174,12 +107,12 @@ glimpse(alp.diff_v1)
 
 # Join data available at all/multiple design levels
 join_v2 <- beta.diff_v2 %>% 
-  dplyr::left_join(x = ., y = alp.diff_v1)
-
-
+  dplyr::left_join(x = ., y = alp.diff_v1,
+    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, 
+      exp.name, design.level)) %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
-    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
-      excluded.group, measured.group, exp.name)) %>% 
+    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, 
+      exp.name, design.level, project.name, sampling.years, cage.treatment_orig)) %>%
   dplyr::relocate(project.name, sampling.years, dplyr::starts_with("exp.design."),
     .before = design.level)
 
@@ -288,75 +221,12 @@ join_v5 %>%
 dplyr::glimpse(join_v5)
 
 ## ------------------------------------------- ##
-# Join Beta (Un-Averaged) & Metadata ----
-## ------------------------------------------- ##
-# Make a list for storing outputs
-w.meta_out_list <- list()
-
-# Loop across files for which we want 'metadata' attached
-for(focal_w.meta in w.meta_outs){
-  # focal_w.meta <- "05-A_caged_beta-disp_all-scales.csv"
-  
-  # Processing message
-  message("Attaching ancillary data to ", focal_w.meta)
-  
-  # Grab just that file out of the list of inputs
-  w.meta_v1 <- w.meta_in_list[[focal_w.meta]] %>% 
-    dplyr::rename(design.level = betadisp.design.level)
-  
-  # Attach 'all other data' pre-joined object
-  w.meta_v2 <- w.meta_v1 %>% 
-    dplyr::left_join(x = ., y = join_v1,
-      by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
-        excluded.group, measured.group, exp.name)) %>% 
-      dplyr::relocate(exp.design.4:betadisp.comm.dist, 
-                    .after = dplyr::everything())
-  
-  # Add this to the output list
-  w.meta_out_list[[focal_w.meta]] <- w.meta_v2
-  
-} # Close loop
-
-# Check the structure at various points
-## Starting (no metadata added)
-dplyr::glimpse(w.meta_v1)
-## After adding metadata GoogleSheet & gamma richness
-dplyr::glimpse(w.meta_v2)
-
-# How many sources and exp.name got through the pipeline?
-unique(w.meta_v2$source) # 117
-unique(w.meta_v2$exp.name) # 347
-
-## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
-# Loop across the list elements to export
-for(w.meta_outs in unique(names(w.meta_out_list))){
-  # w.meta_outs <- "05-A_caged_beta-disp_all-scales.csv"
-  
-  # Create a final object
-  w.meta_v99 <- w.meta_out_list[[w.meta_outs]]
-  
-  # Generate tidy name / path
-  w.meta_name <- gsub(pattern = "05-A_caged_", 
-                    replacement = "08_caged_w.meta-", x = w.meta_outs)
-  w.meta_path <- file.path("data", w.meta_name)
-  
-  # Export locally
-  write.csv(x = w.meta_v99, row.names = F, na = '', file = w.meta_path)
-}
-
-# Structure check of that
-dplyr::glimpse(w.meta_v99)
-
 # Make final treatment/experiment level joined data (incl, LRRs)
-join_all <- join_v4 %>% 
-  dplyr::filter(source %in% w.meta_v99$source &
-    exp.name %in% w.meta_v99$exp.name)
-join_fine <- join_v5 %>% 
-  dplyr::filter(source %in% w.meta_v99$source &
-    exp.name %in% w.meta_v99$exp.name)
+join_all <- join_v4
+join_fine <- join_v5
 
 # How many sources/experiments
 length(unique(join_all$source)); length(unique(join_all$exp.name))
@@ -368,9 +238,9 @@ dplyr::glimpse(join_fine)
 
 # Also export these
 write.csv(x = join_all, na = '', row.names = FALSE,
-  file = file.path("data", "08_caged_experiment-level-everything_all-scales.csv"))
+  file = file.path("data", "08-B_caged_expname-effect-size_all-scales.csv"))
 
 write.csv(x = join_fine, na = '', row.names = FALSE,
-  file = file.path("data", "08_caged_experiment-level-everything_fine-scales.csv"))
+  file = file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
 
 # End ----
