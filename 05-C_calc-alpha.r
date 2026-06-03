@@ -45,7 +45,7 @@ dplyr::glimpse(alpha_des1)
 # Calculate Alpha Diversity (Design 2) ----
 ## ------------------------------------------- ##
 
-# Calculate alpha diversity for "exp.design.1"
+# Calculate alpha diversity for "exp.design.2"
 alpha_des2 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
@@ -63,7 +63,7 @@ dplyr::glimpse(alpha_des2)
 # Calculate Alpha Diversity (Design 3) ----
 ## ------------------------------------------- ##
 
-# Calculate alpha diversity for "exp.design.1"
+# Calculate alpha diversity for "exp.design.3"
 alpha_des3 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
@@ -81,7 +81,7 @@ dplyr::glimpse(alpha_des3)
 # Calculate Alpha Diversity (Design 4) ----
 ## ------------------------------------------- ##
 
-# Calculate alpha diversity for "exp.design.1"
+# Calculate alpha diversity for "exp.design.4"
 alpha_des4 <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
@@ -99,7 +99,7 @@ dplyr::glimpse(alpha_des4)
 # Calculate Alpha Diversity (Exp Name) ----
 ## ------------------------------------------- ##
 
-# Calculate alpha diversity for "exp.design.1"
+# Calculate alpha diversity for "exp.name"
 alpha_name <- alpha_v1 %>% 
   dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
