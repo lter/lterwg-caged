@@ -40,35 +40,6 @@ caged_beta2 <- caged_beta %>%
   droplevels()
 unique(caged_beta2$exp.name) # 347, none are dropped
 
-table(caged_beta2$var_aq.or.terr) #Good!
-
-# Drop rows for which latitude is missing
-table(is.na(caged_beta2$lat))
-
-# which exp names are missing latitude
-caged_beta2$exp.name[is.na(caged_beta2$lat)]
-
-caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
-
-table(is.na(caged_beta2$lat)) #Good!
-
-unique(caged_beta2$exp.name) # 347
-
-# Create a column for absolute value of latitude
-caged_beta2 <- caged_beta2 %>%
-  mutate(abs.lat = abs(lat))
-
-# Make sure there are no NAs for the experiment name
-table(is.na(caged_beta2$exp.name)) #Good!
-
-# Make aquatic/terrestrial a factor
-caged_beta2$var_aq.or.terr <- factor(caged_beta2$var_aq.or.terr)
-
-
-# View(caged_effectsize) 
-# View(caged_beta) 
-dim(caged_effectsize)# 347 rows
-dim(caged_beta)# 12905  rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
@@ -104,6 +75,9 @@ caged_beta %>%
   labs(x= "Biome",
        y="Proportion",
        fill = "Ecotype")
+
+marsh = caged_beta %>% 
+  filter(var_ecotype1 == "salt marsh")
 
 #successional stage####
 # Proportion of experiments in aquatic and terrestrial that are successional vs late 
