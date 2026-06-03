@@ -83,10 +83,20 @@ unique(alp.diff_v99$source) # 121
 unique(alp.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-alp.diff_name <- "06-C_caged_alpha-div-diff_expname.csv"
+alp.diff_name <- "06-C_caged_alpha-div-diff_allscales.csv"
 alp.diff_path <- file.path("data", alp.diff_name)
 
 # Export locally
 write.csv(x = alp.diff_v99, row.names = F, na = '', file = alp.diff_path)
+
+# Make an 'experiment name' only
+alp.diff_exp <- dplyr::filter(alp.diff_v99, alpha.diversity_design.level == "exp.name")
+
+# Check structure
+dplyr::glimpse(alp.diff_exp)
+
+# Export
+write.csv(x = alp.diff_v99, row.names = F, na = '', 
+  file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv"))
 
 # End ----
