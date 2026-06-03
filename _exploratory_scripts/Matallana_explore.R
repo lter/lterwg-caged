@@ -9,7 +9,7 @@ librarian::shelf(tidyverse, googledrive, supportR, raster, ncdf4,
                  dplyr, sp, ,sf, stringr, magrittr, reshape2, tools, 
                  maps, ggplot2, cowplot, ggspatial, ggrepel,
                  rnaturalearth, rnaturalearthdata, httpuv, geodata,
-                 QBMS, wesanderson, PerformanceAnalytics)
+                 QBMS, wesanderson, PerformanceAnalytics, svglite)
 
 # Set-up google drive connection & import metadata ----
 googledrive::drive_auth(email = "nicomatamej@gmail.com")
@@ -44,6 +44,11 @@ meta.tidy.simple = meta.tidy.full %>%
   dplyr::select(source, exp.name, var_aq.or.terr, lat, long) %>%
   distinct() %>% #collapse duplicates
   drop_na() #Remove sites with no lat/longs
+
+
+# Read in raw metadata
+raw.meta = read.csv("./data/sitelevel-metadata.csv")
+
 
 #
 # NPP data ----
@@ -1030,6 +1035,65 @@ ggplot(col9.sum) +
   )
 
 
+
+#
+# Basic mapping 2026.06 ----
+
+# prep df
+meta.filt = raw.meta %>%
+  filter(included.in.final.dataset == "y" &
+           var_succ.vs.late == "late") %>%
+  dplyr::select(exp.name, var_aq.or.terr, var_long, var_lat) %>%
+  distinct()
+
+# make map
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+
+sites.map <- ggplot() +
+  geom_sf(data = world, fill = "antiquewhite1") +
+  coord_sf(xlim = c(-180, 180), ylim = c(-90, 90), expand = FALSE) +
+  #annotation_scale(location = "bl", 
+   #                pad_x = unit(0.4, "in"), 
+    #               pad_y = unit(0.7, "in"),
+     #              height = unit(0.2, "cm"), 
+      #             width_hint = 0.2) +
+  annotation_north_arrow(location = "bl", which_north = "true", 
+                         pad_x = unit(0.5, "in"), 
+                         pad_y = unit(0.8, "in"),
+                         style = north_arrow_fancy_orienteering) +
+  geom_point(data = meta.filt, aes(x = var_long, y = var_lat, color = var_aq.or.terr),
+             shape = 19, alpha = 0.5, size = 4) +
+  scale_color_manual(values=c('#0072B2','#D55E00'),
+                     breaks = c("aquatic","terrestrial"),
+                     labels = c("Aquatic","Terrestrial")) +
+  guides(color=guide_legend(bquote(paste("Systems")))) +
+  #guides(size=guide_legend("")) +
+  #labs(tag = "A") +
+  xlab("Longitude") + 
+  ylab("Latitude") +
+  theme(#legend.position = "none",
+    legend.background = element_blank(),
+    legend.box.background = element_blank(),
+    legend.key = element_blank(),
+    legend.text = element_text(size = 10, family = "Arial", color = "black"),
+    panel.grid.major = element_line(colour = gray(0.5), linetype = "dashed", size = 0.2), 
+    panel.background = element_rect(fill = "aliceblue"), 
+    panel.border = element_rect(fill = NA),
+    axis.text.y = element_text(size = 12, family = "Arial", color = "black"),
+    axis.text.x = element_text(size = 12, family = "Arial", color = "black"),
+    axis.title = element_text(size = 14, family = "Arial", color = "black"))
+
+sites.map
+
+ggsave(
+  filename = "./graphs/map.aq.terr.late.succession.svg",
+  plot = sites.map,
+  device = "svg",
+  width = 10,
+  height = 8.5,
+  units = "in"
+)
 
 #
 # End ----
