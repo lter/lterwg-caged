@@ -1096,4 +1096,28 @@ ggsave(
 )
 
 #
+# Beta format & figures for new ecotypes ----
+
+beta.meta = read_xlsx("./data/2026.06.03 sitelevel-metadata.xlsx") %>%
+  dplyr::select(-1, -c(21:63)) %>%
+  filter(included.in.final.dataset == "y") %>%
+  distinct() %>%
+  group_by(var_aq.or.terr, var_ecotype1) %>%
+  summarise(n = n())
+
+ecotypes.26.06.03 = ggplot(beta.meta) +
+  geom_bar(aes(x = var_aq.or.terr, y = n, fill = var_ecotype1), stat = "identity", position = "dodge") +
+  theme(panel.background = element_blank(),
+        panel.border = element_rect(fill = NA, colour = "grey30"),
+        #axis.title.x = element_blank() 
+  )
+
+jpeg("./graphs/new.ecotype.counts.2026-06-03.jpeg", width = 7, height = 5, units = "in",
+     res = 300)
+
+ecotypes.26.06.03
+
+dev.off()
+
+#
 # End ----
