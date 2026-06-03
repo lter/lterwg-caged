@@ -63,7 +63,7 @@ str(df1)
 
 
   
-mod1 <- lmer(betadisp.mean.lrr ~ abs.lat *
+mod1 <- lmer(abs(betadisp.mean.lrr) ~ abs.lat +
                var_exclusion.duration.continuousyears +
                (1|var_upper.source), data = df1)
 summary(mod1)
@@ -83,7 +83,7 @@ AIC(mod1, mod2)
 
 range(df1$alpha.diversity_cage.treat.lrr) # -6.671471  6.629928
 
-mod1 <- lmer(alpha.diversity_cage.treat.lrr ~ abs.lat + 
+mod1 <- lmer(abs(alpha.diversity_cage.treat.lrr) ~ abs.lat + 
                (1|var_upper.source), data = df1)
 
 summary(mod1)
@@ -92,8 +92,10 @@ plot(allEffects(mod1))
 
 
 
-mod1 <- lmer(dominance_cage.treat.lrr ~ abs.lat + 
+mod1 <- lmer(abs(dominance_cage.treat.lrr) ~ abs.lat + 
                (1|var_upper.source), data = df1)
+
+plot(allEffects(mod1))
 
 summary(mod1)
 
@@ -150,99 +152,14 @@ caged_beta$betadisp.comm.dist_transform <- sapply(X = caged_beta$betadisp.comm.d
 # Validate (this should look like a 1:1)
 plot(x = caged_beta$betadisp.comm.dist, y =  caged_beta$betadisp.comm.dist_transform)
 
-
-## ------------------------------------------- ##
-## Create new dataframes for models to follow ----
-## ------------------------------------------- ##
-# Drop rows for which there is no terrestrial or aquatic categorization
-table(caged_beta$var_aq.or.terr)
-
-caged_beta2 <- caged_beta %>% 
-  dplyr::filter(var_aq.or.terr != "") %>% 
-  droplevels()
-unique(caged_beta2$exp.name) # 346, none are dropped
-
-table(caged_beta2$var_aq.or.terr) #Good!
-
-# Drop rows for which latitude is missing
-table(is.na(caged_beta2$lat))
-
-# which exp names are missing latitude
-caged_beta2$exp.name[is.na(caged_beta2$lat)]
-
-caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
-
-table(is.na(caged_beta2$lat)) #Good!
-
-unique(caged_beta2$exp.name) # 345
-# what did we lose here - burkepile_floridakeys_reefexclosure_20042005_fish_benthic.csv
-
-
-
-
 # Create a column for absolute value of latitude
-caged_beta2 <- caged_beta2 %>%
+caged_beta2 <- caged_beta %>%
   mutate(abs.lat = abs(lat))
 
-# Make sure there are no NAs for the experiment name
-table(is.na(caged_beta2$exp.name)) #Good!
 
 # Make aquatic/terrestrial a factor
 caged_beta2$var_aq.or.terr <- factor(caged_beta2$var_aq.or.terr)
 
-# Subset datasets for uncaged plots only or caged plots only
-uncaged.df <- caged_beta2 %>%
-  filter(cage.treatment_std == "uncaged") %>%
-  droplevels()
-
-caged.df <- caged_beta2 %>%
-  filter(cage.treatment_std == "caged") %>%
-  droplevels()
-
-# Check data: Collinearity between x1 and x2?
-ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
-  geom_boxplot()
-
-ggplot(data = caged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
-  geom_boxplot()
-
-# Note that terrestrial locations are higher in latitude than aquatic ones, on average, by about 10-20 degrees
-
-# Check data: General relationships between y and x1 or x2
-ggplot(data = caged_beta2, aes(x = lat, y = betadisp.comm.dist_transform)) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) +
-  facet_grid(cage.treatment_std ~ var_aq.or.terr) 
-ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
-  geom_boxplot()
-ggplot(data = caged_beta2, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
-  geom_boxplot()
-ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
-  geom_boxplot() +
-  facet_wrap( ~ var_aq.or.terr) 
-
-ggplot(data = uncaged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) 
-ggplot(data = uncaged.df, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
-  geom_point() +
-  geom_smooth(method = 'lm') 
-ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
-  geom_boxplot()
-
-ggplot(data = uncaged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) +
-  facet_wrap(~var_aq.or.terr)
-
-ggplot(data = caged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
-  geom_point() +
-  geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) 
-ggplot(data = caged.df, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
-  geom_point() +
-  geom_smooth(method = 'lm')
-ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
-  geom_boxplot()
 
 
 
@@ -264,11 +181,64 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 # In the end, the probit model had the lowest AIC by at least 10-20 units and was best behaved in DHARMa diagnostics.
 
 
+# Beta disprer
+
+
+late.df <- caged_beta2 %>%
+  filter(var_succ.vs.late == "late") %>%
+  filter(cage.treatment_std %in% c("caged", "uncaged"))
+
+dim(late.df)
+
+mod1<- glmmTMB(betadisp.comm.dist_transform ~ 
+                                  cage.treatment_std * scale(abs.lat)  +
+                                  # accounting for gamma richness and sample size
+                                  scale(gamma.richness) + scale(betadisp.sample.size) +
+                                  (1|exp.name), 
+                                dispformula = ~ abs.lat,
+                                family = beta_family(link = "probit"),
+                                control = glmmTMBControl(optimizer = optim, 
+                                                         optArgs = list(method = "BFGS")), 
+                                # Or use nlminb, or bobyqa via nloptr
+                                data = late.df) 
+# scaling the continuous variables reduced multicollinearity to low from moderate
+
+summary(mod1)    
+car::Anova(mod1, type = "II") # interaction is significant
+
+library(effects)
+plot(allEffects(mod1))
+# beta dispresion increases with gamma richness and sample size
+# beta dispersion increases with latitude for aquatic, but decreases with latitude for terrestrial
+
+alpha.late.df <- late.df %>%
+  drop_na(alpha.diversity_richness)
+
+dim(alpha.late.df)
+
+mod2 <- lmer(alpha.diversity_richness ~ 
+                 cage.treatment_std * scale(abs.lat)  +
+                 # accounting for gamma richness and sample size
+                 scale(gamma.richness) + scale(betadisp.sample.size) +
+                 (1|exp.name), 
+               data = late.df) 
+
+
+
+
+
+
+
+
+
+
+
+
+
 # check sample size
-dim(caged_beta2) # 12889    28
-unique(caged_beta2$exp.name) # 345 (just lost the burkepile one)
-unique(caged_beta2$source) # 116
-# this is the sample size after dropping missing metadata 
+dim(caged_beta2) # 13964   28
+unique(caged_beta2$exp.name) # 347 
+unique(caged_beta2$source) # 117
 
 # which sources and experiment names make it through the pipeline 
 test<- caged_beta2 %>% select(exp.name, source) %>% distinct()
@@ -277,9 +247,16 @@ write.csv(test, "data/final.data.through.pipeline.csv")
 
 
 
-caged_beta2 %>%
-  group_by(var_aq.or.terr,var_succ.vs.late) %>%
-  summarize(n())
+
+
+
+
+
+
+
+
+
+
 
 
 # Caged vs Uncaged Model
