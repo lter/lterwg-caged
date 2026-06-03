@@ -60,26 +60,20 @@ dplyr::glimpse(gam.diff_v1)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_all-scales.csv")) %>% 
-  dplyr::rename(design.level = alpha.diversity_design.level,
-    alpha.diversity_cage.treat.diff = within.cage.treat_alpha.diff,
-    alpha.diversity_cage.treat.lrr = within.cage.treat_alpha.lrr)
+alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv"))
 
 # Check structure
-dplyr::glimpse(alp.diff_v1)
+dplyr::glimpse(alp.diff_v1) #4705
 
 ## ------------------------------------------- ##
 # Load Dominance Diffs & LRRs  ----
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_all-scales.csv")) %>% 
-  dplyr::rename(design.level = dominance_design.level,
-    dominance_cage.treat.diff = within.cage.treat_dominance.diff,
-    dominance_cage.treat.lrr = within.cage.treat_dominance.lrr)
+dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_expname.csv"))
 
 # Check structure
-dplyr::glimpse(dom.diff_v1)
+dplyr::glimpse(dom.diff_v1) # 6336
 
 ## ------------------------------------------- ##
 # Load Mean Beta Diffs & LRRs ----
@@ -92,7 +86,7 @@ beta.diff_v1 <- read.csv(file = file.path("data", "06-A_caged_mean-beta-diff_all
     .fn = ~ gsub("within.cage.treat_", "", x = .))
 
 # Check structure of one
-dplyr::glimpse(beta.diff_v1)
+dplyr::glimpse(beta.diff_v1) # 2410
 
 # Do some post-processing here to get the format to match alpha/dominance LRR data
 beta.diff_v2 <- beta.diff_v1 %>% 
@@ -127,12 +121,10 @@ dplyr::glimpse(join_v1)
 # Join data available at all/multiple design levels
 join_v2 <- beta.diff_v2 %>% 
   dplyr::left_join(x = ., y = alp.diff_v1,
-    by = dplyr::join_by(source, organization, site, excluded.group, 
-      measured.group, exp.name, design.level)) %>% 
+    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, exp.name)) %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
     by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
-      excluded.group, measured.group, exp.name, design.level, 
-      exp.design.4, exp.design.3, exp.design.2, exp.design.1)) %>% 
+      excluded.group, measured.group, exp.name)) %>% 
   dplyr::relocate(project.name, sampling.years, dplyr::starts_with("exp.design."),
     .before = design.level)
 
@@ -165,7 +157,7 @@ join_v4 <- join_v3 %>%
     names = c("metric", "cage.treatment_std"), cols_remove = TRUE) %>% 
   tidyr::pivot_wider(names_from = metric, values_from = value) %>% 
   dplyr::relocate(cage.treatment_std,
-    .after = exp.design.1)
+    .after = year)
 
 # Check structure
 dplyr::glimpse(join_v4)
@@ -229,6 +221,7 @@ for(join_src.name in sort(unique(join_v4$source))){
 join_v5 <- purrr::list_rbind(x = join_list)
 
 # Did that work?
+## The following should return a 0-row tibble (if it worked)
 join_v5 %>% 
   dplyr::group_by(source, exp.name) %>% 
   dplyr::summarize(design.ct = length(unique(design.level)),

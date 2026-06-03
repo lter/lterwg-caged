@@ -24,50 +24,62 @@ alp.diff_v01 <- read.csv(file.path("data", "05-C_caged_alpha-div_all-scales.csv"
 dplyr::glimpse(alp.diff_v01)
 
 ## ------------------------------------------- ##
-# Streamline / Prepare Data ----
+# Filter to Experiment Name Level ----
 ## ------------------------------------------- ##
 
-# Filter to only desired treatments and get data in right shape
+# Filter to only experiment name-level, desired treatments, and average across replicates
 alp.diff_v02 <- alp.diff_v01 %>% 
+  dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
   dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std)) %>% 
-  tidyr::pivot_wider(names_from = cage.treatment_std,
-    values_from = alpha.diversity_richness)
+  dplyr::select(-alpha.diversity_design.level)
 
 # Check structure
 dplyr::glimpse(alp.diff_v02)
 
 ## ------------------------------------------- ##
-# Calculate Difference & LRR ----
+# Streamline Data ----
 ## ------------------------------------------- ##
 
-# Calculate difference and LRR
+# Drop columns that are completely empty (i.e., "exp.design.#" columns)
 alp.diff_v03 <- alp.diff_v02 %>% 
-  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
-    .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
-  # need to change this to the minimum average value of mean alpha diversity (replace 0.005)
-  dplyr::mutate(caged = alpha.diversity_caged + 0.005,
-    uncaged = alpha.diversity_uncaged + 0.005) %>% 
-  dplyr::mutate(within.cage.treat_alpha.diff = uncaged - caged,
-    within.cage.treat_alpha.lrr = log2(uncaged / caged)) %>% 
-  dplyr::select(-caged, -uncaged)
+  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.))))
 
 # Check structure
 dplyr::glimpse(alp.diff_v03)
+
+## ------------------------------------------- ##
+# Reshape & Calculate LRR ----
+## ------------------------------------------- ##
+
+# Reshape the data and calculate log response ratio
+alp.diff_v04 <- alp.diff_v03 %>% 
+  tidyr::pivot_wider(names_from = cage.treatment_std,
+    values_from = alpha.diversity_richness) %>% 
+  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
+    .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
+  dplyr::mutate(caged = alpha.diversity_caged + 1,
+    uncaged = alpha.diversity_uncaged + 1) %>% 
+  dplyr::mutate(alpha.diversity_cage.treat.diff = uncaged - caged,
+    alpha.diversity_cage.treat.lrr = log2(uncaged / caged)) %>% 
+  dplyr::select(-caged, -uncaged)
+
+# Check structure
+dplyr::glimpse(alp.diff_v04)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-alp.diff_v99 <- alp.diff_v03
+alp.diff_v99 <- alp.diff_v04
 
 # Count number of sources/experiments at end
 unique(alp.diff_v99$source) # 121
 unique(alp.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-alp.diff_name <- "06-C_caged_alpha-div-diff_all-scales.csv"
+alp.diff_name <- "06-C_caged_alpha-div-diff_expname.csv"
 alp.diff_path <- file.path("data", alp.diff_name)
 
 # Export locally

@@ -24,50 +24,64 @@ dom.diff_v01 <- read.csv(file.path("data", "05-D_caged_dominance_all-scales.csv"
 dplyr::glimpse(dom.diff_v01)
 
 ## ------------------------------------------- ##
-# Streamline / Prepare Data ----
+# Filter to Experiment Name Level ----
 ## ------------------------------------------- ##
 
-# Filter to only desired treatments and get data in right shape
+# Filter to only experiment name-level, desired treatments, and average across replicates
 dom.diff_v02 <- dom.diff_v01 %>% 
+  dplyr::filter(dominance_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-  dplyr::select(-dplyr::ends_with(".abundance")) %>% 
   dplyr::mutate(cage.treatment_std = paste0("dominance_", cage.treatment_std)) %>% 
-  tidyr::pivot_wider(names_from = cage.treatment_std,
-    values_from = dominance)
+  dplyr::select(-dominance_design.level)
 
 # Check structure
 dplyr::glimpse(dom.diff_v02)
 
 ## ------------------------------------------- ##
-# Calculate Difference & LRR ----
+# Streamline Data ----
 ## ------------------------------------------- ##
 
-# Calculate difference and LRR
+# Drop columns that are completely empty (i.e., "exp.design.#" columns)
 dom.diff_v03 <- dom.diff_v02 %>% 
-  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
-    .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
-  dplyr::mutate(caged = dominance_caged + 0.005,
-    uncaged = dominance_uncaged + 0.005) %>% 
-  dplyr::mutate(within.cage.treat_dominance.diff = uncaged - caged,
-    within.cage.treat_dominance.lrr = log2(uncaged / caged)) %>% 
-  dplyr::select(-caged, -uncaged)
+  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.))))
 
 # Check structure
 dplyr::glimpse(dom.diff_v03)
+
+## ------------------------------------------- ##
+# Reshape & Calculate LRR ----
+## ------------------------------------------- ##
+
+# Reshape the data and calculate log response ratio
+dom.diff_v04 <- dom.diff_v03 %>% 
+  dplyr::select(-dplyr::ends_with("abundance")) %>% 
+  tidyr::pivot_wider(names_from = cage.treatment_std,
+    values_from = dominance) %>% 
+  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
+    .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
+  # Add minimum value of dominance to avoid 'division by 0' problem
+  dplyr::mutate(caged = dominance_caged + min(dom.diff_v03$dominance, na.rm = TRUE),
+    uncaged = dominance_uncaged + min(dom.diff_v03$dominance, na.rm = TRUE)) %>% 
+  dplyr::mutate(dominance_cage.treat.diff = uncaged - caged,
+    dominance_cage.treat.lrr = log2(uncaged / caged)) %>% 
+  dplyr::select(-caged, -uncaged)
+
+# Check structure
+dplyr::glimpse(dom.diff_v04)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-dom.diff_v99 <- dom.diff_v03
+dom.diff_v99 <- dom.diff_v04
 
 # Count number of sources/experiments at end
 unique(dom.diff_v99$source) # 121
 unique(dom.diff_v99$exp.name) # 367
 
 # Identify tidy file name / path
-dom.diff_name <- "06-D_caged_dominance-diff_all-scales.csv"
+dom.diff_name <- "06-D_caged_dominance-diff_expname.csv"
 dom.diff_path <- file.path("data", dom.diff_name)
 
 # Export locally

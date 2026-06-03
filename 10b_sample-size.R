@@ -107,7 +107,7 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
     
     fig.list[[i]] = ggplot(bd.factor.df) +
       geom_bar(aes(y = avg.n, x = var_aq.or.terr, fill = .data[[i]]), stat = "identity", position = position_dodge()) +
-      labs(y = "Number of studies", fill = "", title = paste(i)) +
+      labs(y = "Average of caged and uncaged sample sizes", fill = "", title = paste(i)) +
       theme(panel.background = element_blank(),
             panel.border = element_rect(fill = NA, colour = "grey30"),
             axis.title.x = element_blank() 
@@ -178,7 +178,137 @@ for (i in 1:5){
 #grid.list[[1]]
 
 
+# repeat above plots but showing number of exp.names instead of number of observations
+# for loop for predictor exp.names ----
+
+
+fig.list = list()
+
+#hist(bd.temp$var_exclosure.area.m2)
+
+for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
+  
+  #diagnostics, hash out before running
+  #i = colnames(bd.prep)[17]
+  
+  if(i == "var_exclosure.area.m2"){
+    bd.temp = bd.prep %>%
+      dplyr::select(exp.name, var_aq.or.terr, all_of(i)) %>% # filter to relevant variables
+      drop_na() %>% # drop NAs
+      filter(.[[i]] != "") %>%
+      filter(.[[i]] != "unknown") %>%
+      mutate(var_exclosure.area.m2 = as.numeric(var_exclosure.area.m2))
+    
+  } else {
+    bd.temp = bd.prep %>%
+      dplyr::select(exp.name, var_aq.or.terr, all_of(i)) %>% # filter to relevant variables
+      drop_na() %>% # drop NAs
+      filter(i != "") %>%
+      filter(i != "unknown") %>%
+      mutate(across(where(is.character), as.factor)) %>%
+      mutate(across(where(is.integer), as.numeric))
+  }
+  
+  
+  #class(bd.temp[[i]])
+  
+  if(is.factor(bd.temp[[i]])){
+    
+    # %>% select(var_aq.or.terr, exp.name, var_ecotype1)
+    #%>% select(var_aq.or.terr, exp.name, var_ecotype1) %>% unique() %>% group_by(var_aq.or.terr, var_ecotype1) %>% summarize(n_studies = n())
+
+    bd.factor.df = bd.temp %>%
+      distinct() %>% 
+      group_by(var_aq.or.terr, .[i]) %>%
+      summarise(n = n()) # %>%
+     # group_by(var_aq.or.terr, .[i]) %>%
+     # summarise(avg.n = mean(n)) %>% 
+     # ungroup()
+    
+    # number of categories for colors
+    #n_cols <- bd.factor.df %>% select(.[i]) %>% unique() %>% nrow()
+    n_cols <- length(unique(bd.factor.df[[i]]))
+    
+    fig.list[[i]] = ggplot(bd.factor.df) +
+      geom_bar(aes(y = n, x = var_aq.or.terr, fill = .data[[i]]), stat = "identity", position = position_dodge()) +
+      labs(y = "Number of exp.names", fill = "", title = paste(i)) +
+      theme(panel.background = element_blank(),
+            panel.border = element_rect(fill = NA, colour = "grey30"),
+            axis.title.x = element_blank() 
+      ) +
+      scale_fill_manual(values= col_vector[1:n_cols])
+    fig.list[[i]]
+    
+  } else {
+    
+    #i = colnames(bd.prep)[8]
+    
+    bd.num.df = bd.temp %>%
+      group_by(var_aq.or.terr, exp.name) %>%
+      mutate(mean_val = mean(.[i], na.rm = T)) %>%
+      ungroup() %>% distinct() %>% 
+      group_by(var_aq.or.terr, mean_val) %>% 
+    summarize(sample_size = n()) %>% ungroup()  
+     # group_by(var_aq.or.terr) %>%
+     # mutate(sample_size_mean = mean(sample_size)) %>%
+     # ungroup()
+    
+    bd.num.sum = bd.num.df %>%
+      dplyr::select(var_aq.or.terr, sample_size) %>%
+      distinct()
+    
+    fig.list[[i]] = ggplot(bd.num.df) +
+      geom_boxplot(aes(x = var_aq.or.terr, y = mean_val, fill = var_aq.or.terr), alpha = .5) +
+      #geom_point(aes(x = var_aq.or.terr, y = .data[[i]], color = var_aq.or.terr),
+      #position = position_jitter(), alpha = .05) +
+      scale_fill_manual(values = c("turquoise",
+                                   "darkgreen")) +
+      scale_color_manual(values = c("turquoise",
+                                    "darkgreen")) +
+      geom_text(data = bd.num.sum, aes(var_aq.or.terr, Inf, label = round(sample_size)), vjust = 1) +
+      labs(x = "var_aq.or.terr", fill = "var_aq.or.terr")+
+      theme(panel.background = element_blank(),
+            panel.border = element_rect(fill = NA, colour = "grey30"),
+            axis.title.x = element_blank())
+    
+    fig.list[[i]]
+    
+  }
+  
+}
+
+plot_grid(plotlist = fig.list, ncol = 3, nrow = 5)
+
+length(fig.list)
+
+grid.plots = list()
+
+grid.plots[[1]] = plot_grid(fig.list[[1]], fig.list[[2]], fig.list[[3]], ncol = 3, nrow = 1)
+grid.plots[[2]] = plot_grid(fig.list[[4]], fig.list[[5]], fig.list[[6]], ncol = 3, nrow = 1)
+grid.plots[[3]] = plot_grid(fig.list[[7]], fig.list[[8]], fig.list[[9]], ncol = 3, nrow = 1)
+grid.plots[[4]] = plot_grid(fig.list[[10]], fig.list[[11]], fig.list[[12]], ncol = 3, nrow = 1)
+grid.plots[[5]] = plot_grid(fig.list[[13]], fig.list[[14]], fig.list[[15]], ncol = 3, nrow = 1)
+
+
+for (i in 1:5){
+  
+  jpeg(paste0("./graphs/09c_predictor.exp.name.plot.grid.", i, ".jpeg"), width = 15, height = 5, units = "in",
+       res = 300)   
+  
+  print(grid.plots[[i]])
+  
+  dev.off()
+  
+}
+
+
 # calculate number of studies in each ecotype for pie charts
-pie_chart_data <- caged_beta %>% select(var_aq.or.terr, exp.name, var_ecotype1) %>% unique() %>% group_by(var_aq.or.terr, var_ecotype1) %>% summarize(n_studies = n())
+# pie_chart_data <- caged_beta %>% select(var_aq.or.terr, exp.name, var_ecotype1) %>% unique() %>% group_by(var_aq.or.terr, var_ecotype1) %>% summarize(n_studies = n())
+
+
+# calculate number of exp.names with experimental duration longer than 5 years
+#duration_data <- caged_beta %>% select(var_aq.or.terr, exp.name, var_exclusion.duration.continuousyears) %>% filter(var_exclusion.duration.continuousyears >= 5) %>% unique() %>% group_by(var_aq.or.terr) %>% summarize(n_studies = n())
 
 #View(pie_chart_data)
+
+#View(duration_data)
