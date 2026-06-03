@@ -105,6 +105,38 @@ multi.times <- sub_v5 %>%
   dplyr::select(source, year, time.ct, times) %>% 
   dplyr::distinct()
 
+ggplot(multi.times, aes(x = 'x', y = time.ct)) +
+   geom_violin() +
+   geom_jitter() +
+   labs(y = "Number of Time Points Within Year") +
+   supportR::theme_lyon() +
+   theme(axis.text.x = element_blank(),
+      axis.title.x = element_blank())
+
+ggsave("2026-06-03_multi-times-within-year.png", width = 6, height = 6, units = "in")
+
+test <- sub_v5 %>% 
+  group_by(source, exp.name) %>% 
+  dplyr::summarize(year_ct = length(unique(year)),
+   time_cross.yr_ct = length(unique(paste(year, sampling.point))))
+
+ggplot(test, aes(x = "x", y = time_cross.yr_ct))+
+   geom_violin() +
+   geom_jitter() +
+   labs(y = "Number of Time Points Across Years") +
+   supportR::theme_lyon() +
+   theme(axis.text.x = element_blank(),
+      axis.title.x = element_blank())
+
+ggsave("2026-06-03_multi-times-across-year.png", width = 6, height = 6, units = "in")
+
+ggplot(test, aes(x = year_ct, y = time_cross.yr_ct))+
+   geom_point(alpha = 0.1) +
+   labs(y = "Number of Time Points Across Years") +
+   supportR::theme_lyon()
+
+ggsave("2026-06-03_multi-times-year-by-within-year.png", width = 6, height = 6, units = "in")
+
 # Check that out
 as.data.frame(multi.times)
 ## View(multi.times)
