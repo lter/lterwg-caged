@@ -32,7 +32,7 @@ gamma_trt <- gamma_v1 %>%
   # Drop zero abundance taxa
   dplyr::filter(abundance > 0 & !is.na(abundance)) %>% 
   # Drop unwanted columns
-  dplyr::select(-dplyr::starts_with("exp.design."), -cage.treatment_orig, -abundance) %>% 
+  dplyr::select(-dplyr::starts_with("exp.design."), -abundance) %>% 
     # Group by only desired columns & count number of unique taxa
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c("year", "taxa", "abundance"))) 
@@ -41,7 +41,7 @@ gamma_trt <- gamma_v1 %>%
     .groups = "drop")
 
 # Do we have the expected number of values?
-nrow(gamma_trt) == length(unique(paste(gamma_trt$source, gamma_trt$exp.name, gamma_trt$cage.treatment_std)))
+nrow(gamma_trt) == length(unique(paste(gamma_trt$source, gamma_trt$exp.name, gamma_trt$cage.treatment_orig)))
 
 # Check structure
 dplyr::glimpse(gamma_trt)
@@ -70,9 +70,8 @@ dplyr::glimpse(gamma_exp)
 ## ------------------------------------------- ##
 
 # Prep the 'by treatment' one for integration with the 'by experiment' one
-gamma_trt_v2 <- gamma_trt %>% 
-  dplyr::mutate(cage.treatment_std = paste0("gamma.richness_", cage.treatment_std)) %>% 
-  tidyr::pivot_wider(names_from = cage.treatment_std, values_from = gamma.richness)
+gamma_trt_v2 <- gamma_trt
+## No such prep required
 
 # Check structure
 dplyr::glimpse(gamma_trt_v2)
@@ -85,7 +84,9 @@ dplyr::glimpse(gamma_trt_v2)
 gamma_v2 <- gamma_exp %>% 
   dplyr::left_join(x = ., y = gamma_trt_v2,
     by = dplyr::join_by(source, organization, site, project.name, 
-      sampling.years, excluded.group, measured.group, exp.name))
+      sampling.years, excluded.group, measured.group, exp.name)) %>% 
+  dplyr::relocate(dplyr::starts_with("cage.treatment_"),
+    .after = exp.name)
 
 # Check structure
 dplyr::glimpse(gamma_v2)

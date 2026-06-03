@@ -44,9 +44,6 @@ dplyr::glimpse(meta_v1)
 ## ------------------------------------------- ##
 # Load Gamma Diffs & LRRs  ----
 ## ------------------------------------------- ##
-# Note we can skip (for now) 05 B-D outputs...
-## ...because the 06 variants have all relevant info plus LRRs
-
 # Read in gamma richness diffs
 gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv")) %>% 
   dplyr::rename(gamma.richness_cage.treat.diff = within.cage.treat_gamma.diff,
@@ -56,6 +53,27 @@ gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv")) %
 dplyr::glimpse(gam.diff_v1)
 
 ## ------------------------------------------- ##
+# Load Gamma 'Raw' ----
+## ------------------------------------------- ##
+
+# Read in the data
+gamma_v1 <- read.csv(file.path("data", "05-B_caged_gamma-rich.csv"))
+
+# Check structure
+dplyr::glimpse(gamma_v1)
+
+# Do some necessary wrangling
+gamma_v2 <- gamma_v1 %>% 
+  dplyr::select(-gamma.richness_uncertain, -gamma.richness_partial) %>% 
+  tidyr::pivot_longer(cols = dplyr::ends_with("caged"),
+    names_to = "cage.treatment_std", values_to = "gamma.richness") %>% 
+  dplyr::filter(!is.na(gamma.richness)) %>% 
+  dplyr::mutate(cage.treatment_std = gsub("gamma\\.richness_", "", cage.treatment_std))
+
+# Check structure
+dplyr::glimpse(gamma_v2)
+
+## ------------------------------------------- ##
 # Load Alpha Diffs & LRRs  ----
 ## ------------------------------------------- ##
 
@@ -63,7 +81,24 @@ dplyr::glimpse(gam.diff_v1)
 alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv"))
 
 # Check structure
-dplyr::glimpse(alp.diff_v1) #4705
+dplyr::glimpse(alp.diff_v1)
+
+## ------------------------------------------- ##
+# Load Alpha 'Raw' ----
+## ------------------------------------------- ##
+
+# Read in the data
+alpha_v1 <- read.csv(file.path("data", "05-C_caged_alpha-div_all-scales.csv"))
+
+# Check structure
+dplyr::glimpse(alpha_v1)
+
+# Do needed wrangling
+alpha_v2 <- alpha_v1 %>% 
+  dplyr::rename(betadisp.design.level = alpha.diversity_design.level)
+
+# Check structure
+dplyr::glimpse(alpha_v2)
 
 ## ------------------------------------------- ##
 # Load Dominance Diffs & LRRs  ----
@@ -73,7 +108,26 @@ dplyr::glimpse(alp.diff_v1) #4705
 dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_expname.csv"))
 
 # Check structure
-dplyr::glimpse(dom.diff_v1) # 6336
+dplyr::glimpse(dom.diff_v1)
+
+## ------------------------------------------- ##
+# Load Dominance 'Raw' ----
+## ------------------------------------------- ##
+
+# Read in the data
+dom_v1 <- read.csv(file.path("data", "05-D_caged_dominance_all-scales.csv"))
+
+# Check structure
+dplyr::glimpse(dom_v1)
+
+# Do needed wrangling
+dom_v2 <- dom_v1 %>% 
+  dplyr::select(-dplyr::ends_with("abundance")) %>% 
+  dplyr::filter(!is.na(dominance)) %>% 
+  dplyr::rename(betadisp.design.level = dominance_design.level)
+
+# Check structure
+dplyr::glimpse(dom_v2)
 
 ## ------------------------------------------- ##
 # Load Mean Beta Diffs & LRRs ----

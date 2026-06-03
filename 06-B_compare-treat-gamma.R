@@ -27,9 +27,15 @@ dplyr::glimpse(gam.diff_v01)
 # Streamline Data ----
 ## ------------------------------------------- ##
 
-# Ditch any unwanted rows/columns
+# Ditch any unwanted rows/columns and get into right shape
 gam.diff_v02 <- gam.diff_v01 %>% 
-  dplyr::select(-gamma.richness_uncertain, -gamma.richness_partial)
+  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
+  dplyr::group_by(dplyr::across(dplyr::all_of(
+    setdiff(x = names(.), y = c("cage.treatment_orig", "gamma.richness"))))) %>% 
+  dplyr::summarize(gamma.richness = mean(gamma.richness, na.rm = TRUE),
+    .groups = "drop") %>% 
+  dplyr::mutate(cage.treatment_std = paste0("gamma.richness_", cage.treatment_std)) %>% 
+  tidyr::pivot_wider(names_from = cage.treatment_std, values_from = gamma.richness)
 
 # Check structure
 dplyr::glimpse(gam.diff_v02)
@@ -40,7 +46,7 @@ dplyr::glimpse(gam.diff_v02)
 
 # Calculate difference and LRR
 gam.diff_v03 <- gam.diff_v02 %>% 
-  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("caged"),
+  dplyr::mutate(dplyr::across(dplyr::ends_with("caged"),
     .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
   dplyr::mutate(caged = gamma.richness_caged + 0.005,
     uncaged = gamma.richness_uncaged + 0.005) %>% 
