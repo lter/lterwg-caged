@@ -48,154 +48,26 @@ effectsizes_v2 <- effectsizes_v1 %>%
   select(source, exp.name, contains("lrr")) %>%
 distinct()
 
-dim(effectsizes_v2) # why does this have 651 rows? should only have 347? 
-# i think its because dominance and alpha diversity LRR are not calculated at mean caged/uncaged so they have more unique values than they should
-
-colnames(effectsizes_v2)
+dim(effectsizes_v2) # 347
 
 
-
-
-
-
-
-# What columns are lost/gained?
-supportR::diff_check(old = names(caged_v1), new = names(caged_mean))
-
-# Check structure
-dplyr::glimpse(caged_mean)
-
-# Check replicates
-unique(caged_mean$source) # 117
-unique(caged_mean$exp.name) # 346
-# now these are the same!
-
-# Which are lost (if any)
-supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_mean$source))
-supportR::diff_check(old = unique(caged_v1$exp.name), new = unique(caged_mean$exp.name))
-
-# Export locally (if you want)
-# write.csv(x = caged_mean, row.names = F, na = '',
-#           file = file.path("data","08_caged_prepped-mean-difference.csv"))
-
-# Check structure of that
-dplyr::glimpse(caged_mean)
-
-# Check which data are missing mean differences
-na.diff <- caged_v1 %>% 
-  dplyr::filter(is.na(within.cage.treat_betadisp.mean.diff)) %>%
-  dplyr::select(source, exp.name, cage.treatment_std, cage.treatment_orig,
-                betadisp.comm.dist:within.cage.treat_betadisp.mean.diff) %>% 
-  dplyr::distinct()
-
-# What's in that?
-unique(na.diff$source)
-unique(na.diff$cage.treatment_std) # partial and uncertain so that makes sense
-
-# Glimpse it
-dplyr::glimpse(na.diff)
-# View(na.diff)
-
-## ------------------------------------------- ##
-# Effect Size Prep ----
-## ------------------------------------------- ##
-
-# Data for modeling beta dispersion effect size
-caged_effectsize <- caged_mean %>% 
-  # Only columns we need and have
-  dplyr::select(source, exp.name, lat, var_aq.or.terr, var_succ.vs.late,
-               # betadisp.sample.size, gamma.richness,
-                within.cage.treat_betadisp.mean.diff,
-               within.cage.treat_betadisp.mean.lrr) %>%
-  unique()
-
-# Check number of sources
-unique(caged_effectsize$source) # 117
-unique(caged_effectsize$exp.name) # 346
-
-dim(caged_effectsize) #347 
-# i canʻt figure out why this has an extra duplicate? we need to figure this out
-
-
-caged_effectsize %>%
-  dplyr::count(exp.name) %>%
-  dplyr::filter(n > 1)
-# could this be the issue? 
-
-
-
-# Which are lost (if any)
-supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_effectsize$source))
-supportR::diff_check(old = unique(caged_v1$exp.name), new = unique(caged_effectsize$exp.name))
-
-# Check structure
-dplyr::glimpse(caged_effectsize)
-
-## ------------------------------------------- ##
-# Streamline Data for Statistics ----
-## ------------------------------------------- ##
-
-# Trim down some columns to create a nicer DF for modeling
-caged_model <- caged_v1 %>% 
-  # Select columns we (think that we'll) need
-  dplyr::select(
-    ## Experiment identity info
-    source, site, exp.name, 
-    ## Critical metadata (see relevant GoogleSheet)
-    starts_with("var"), cage.treatment_std, year.start.exclosure, 
-    year.end.exclosure, exp.name.spatialextent.category, 
-    natural.vs.artificial.substrate, lat, 
-    ## Information about beta dispersion calculation
-    betadisp.design.level,
-    ## Response information
-    measured.group, gamma.richness, betadisp.sample.size, betadisp.comm.dist
-    ) %>% 
-  # Keep only the two treatments that we are interested in
-  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) 
-
-# Check structure
-dplyr::glimpse(caged_model)
-
-# Check replicates
-unique(caged_model$source) # 117
-unique(caged_model$exp.name) # 346
-
-# Which are lost (if any)
-supportR::diff_check(old = unique(caged_v1$source), new = unique(caged_model$source))
-supportR::diff_check(old = unique(caged_v1$exp.name), new = unique(caged_model$exp.name))
-
-## ------------------------------------------- ##
-# Beta Dispersion Modeling ----
-## ------------------------------------------- ##
-
-# Data for modeling beta dispersion
-caged_beta <- caged_model %>% 
-  # Drop unwanted columns
-  dplyr::select(-measured.group, -natural.vs.artificial.substrate,
-                -site, -year.end.exclosure, -year.start.exclosure)
-
-# Check difference in columns
-supportR::diff_check(old = names(caged_model), new = names(caged_beta))
-
-# Check number of sources
-unique(caged_beta$source) # 117
-unique(caged_beta$exp.name) # 346
-
-# Check structure
-dplyr::glimpse(caged_beta)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
-# Export some of these products locally
-## Prepped for beta dispersion modeling
-write.csv(x = caged_beta, row.names = F, na = '',
-          file = file.path("data", "08_caged_prepped-beta-dispersion.csv"))
 
-## Prepped for effect size modeling
-write.csv(x = caged_effectsize, row.names = F, na = '',
+## Effect size df 
+write.csv(x = effectsizes_v2, row.names = F, na = '',
           file = file.path("data", "08_caged_prepped-effect-size.csv"))
 
 # End ----
+
+
+
+
+
+
+
+
 
