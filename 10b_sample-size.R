@@ -33,7 +33,7 @@ dim(caged_beta)# 12905  rows
 colnames(caged_beta)
 
 # List the predictors
-caged_beta %>% select(starts_with("var")) %>% names()
+caged_beta %>% dplyr::select(starts_with("var")) %>% names()
 
 # [1] "var_upper.source"                       "var_climate.zone"                      
 # [3] "var_aq.or.terr"                         "var_ecotype1"                          
@@ -47,7 +47,7 @@ caged_beta %>% select(starts_with("var")) %>% names()
 
 # Check which columns are categorical and numerical 
 caged_beta %>% 
-  select(starts_with("var")) %>% 
+  dplyr::select(starts_with("var")) %>% 
   sapply(class)
 
 # draft for loop for predictor sample sizes ----
@@ -178,8 +178,10 @@ for (i in 1:5){
 #grid.list[[1]]
 
 
-# repeat above plots but showing number of exp.names instead of number of observations
+#
 # for loop for predictor exp.names ----
+
+# repeat above plots but showing number of exp.names instead of number of observations
 
 
 fig.list = list()
@@ -245,17 +247,17 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
     
     bd.num.df = bd.temp %>%
       group_by(var_aq.or.terr, exp.name) %>%
-      mutate(mean_val = mean(.[i], na.rm = T)) %>%
-      ungroup() %>% distinct() %>% 
-      group_by(var_aq.or.terr, mean_val) %>% 
-    summarize(sample_size = n()) %>% ungroup()  
-     # group_by(var_aq.or.terr) %>%
-     # mutate(sample_size_mean = mean(sample_size)) %>%
-     # ungroup()
+      summarise(mean_val = mean(.data[[i]])) %>%
+      ungroup() %>%
+      group_by(var_aq.or.terr) %>%
+      mutate(sample_size = n()) %>%
+      ungroup()
+    
     
     bd.num.sum = bd.num.df %>%
-      dplyr::select(var_aq.or.terr, sample_size) %>%
-      distinct()
+       group_by(var_aq.or.terr) %>%
+       summarise(exp.names = n())
+    
     
     fig.list[[i]] = ggplot(bd.num.df) +
       geom_boxplot(aes(x = var_aq.or.terr, y = mean_val, fill = var_aq.or.terr), alpha = .5) +
@@ -265,8 +267,9 @@ for(i in colnames(bd.prep)[4:length(colnames(bd.prep))]){
                                    "darkgreen")) +
       scale_color_manual(values = c("turquoise",
                                     "darkgreen")) +
-      geom_text(data = bd.num.sum, aes(var_aq.or.terr, Inf, label = round(sample_size)), vjust = 1) +
-      labs(x = "var_aq.or.terr", fill = "var_aq.or.terr")+
+      geom_text(aes(var_aq.or.terr, Inf, label = round(sample_size)), vjust = 1) +
+      labs(x = "var_aq.or.terr", fill = "var_aq.or.terr", title = i,
+           y = "mean vals. per exp. name")+
       theme(panel.background = element_blank(),
             panel.border = element_rect(fill = NA, colour = "grey30"),
             axis.title.x = element_blank())
@@ -292,7 +295,7 @@ grid.plots[[5]] = plot_grid(fig.list[[13]], fig.list[[14]], fig.list[[15]], ncol
 
 for (i in 1:5){
   
-  jpeg(paste0("./graphs/09c_predictor.exp.name.plot.grid.", i, ".jpeg"), width = 15, height = 5, units = "in",
+  jpeg(paste0("./graphs/09c_predictor.exp.name.plots/09c_predictor.exp.name.plot.grid.", i, ".jpeg"), width = 15, height = 5, units = "in",
        res = 300)   
   
   print(grid.plots[[i]])
