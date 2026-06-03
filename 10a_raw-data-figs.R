@@ -22,13 +22,13 @@ rm(list = ls()); gc()
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
-caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
+caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
 
 
 # View(caged_effectsize) 
 # View(caged_beta) 
 dim(caged_effectsize)# 347 rows
-dim(caged_beta)# 12905  rows
+dim(caged_beta)# 13964  rows
 
 ## ------------------------------------------- ##
 # Plots ---- 
@@ -105,14 +105,14 @@ caged_effectsize %>%
 caged_effectsize %>%
   filter(var_succ.vs.late == "late") %>%
   ggplot(aes(x=abs(lat), 
-             y=within.cage.treat_betadisp.mean.lrr)) +
+             y=betadisp.mean.lrr)) +
   geom_point() +
   geom_smooth(method="lm") +
   #geom_smooth(method = "loess", se = FALSE, col="red") +
   theme_pubr(base_size=16) +
   # scale_color_manual(values= c("royalblue","darkgreen"))+
   labs(x= "Absolute latitude",
-       y= "LRR(uncaged/caged)") +
+       y= "LRR Beta Dispersion (uncaged/caged)") +
   geom_hline(yintercept=0) #+
 # geom_hline(yintercept=0.69)
 
@@ -123,14 +123,14 @@ caged_effectsize %>%
 caged_effectsize %>%
   filter(var_succ.vs.late == "late") %>%
   ggplot(aes(x=abs(lat), 
-             y=within.cage.treat_betadisp.mean.lrr)) +
+             y=alpha.diversity_cage.treat.lrr)) +
   geom_point() +
   geom_smooth(method="lm") +
   #geom_smooth(method = "loess", se = FALSE, col="red") +
   theme_pubr(base_size=16) +
   # scale_color_manual(values= c("royalblue","darkgreen"))+
   labs(x= "Absolute latitude",
-       y= "LRR(uncaged/caged)") +
+       y= "LRR Alpha Diversity(uncaged/caged)") +
   geom_hline(yintercept=0) #+
 # geom_hline(yintercept=0.69)
 
@@ -140,20 +140,31 @@ caged_effectsize %>%
 caged_effectsize %>%
   filter(var_succ.vs.late == "late") %>%
   ggplot(aes(x=abs(lat), 
-             y=within.cage.treat_betadisp.mean.lrr)) +
+             y=dominance_cage.treat.lrr)) +
   geom_point() +
   geom_smooth(method="lm") +
   #geom_smooth(method = "loess", se = FALSE, col="red") +
   theme_pubr(base_size=16) +
   # scale_color_manual(values= c("royalblue","darkgreen"))+
   labs(x= "Absolute latitude",
-       y= "LRR(uncaged/caged)") +
+       y= "LRR Dominance (uncaged/caged)") +
   geom_hline(yintercept=0) #+
 # geom_hline(yintercept=0.69)
 
 
-
-
+# Beta dispersion by caging treatment*latitude
+caged_beta %>%
+  filter(var_succ.vs.late == "late") %>%
+  filter(cage.treatment_std %in% c("caged", "uncaged")) %>%
+  ggplot(aes(x=abs(lat), 
+             y=betadisp.comm.dist,
+             col=cage.treatment_std)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  theme_pubr(base_size=16) +
+  labs(x= "Absolute latitude",
+       y= "Beta dispersion",
+       colour = "Biome") 
 
 
 
