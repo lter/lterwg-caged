@@ -121,14 +121,10 @@ dplyr::glimpse(join_v1)
 # Join data available at all/multiple design levels
 join_v2 <- beta.diff_v2 %>% 
   dplyr::left_join(x = ., y = alp.diff_v1,
-    by = dplyr::join_by(source, organization, site, excluded.group, 
-      measured.group, exp.name, design.level)) %>% 
+    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, exp.name)) %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
-    by = dplyr::join_by(source, organization, site, 
-                     #   project.name, sampling.years, 
-      excluded.group, measured.group, exp.name, design.level, 
-      #exp.design.4, exp.design.3, exp.design.2, exp.design.1
-      )) %>% 
+    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
+      excluded.group, measured.group, exp.name)) %>% 
   dplyr::relocate(project.name, sampling.years, dplyr::starts_with("exp.design."),
     .before = design.level)
 
@@ -161,7 +157,7 @@ join_v4 <- join_v3 %>%
     names = c("metric", "cage.treatment_std"), cols_remove = TRUE) %>% 
   tidyr::pivot_wider(names_from = metric, values_from = value) %>% 
   dplyr::relocate(cage.treatment_std,
-    .after = exp.design.1)
+    .after = year)
 
 # Check structure
 dplyr::glimpse(join_v4)
@@ -225,6 +221,7 @@ for(join_src.name in sort(unique(join_v4$source))){
 join_v5 <- purrr::list_rbind(x = join_list)
 
 # Did that work?
+## The following should return a 0-row tibble (if it worked)
 join_v5 %>% 
   dplyr::group_by(source, exp.name) %>% 
   dplyr::summarize(design.ct = length(unique(design.level)),
