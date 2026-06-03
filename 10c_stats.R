@@ -27,10 +27,10 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 
-caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
+caged_beta <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_finest-scales.csv"))
 
-dim(caged_effectsize) # 417 rows
-dim(caged_beta) # 12905  rows
+dim(caged_effectsize) # 347 rows
+dim(caged_beta) # 13964 rows
 
 # Check number of sources
 unique(caged_effectsize$exp.name) # 346
@@ -38,11 +38,71 @@ unique(caged_beta$exp.name) #346
 dim(caged_effectsize)
 
 
+
+# Paper 1 Effect Size Models
+colnames(caged_effectsize)
+
+range(caged_effectsize$betadisp.mean.lrr)
+# why is there a NA in beta disp mean LRR? 
+
+df1 <- caged_effectsize %>%
+  filter(var_succ.vs.late == "late") %>%
+  drop_na(betadisp.mean.lrr)%>%
+  mutate(abs.lat = abs(lat))
+
+
+unique(df1$exp.name) # 239
+unique(df1$source) # 94
+# dropped one 
+
+range(df1$betadisp.mean.lrr) # -6.671471  6.629928
+hist(df1$betadisp.mean.lrr)
+
+colnames(df1)
+str(df1)
+
+
+  
+mod1 <- lmer(betadisp.mean.lrr ~ abs.lat *
+               var_exclusion.duration.continuousyears +
+               (1|var_upper.source), data = df1)
+summary(mod1)
+car::Anova(mod1, type =2)
+
+library(effects)
+plot(allEffects(mod1))
+
+mod2 <- lmer(betadisp.mean.lrr ~ abs.lat + (1|var_upper.source), data = df1)
+summary(mod2)
+plot(allEffects(mod2))
+
+AIC(mod1, mod2)
+
+
+
+
+range(df1$alpha.diversity_cage.treat.lrr) # -6.671471  6.629928
+
+mod1 <- lmer(alpha.diversity_cage.treat.lrr ~ abs.lat + 
+               (1|var_upper.source), data = df1)
+
+summary(mod1)
+
+plot(allEffects(mod1))
+
+
+
+mod1 <- lmer(dominance_cage.treat.lrr ~ abs.lat + 
+               (1|var_upper.source), data = df1)
+
+summary(mod1)
+
+
 ## ------------------------------------------- ##
 # Latitude Models  ----
 ## ------------------------------------------- ##
 
-glimpse(caged_beta) #12,905 rows
+glimpse(caged_beta) #13,964 rows
 
 # Check distribution of values in response variable, betadisp.comm.dist
 hist(caged_beta$betadisp.comm.dist)  
