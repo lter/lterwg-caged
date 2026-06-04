@@ -109,30 +109,27 @@ beta_name_list <- list()
 for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                          # Manually (temporarily) removing datasets as/if needed
                          y = c(""))){
-  # focal_src <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv"
+  # focal_src <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
   
   # Subset data
-  src_sub <- beta_v2 %>% 
-    dplyr::filter(source == focal_src)
+  src_sub <- dplyr::filter(beta_v2, source == focal_src)
   
   # Loop across treatments
   for(focal_trt in unique(src_sub$cage.treatment_orig)){
-    # focal_trt <- "F"
+    # focal_trt <- "Exclusion"
     
     # Subset again
-    trt_sub <- src_sub %>% 
-      dplyr::filter(cage.treatment_orig == focal_trt)
+    trt_sub <- dplyr::filter(src_sub, cage.treatment_orig == focal_trt)
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
-      # focal_yr <- "2021"
+      # focal_yr <- "2011"
       
       # Subset again
-      yr_sub <- trt_sub %>% 
-        dplyr::filter(year == focal_yr)
+      yr_sub <- dplyr::filter(trt_sub, year == focal_yr)
       
       ## ------------------------ ##
       # Beta Disp for Design 1 ----
@@ -140,11 +137,10 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across most granular level of experimental design
       for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "CSF__1"
+        # focal_des1 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C__1"
         
         # Subset yet again
-        des1_sub <- yr_sub %>% 
-          dplyr::filter(exp.design.1 == focal_des1)
+        des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
         
         # Calculate beta dispersion
         des1_beta <- calc_betadisp(df = des1_sub, floor = min_reps,
@@ -164,7 +160,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 2
       for(focal_des2 in unique(yr_sub$exp.design.2)){
-        # focal_des2 <- "CSF"
+        # focal_des2 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C"
         
         # Subset yet again
         des2_sub <- yr_sub %>% 
@@ -188,7 +184,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 3
       for(focal_des3 in unique(yr_sub$exp.design.3)){
-        # focal_des3 <- "CSF"
+        # focal_des3 <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv-EL"
         
         # Subset yet again
         des3_sub <- yr_sub %>% 
@@ -206,17 +202,19 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
           # Average across experimental design 1 (within exp. design 2 levels)
           des3_sub %<>% 
-            dplyr::group_by(
-              dplyr::across(
-                dplyr::all_of(setdiff(x = names(trt_sub), 
+            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                              .groups = "drop")
           
         } # Close conditional aggregation
+
+        # Ditch lower design levels
+        des3_ready <- des3_sub %>% 
+          dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:2)))
         
         # Calculate beta dispersion
-        des3_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
+        des3_beta <- calc_betadisp(df = des3_ready, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
                                    dist_method = pref_dist_method, result_prefix = "exp.design.3") %>% 
           # Wrangle that output slightly
@@ -233,7 +231,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 4
       for(focal_des4 in unique(yr_sub$exp.design.4)){
-        # focal_des4 <- "CSF"
+        # focal_des4 <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv-EL"
         
         # Subset yet again
         des4_sub <- yr_sub %>% 
@@ -251,9 +249,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
           # Average across experimental design 1 (within exp. design 2 levels)
           des4_sub %<>% 
-            dplyr::group_by(
-              dplyr::across(
-                dplyr::all_of(setdiff(x = names(trt_sub), 
+            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                             .groups = "drop")
@@ -272,17 +268,19 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
           # Average across experimental design 2 (within exp. design 3 levels)
           des4_sub %<>% 
-            dplyr::group_by(
-              dplyr::across(
-                dplyr::all_of(setdiff(x = names(trt_sub), 
+            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                             .groups = "drop")
           
         } # Close conditional aggregation
         
+        # Ditch lower design levels
+        des4_ready <- des4_sub %>% 
+          dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:3)))
+
         # Calculate beta dispersion
-        des4_beta <- calc_betadisp(df = des4_sub, floor = min_reps,
+        des4_beta <- calc_betadisp(df = des4_ready, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
                                    dist_method = pref_dist_method, result_prefix = "exp.design.4") %>% 
           # Wrangle that output slightly
@@ -299,7 +297,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 4
       for(focal_name in unique(yr_sub$exp.name)){
-        # focal_name <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+        # focal_name <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv-EL"
         
         # Subset yet again
         name_sub <- yr_sub %>% 
@@ -316,9 +314,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
            length(unique(name_sub$exp.design.2)) > 1){
           # Average across experimental design 1 (within exp. design 2 levels)
           name_sub %<>% 
-            dplyr::group_by(
-              dplyr::across(
-                dplyr::all_of(setdiff(x = names(trt_sub), 
+            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                             .groups = "drop")
@@ -336,9 +332,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
            length(unique(name_sub$exp.design.3)) > 1){
           # Average across experimental design 2 (within exp. design 3 levels)
           name_sub %<>% 
-            dplyr::group_by(
-              dplyr::across(
-                dplyr::all_of(setdiff(x = names(trt_sub), 
+            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
                             .groups = "drop")
@@ -357,9 +351,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
           # Average across experimental design 3 (within exp. design 4 levels)
           name_sub %<>% 
-            dplyr::group_by(
-              dplyr::across(
-                dplyr::all_of(setdiff(x = names(trt_sub), 
+            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
                                       y = c("exp.design.3", "exp.design.2", 
                                             "exp.design.1", "abundance"))))) %>% 
             dplyr::summarize(abundance = mean(abundance, na.rm = T),
@@ -367,8 +359,12 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
         } # Close conditional aggregation
         
+        # Ditch lower design levels
+        name_ready <- name_sub %>% 
+          dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:4)))
+
         # Calculate beta dispersion
-        name_beta <- calc_betadisp(df = name_sub, floor = min_reps,
+        name_beta <- calc_betadisp(df = name_ready, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
                                    dist_method = pref_dist_method, result_prefix = "exp.name") %>% 
           # Wrangle that output slightly
