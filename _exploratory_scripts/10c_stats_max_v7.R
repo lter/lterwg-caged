@@ -50,7 +50,7 @@ rm(list = ls()); gc()
 
 options(scipen = 1)  # fixed notation for ≥1e-4; scientific for ≤1e-5
 
-source(file.path("10c_helpers.R"))
+source(file.path("_exploratory_scripts/10c_helpers.R"))
 
 ## ------------------------------------------- ##
 # Load Data ----
@@ -415,6 +415,24 @@ plot_covariate_effects(mod7b, caged_beta, "mod7b_latitude")
 #       known duration + known area) — caged_beta_mod8.
 # VIF checked on a main-effects-only version of Mod 8 (interactions inflate VIF
 # artifactually). All predictors < 5 — no collinearity concerns.
+
+mod8 <- glmmTMB(
+  betadisp_t ~
+    cage.treatment_std * var_aq.or.terr +
+    cage.treatment_std * var_succ.vs.late +
+    cage.treatment_std * var_consumer.metabolism +
+    cage.treatment_std * scale(exclusion.duration) +
+    cage.treatment_std * scale(abs.lat) +
+    cage.treatment_std * scale(log.area) +
+    scale(gamma.richness_exp.name) +
+    scale(betadisp.sample.size) +
+    (1 | var_upper.source / exp.name),
+  #dispformula = ~ abs.lat + var_aq.or.terr,
+  family  = beta_family(link = "probit"),
+  control = ctrl,
+  data    = caged_beta_mod8
+)
+
 
 mod8 <- glmmTMB(
   betadisp_t ~
