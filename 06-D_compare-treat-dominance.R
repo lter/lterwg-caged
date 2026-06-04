@@ -38,11 +38,23 @@ dplyr::glimpse(dom.diff_v02)
 ## ------------------------------------------- ##
 # Streamline Data ----
 ## ------------------------------------------- ##
+# Identify the grouping columns (we'll use this twice)
+diff_groupcols <- c("source", "organization", "site", 
+                    "excluded.group", "measured.group", 
+                    "exp.name","dominance_design.level")
+
 
 # Drop columns that are completely empty (i.e., "exp.design.#" columns)
 dom.diff_v03 <- dom.diff_v02 %>% 
-  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.))))
-
+  dplyr::select(-dplyr::where(fn = ~ all(nchar(.) == 0 | is.na(.)))) %>%
+# Summarize within treatments/etc.
+dplyr::group_by(dplyr::across(
+  dplyr::all_of(c(diff_groupcols, "cage.treatment_std"))
+)) %>% 
+  dplyr::summarize(dominance = mean(dominance, na.rm = TRUE),
+                   .groups = "drop")
+  
+  
 # Check structure
 dplyr::glimpse(dom.diff_v03)
 
