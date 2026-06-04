@@ -24,12 +24,8 @@ rm(list = ls()); gc()
 ## ------------------------------------------- ##
 
 # Read in relevant data file
-betadisp_v1 <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_finest-scales.csv"))
-#effectsizes_v1 <- read.csv(file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
-# this one doesn't work for now 
-
-effectsizes_v1 <- read.csv(file.path("data", "08_caged_experiment-level-everything_fine-scales.csv"))
-# can use this old version for now for it to work - it all seems correct still 
+betadisp_v1 <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_fine-scales.csv"))
+effectsizes_v1 <- read.csv(file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
 
 # Check structure
 dplyr::glimpse(betadisp_v1)
@@ -37,16 +33,18 @@ dplyr::glimpse(effectsizes_v1)
 
 
 # Check number of sources
-unique(effectsizes_v1$source) # 118
-unique(effectsizes_v1$exp.name) # 356
-# this seems wrong 
+unique(effectsizes_v1$source) # 117
+unique(effectsizes_v1$exp.name) # 347
+
 
 unique(betadisp_v1$source) # 117
 unique(betadisp_v1$exp.name) # 347
+dim(betadisp_v1) # 13964    44
+
 
 # Check number of rows and dataframe
-dim(effectsizes_v1) # 1556   43
-dim(effectsizes_v1) # 1556   43
+dim(effectsizes_v1) #637  50
+dim(effectsizes_v1) #637  50
 # so the effect size needs to be set to only unique 
 
 dim(betadisp_v1) # 13964    42
@@ -55,14 +53,14 @@ dim(betadisp_v1) # 13964    42
 colnames(effectsizes_v1)
 
 effectsizes_v2 <- effectsizes_v1 %>%
-  select(source, exp.name, lat,var_succ.vs.late,
-         var_upper.source, gamma.richness_exp.name,
-         var_aq.or.terr,var_exclusion.duration.continuousyears,
-         var_ecotype1, var_resource.type.category,
+  select(source, exp.name, #lat,var_succ.vs.late,
+         # var_upper.source, gamma.richness_exp.name,
+         # var_aq.or.terr,var_exclusion.duration.continuousyears,
+         # var_ecotype1, var_resource.type.category,
          contains("lrr")) %>%
 distinct()
 
-dim(effectsizes_v2) # 760  12 (wrong - should be 347)
+dim(effectsizes_v2) # 636
 
 
 
