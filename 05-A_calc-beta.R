@@ -401,16 +401,15 @@ dplyr::glimpse(beta_allscales)
 beta_finelist <- list()
 
 # Pare down the 'all scales' output slightly (to only instances with beta dispersion
-beta_fine_v1 <- beta_allscales %>% 
-  dplyr::filter(is.na(betadisp.comm.dist) != T)
+beta_fine_v1 <- dplyr::filter(beta_allscales, !is.na(betadisp.comm.dist))
 
 # To do this, we'll loop across sources and experiments
 for(finest_src in sort(unique(beta_allscales$source))){
   
   # Subset to that source
-  beta_fine_src <- beta_fine_v1 %>% 
-    dplyr::filter(source == finest_src)
-  
+  beta_fine_src <- dplyr::filter(beta_fine_v1, source == finest_src)
+
+  # Loop across exp.names
   for(finest_name in sort(unique(beta_fine_src$exp.name))){
     # finest_name <- "Palmas_Exposed-Cool"
     
@@ -418,8 +417,7 @@ for(finest_src in sort(unique(beta_allscales$source))){
     message("Identifying finest scale for '", finest_name, "'")
     
     # Subset the beta dispersion table to only this source
-    beta_fine_sub <- beta_fine_src %>% 
-      dplyr::filter(exp.name == finest_name)
+    beta_fine_sub <- dplyr::filter(beta_fine_src, exp.name == finest_name)
     
     # Make another subset for each design level
     beta_fine_sub_des1 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.1")
