@@ -43,25 +43,14 @@ dim(betadisp_v1) # 13964    44
 
 
 # Check number of rows and dataframe
-dim(effectsizes_v1) #637  50
-dim(effectsizes_v1) #637  50
+dim(effectsizes_v1) #347  46
+dim(effectsizes_v1) #347  46
 # so the effect size needs to be set to only unique 
 
 dim(betadisp_v1) # 13964    42
 dim(betadisp_v1) # 13964    42
 
 colnames(effectsizes_v1)
-
-effectsizes_v2 <- effectsizes_v1 %>%
-  select(source, exp.name, #lat,var_succ.vs.late,
-         # var_upper.source, gamma.richness_exp.name,
-         # var_aq.or.terr,var_exclusion.duration.continuousyears,
-         # var_ecotype1, var_resource.type.category,
-         contains("lrr")) %>%
-distinct()
-
-dim(effectsizes_v2) # 636
-
 
 
 ## ------------------------------------------- ##

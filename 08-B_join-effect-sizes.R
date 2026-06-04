@@ -91,9 +91,8 @@ dplyr::glimpse(join_v1)
 # Join 'allscales' alpha & dominance data
 join_v2 <- alp.diff_v1 %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
-    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
-      excluded.group, measured.group, exp.name,
-      exp.design.4, exp.design.3, exp.design.2, exp.design.1, design.level))
+    by = dplyr::join_by(source, organization, site,  
+      excluded.group, measured.group, exp.name, design.level))
   
 # Check structure
 dplyr::glimpse(join_v2)
@@ -105,7 +104,7 @@ dplyr::glimpse(join_v2)
 # Combine all ancillary data (with 'all scales' on left)
 join_v3 <- join_v2 %>% 
   dplyr::left_join(x = ., y = join_v1,
-    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
+    by = dplyr::join_by(source, organization, site,
       excluded.group, measured.group, exp.name))
 
 # Check structure
