@@ -186,7 +186,8 @@ caged_beta2$var_aq.or.terr <- factor(caged_beta2$var_aq.or.terr)
 
 late.df <- caged_beta2 %>%
   filter(var_succ.vs.late == "late") %>%
-  filter(cage.treatment_std %in% c("caged", "uncaged"))
+  filter(cage.treatment_std %in% c("caged", "uncaged")) %>%
+  mutate(grassy = ifelse("grassland"))
 
 dim(late.df)
 
