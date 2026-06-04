@@ -109,7 +109,7 @@ beta_name_list <- list()
 for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                          # Manually (temporarily) removing datasets as/if needed
                          y = c(""))){
-  # focal_src <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+  # focal_src <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
@@ -119,14 +119,14 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
   
   # Loop across treatments
   for(focal_trt in unique(src_sub$cage.treatment_orig)){
-    # focal_trt <- "Exclusion"
+    # focal_trt <- "NG"
     
     # Subset again
     trt_sub <- dplyr::filter(src_sub, cage.treatment_orig == focal_trt)
     
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
-      # focal_yr <- "2011"
+      # focal_yr <- "2012"
       
       # Subset again
       yr_sub <- dplyr::filter(trt_sub, year == focal_yr)
@@ -137,7 +137,7 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across most granular level of experimental design
       for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C__1"
+        # focal_des1 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv__1"
         
         # Subset yet again
         des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
@@ -160,11 +160,10 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 2
       for(focal_des2 in unique(yr_sub$exp.design.2)){
-        # focal_des2 <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv__C"
+        # focal_des2 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
         
         # Subset yet again
-        des2_sub <- yr_sub %>% 
-          dplyr::filter(exp.design.2 == focal_des2)
+        des2_sub <- dplyr::filter(yr_sub, exp.design.2 == focal_des2)
         
         # Calculate beta dispersion
         des2_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
@@ -184,11 +183,10 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 3
       for(focal_des3 in unique(yr_sub$exp.design.3)){
-        # focal_des3 <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv-EL"
+        # focal_des3 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
         
         # Subset yet again
-        des3_sub <- yr_sub %>% 
-          dplyr::filter(exp.design.3 == focal_des3)
+        des3_sub <- dplyr::filter(yr_sub, exp.design.3 == focal_des3)
         
         # Identify the number of psuedoreplicates at lower design levels
         des3_pseudorep_ct <- des3_sub %>% 
@@ -208,13 +206,9 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
                              .groups = "drop")
           
         } # Close conditional aggregation
-
-        # Ditch lower design levels
-        des3_ready <- des3_sub %>% 
-          dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:2)))
         
         # Calculate beta dispersion
-        des3_beta <- calc_betadisp(df = des3_ready, floor = min_reps,
+        des3_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
                                    dist_method = pref_dist_method, result_prefix = "exp.design.3") %>% 
           # Wrangle that output slightly
@@ -231,11 +225,10 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 4
       for(focal_des4 in unique(yr_sub$exp.design.4)){
-        # focal_des4 <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv-EL"
+        # focal_des4 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
         
         # Subset yet again
-        des4_sub <- yr_sub %>% 
-          dplyr::filter(exp.design.4 == focal_des4)
+        des4_sub <- dplyr::filter(yr_sub, exp.design.4 == focal_des4)  
         
         # Identify the number of psuedoreplicates at lower design levels
         des4_pseudorep_ct <- des4_sub %>% 
@@ -275,12 +268,8 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
         } # Close conditional aggregation
         
-        # Ditch lower design levels
-        des4_ready <- des4_sub %>% 
-          dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:3)))
-
         # Calculate beta dispersion
-        des4_beta <- calc_betadisp(df = des4_ready, floor = min_reps,
+        des4_beta <- calc_betadisp(df = des4_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
                                    dist_method = pref_dist_method, result_prefix = "exp.design.4") %>% 
           # Wrangle that output slightly
@@ -297,11 +286,10 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
       
       # Loop across experimental design level 4
       for(focal_name in unique(yr_sub$exp.name)){
-        # focal_name <- "gilson_southafrica_intertidalexclusion_2021_grazers_inverts.csv-EL"
+        # focal_name <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
         
         # Subset yet again
-        name_sub <- yr_sub %>% 
-          dplyr::filter(exp.name == focal_name)
+        name_sub <- dplyr::filter(yr_sub, exp.name == focal_name)
         
         # Identify the number of psuedoreplicates at lower design levels
         name_pseudorep_ct <- name_sub %>% 
@@ -359,12 +347,8 @@ for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
           
         } # Close conditional aggregation
         
-        # Ditch lower design levels
-        name_ready <- name_sub %>% 
-          dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:4)))
-
         # Calculate beta dispersion
-        name_beta <- calc_betadisp(df = name_ready, floor = min_reps,
+        name_beta <- calc_betadisp(df = name_sub, floor = min_reps,
                                    taxa_col = "taxa", abun_col = "abundance",
                                    dist_method = pref_dist_method, result_prefix = "exp.name") %>% 
           # Wrangle that output slightly
