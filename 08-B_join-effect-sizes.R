@@ -42,7 +42,7 @@ dplyr::glimpse(gam.diff_v1)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_expname.csv")) %>% 
+alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_allscales.csv")) %>% 
   dplyr::rename(design.level = alpha.diversity_design.level)
 
 # Check structure
@@ -53,7 +53,7 @@ dplyr::glimpse(alp.diff_v1)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_expname.csv")) %>% 
+dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_allscales.csv")) %>% 
   dplyr::rename(design.level = dominance_design.level)
 
 # Check structure
@@ -70,21 +70,7 @@ beta.diff_v1 <- read.csv(file = file.path("data", "06-A_caged_mean-beta-diff_all
     .fn = ~ gsub("within.cage.treat_", "", x = .))
 
 # Check structure of one
-dplyr::glimpse(beta.diff_v1) # 2410
-
-# Do some post-processing here to get the format to match alpha/dominance LRR data
-beta.diff_v2 <- beta.diff_v1 %>% 
-  tidyr::pivot_longer(cols = dplyr::starts_with("betadisp")) %>% 
-  dplyr::mutate(new.name = paste0(name, "_", cage.treatment_std)) %>% 
-  dplyr::select(-name, -cage.treatment_std) %>% 
-  tidyr::pivot_wider(names_from = new.name, values_from = value) %>% 
-  dplyr::relocate(dplyr::contains("mean_"), dplyr::contains("n_"),
-    dplyr::contains("sd_"), dplyr::contains("se_"), 
-    dplyr::contains("diff_"), dplyr::contains("lrr_"),
-    .after = design.level)
-
-# Check structure of one
-dplyr::glimpse(beta.diff_v2)
+dplyr::glimpse(beta.diff_v1)
 
 ## ------------------------------------------- ##
 # Join Gamma & Metadata ----
@@ -99,53 +85,41 @@ join_v1 <- meta_v1 %>%
 dplyr::glimpse(join_v1)
 
 ## ------------------------------------------- ##
-# Join Beta (Means), Alpha & Dominance ----
+# Join Alpha & Dominance ----
 ## ------------------------------------------- ##
 
-glimpse(beta.diff_v2)
-glimpse(alp.diff_v1)
-
-# Join data available at all/multiple design levels
-join_v2 <- beta.diff_v2 %>% 
-  dplyr::left_join(x = ., y = alp.diff_v1,
-    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, 
-      exp.name, design.level)) %>% 
+# Join 'allscales' alpha & dominance data
+join_v2 <- alp.diff_v1 %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
-    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, 
-      exp.name, design.level, project.name, sampling.years, cage.treatment_orig)) %>%
-  dplyr::relocate(project.name, sampling.years, dplyr::starts_with("exp.design."),
-    .before = design.level)
-
+    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
+      excluded.group, measured.group, exp.name,
+      exp.design.4, exp.design.3, exp.design.2, exp.design.1, design.level))
+  
 # Check structure
 dplyr::glimpse(join_v2)
 
 ## ------------------------------------------- ##
-# Join Alpha, Beta (Means), Gamma, Dominance, & Meta ----
+# Join Gamma, Alpha, Meta, and Dominance ----
 ## ------------------------------------------- ##
 
-# Join all preceding data
-join_v3 <- join_v1 %>% 
-  dplyr::left_join(x = ., y = join_v2,
-    by = dplyr::join_by(source, exp.name, organization, site, project.name, 
-      sampling.years, excluded.group, measured.group)) %>% 
-  dplyr::relocate(year:design.level,
-    .after = measured.group)
+# Combine all ancillary data (with 'all scales' on left)
+join_v3 <- join_v2 %>% 
+  dplyr::left_join(x = ., y = join_v1,
+    by = dplyr::join_by(source, organization, site, project.name, sampling.years, 
+      excluded.group, measured.group, exp.name))
 
 # Check structure
 dplyr::glimpse(join_v3)
 
 ## ------------------------------------------- ##
-# Reshape to Long Format ----
+# Join Beta (Means) with Everything ----
 ## ------------------------------------------- ##
 
-# Get a long-format version to join on beta dispersion (non-averaged)
+# Join everything with beta differences (again, everything othat than beta in left)
 join_v4 <- join_v3 %>% 
-  tidyr::pivot_longer(cols = dplyr::ends_with("caged")) %>% 
-  tidyr::separate_wider_delim(cols = name, delim = "_",
-    names = c("metric", "cage.treatment_std"), cols_remove = TRUE) %>% 
-  tidyr::pivot_wider(names_from = metric, values_from = value) %>% 
-  dplyr::relocate(cage.treatment_std,
-    .after = year)
+  dplyr::left_join(x = ., y = beta.diff_v1,
+    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, 
+      exp.name, design.level))
 
 # Check structure
 dplyr::glimpse(join_v4)
@@ -159,13 +133,13 @@ join_list <- list()
 
 # The prior object includes all calculable scales, let's make a 'finest scales' variant
 for(join_src.name in sort(unique(join_v4$source))){
-  # join_src.name <- "gex_junnerkoeland_bakkerjunnerkoeland_2001_cattle_plants.csv"
+  # join_src.name <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
   
   # Subset to that source
   join_src <- dplyr::filter(join_v4, source == join_src.name)
   
   for(join_exp.name in sort(unique(join_src$exp.name))){
-    # join_exp.name <- "gex_junnerkoeland_bakkerjunnerkoeland_2001_cattle_plants.csv"
+    # join_exp.name <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
     
     # Progress message
     message("Identifying finest scale for '", join_exp.name, "'")
@@ -181,27 +155,17 @@ for(join_src.name in sort(unique(join_v4$source))){
     join_name <- dplyr::filter(join_exp, design.level == "exp.name")
     
     # Work through the design levels sequentially (lowest to highest) to identify finest
-    if(all(c("caged", "uncaged") %in% unique(join_des1$cage.treatment_std))){
-      
-      # Add to list
+    if(any(!is.na(join_des1$betadisp.mean.diff))){
       join_list[[paste0(join_src.name, join_exp.name)]] <- join_des1
-    
-    # Do the same for design 2
-    } else if(all(c("caged", "uncaged") %in% unique(join_des2$cage.treatment_std))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des2 }
-    
-    # And design 3
-    else if(all(c("caged", "uncaged") %in% unique(join_des3$cage.treatment_std))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des3 }
-    
-    # And design 4
-    else if(all(c("caged", "uncaged") %in% unique(join_des4$cage.treatment_std))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des4 }
-    
-    # And the experiment name
-    else if(all(c("caged", "uncaged") %in% unique(join_name$cage.treatment_std))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_name }
-    
+    } else if(any(!is.na(join_des2$betadisp.mean.diff))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des2
+    } else if(any(!is.na(join_des3$betadisp.mean.diff))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des3
+    } else if(any(!is.na(join_des4$betadisp.mean.diff))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des4
+    } else if(any(!is.na(join_name$betadisp.mean.diff))){
+      join_list[[paste0(join_src.name, join_exp.name)]] <- join_name
+    }
   } # Close 'exp.name' loop
 } # Close 'source' loop
 
