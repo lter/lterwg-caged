@@ -6,7 +6,7 @@
 #   affects beta dispersion, moderated by ecological predictors.
 #   Addresses project hypotheses (McDevitt-Irwin et al.).
 #
-# CHANGES FROM v7:
+# CHANGES FROM v7-v8:
 #   - Mod 2b (gamma richness sensitivity check) removed
 #   - Mods 5 (duration) and 6 (area) dropped; both variables folded
 #     into the standard covariate set for ALL models
@@ -349,8 +349,8 @@ mod5 <- glmmTMB(
     scale(betadisp.sample.size) +
     scale(exclusion.duration) +
     scale(abs.lat) +
-    scale(log.area) +
-    (1 | var_upper.source / exp.name),
+    scale(log.area) +  # Note that aquatic-only data can't accommodate a random effect structure of (1 | var_upper.source / exp.name)
+    (1 |  exp.name), 
   family  = beta_family(link = "probit"),
   control = ctrl,
   data    = caged_beta_aq_tax
@@ -417,7 +417,8 @@ mod7 <- glmmTMB(
     scale(exclusion.duration) +
     scale(abs.lat) +
     scale(log.area) +
-    (1 | var_upper.source / exp.name),
+    # Note that aquatic-only data can't accommodate a random effect structure of (1 | var_upper.source / exp.name)
+    (1 |  exp.name), 
   family  = beta_family(link = "probit"),
   control = ctrl,
   data    = caged_beta_aq_met
