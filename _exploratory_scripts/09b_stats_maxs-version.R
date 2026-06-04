@@ -10,9 +10,9 @@
 
 # Load libraries (performance might be within easystats)
 librarian::shelf(tidyverse, ltertools, lme4, lmerTest, glmmTMB, DHARMa,
-                 performance, lubridate, car, broom.mixed, #easystats, 
+                 performance, easystats, lubridate, car, broom.mixed,
                  njlyon0/supportR, MuMIn, visreg, grid, gridExtra,
-                 emmeans, tidymodels, qqplotr, sjPlot, effects) #, update_all= TRUE) 
+                 emmeans, tidymodels, qqplotr, sjPlot) #, update_all= TRUE) 
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -20,27 +20,24 @@ source(file = file.path("00_setup.R"))
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
+
 ## ------------------------------------------- ##
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
-caged_beta <- read.csv(file.path("data", "08_caged_w.meta-beta-disp_finest-scales.csv"))
+
+caged_beta <- read.csv(file.path("data", "08_caged_prepped-beta-dispersion.csv"))
+
 
 dim(caged_effectsize) # 417 rows
-dim(caged_beta) # 13,964  rows
+dim(caged_beta) # 12905  rows
 
 # Check number of sources
 unique(caged_effectsize$exp.name) # 346
-unique(caged_beta$exp.name) #347
-dim(caged_effectsize) #417
+unique(caged_beta$exp.name) #346
+dim(caged_effectsize)
 
-
-# Drop partial and uncertain levels for column 'cage.treatment_std'
-caged_beta <- caged_beta %>%
-  dplyr::filter(cage.treatment_std != 'partial') %>%
-  dplyr::filter(cage.treatment_std != 'uncertain') %>%
-  droplevels()
 
 ## ------------------------------------------- ##
 # Latitude Models  ----
@@ -104,7 +101,7 @@ table(caged_beta$var_aq.or.terr)
 caged_beta2 <- caged_beta %>% 
   dplyr::filter(var_aq.or.terr != "") %>% 
   droplevels()
-unique(caged_beta2$exp.name) # 347, none are dropped
+unique(caged_beta2$exp.name) # 346, none are dropped
 
 table(caged_beta2$var_aq.or.terr) #Good!
 
@@ -118,7 +115,11 @@ caged_beta2 <- caged_beta2[!is.na(caged_beta2$lat), ]
 
 table(is.na(caged_beta2$lat)) #Good!
 
-unique(caged_beta2$exp.name) # 347
+unique(caged_beta2$exp.name) # 345
+# what did we lose here - burkepile_floridakeys_reefexclosure_20042005_fish_benthic.csv
+
+
+
 
 # Create a column for absolute value of latitude
 caged_beta2 <- caged_beta2 %>%
@@ -139,18 +140,24 @@ caged.df <- caged_beta2 %>%
   filter(cage.treatment_std == "caged") %>%
   droplevels()
 
+# Check data: Collinearity between x1 and x2?
+ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
+  geom_boxplot()
+
+ggplot(data = caged.df, aes(x = var_aq.or.terr, y = abs.lat)) +
+  geom_boxplot()
+
+# Note that terrestrial locations are higher in latitude than aquatic ones, on average, by about 10-20 degrees
+
 # Check data: General relationships between y and x1 or x2
 ggplot(data = caged_beta2, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) +
   facet_grid(cage.treatment_std ~ var_aq.or.terr) 
-
 ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
-
 ggplot(data = caged_beta2, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
-
 ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_transform)) +
   geom_boxplot() +
   facet_wrap( ~ var_aq.or.terr) 
@@ -158,11 +165,9 @@ ggplot(data = caged_beta2, aes(x = cage.treatment_std, y = betadisp.comm.dist_tr
 ggplot(data = uncaged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) 
-
 ggplot(data = uncaged.df, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm') 
-
 ggplot(data = uncaged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
 
@@ -174,11 +179,9 @@ ggplot(data = uncaged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
 ggplot(data = caged.df, aes(x = lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm', formula = y ~ poly(x, 2)) 
-
 ggplot(data = caged.df, aes(x = abs.lat, y = betadisp.comm.dist_transform)) +
   geom_point() +
   geom_smooth(method = 'lm')
-
 ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform)) +
   geom_boxplot()
 
@@ -201,236 +204,42 @@ ggplot(data = caged.df, aes(x = var_aq.or.terr, y = betadisp.comm.dist_transform
 
 # In the end, the probit model had the lowest AIC by at least 10-20 units and was best behaved in DHARMa diagnostics.
 
+
 # check sample size
-dim(caged_beta2) # 12889    45
-unique(caged_beta2$exp.name) # 347 
+dim(caged_beta2) # 12889    28
+unique(caged_beta2$exp.name) # 345 (just lost the burkepile one)
 unique(caged_beta2$source) # 116
 # this is the sample size after dropping missing metadata 
+
+# which sources and experiment names make it through the pipeline 
+test<- caged_beta2 %>% select(exp.name, source) %>% distinct()
+
+write.csv(test, "data/final.data.through.pipeline.csv")
+
+
 
 caged_beta2 %>%
   group_by(var_aq.or.terr,var_succ.vs.late) %>%
   summarize(n())
 
-# Caged vs Uncaged Model: Ecotype
-caging.betamod.habitat <- glmmTMB(betadisp.comm.dist  ~ 
-                                    cage.treatment_std * var_ecotype1 +
-                                    scale(gamma.richness_exp.name) + 
-                                    scale(betadisp.sample.size) +
-                                    (1 | var_upper.source / exp.name), 
-                                  dispformula = ~ cage.treatment_std * var_ecotype1 + abs.lat,
-                                  family = ordbeta(link = 'probit'),
-                                  control = glmmTMBControl(optimizer = optim, 
-                                                           optArgs = list(method = "BFGS")), 
-                                  data = caged_beta2) 
-summary(caging.betamod.habitat)    
-car::Anova(caging.betamod.habitat, type = "II")
 
-## ------------------------------------------- ##
-# DHARMa Validation: caging.betamod.habitat ----
-## ------------------------------------------- ##
+# Caged vs Uncaged Model
+caging.betamod <- glmmTMB(betadisp.comm.dist_transform ~ 
+                            cage.treatment_std +
+                             # accounting for gamma richness and sample size
+                             scale(gamma.richness) + scale(betadisp.sample.size) +
+                             (1|exp.name), 
+                           #dispformula = ~ var_aq.or.terr, #+ abs.lat,
+                           family = beta_family(link = "probit"),
+                           control = glmmTMBControl(optimizer = optim, 
+                                                    optArgs = list(method = "BFGS")), 
+                           # Or use nlminb, or bobyqa via nloptr
+                           data = caged_beta2) 
 
-sim_out.habitat <- simulateResiduals(fittedModel = caging.betamod.habitat, n = 1000, plot = FALSE)
-plot(sim_out.habitat)
-testUniformity(sim_out.habitat)
-testDispersion(sim_out.habitat)
-testZeroInflation(sim_out.habitat)
-plotResiduals(sim_out.habitat, form = caged_beta2$cage.treatment_std)
-plotResiduals(sim_out.habitat, form = caged_beta2$var_ecotype1)
-plotResiduals(sim_out.habitat, form = caged_beta2$gamma.richness_exp.name)
-plotResiduals(sim_out.habitat, form = caged_beta2$betadisp.sample.size)
-plotResiduals(sim_out.habitat, form = caged_beta2$abs.lat)
-plotResiduals(sim_out.habitat, form = as.factor(caged_beta2$var_upper.source))
-plotResiduals(sim_out.habitat, form = as.factor(caged_beta2$exp.name))
-
-## ------------------------------------------- ##
-# Plot 1: Model predictions over raw data ----
-## ------------------------------------------- ##
-emm.habitat <- emmeans(caging.betamod.habitat,
-                       specs  = ~ cage.treatment_std * var_ecotype1,
-                       type   = "response")
-emm_df.habitat <- as.data.frame(emm.habitat)
-
-ggplot() +
-  geom_jitter(data = caged_beta2,
-              aes(x = var_ecotype1,
-                  y = betadisp.comm.dist,
-                  color = cage.treatment_std),
-              alpha = 0.15, size = 0.8,
-              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.6)) +
-  geom_pointrange(data = emm_df.habitat,
-                  aes(x = var_ecotype1,
-                      y = response,
-                      ymin = asymp.LCL,
-                      ymax = asymp.UCL,
-                      color = cage.treatment_std),
-                  position = position_dodge(width = 0.6),
-                  size = 0.8) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = "Ecotype", y = "Beta dispersion") +
-  theme_classic(base_size = 13) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-
-## ------------------------------------------- ##
-# Plot 2: Partial regression plots ----
-## ------------------------------------------- ##
-ggplot(emm_df.habitat, aes(x = cage.treatment_std,
-                           y = response,
-                           ymin = asymp.LCL,
-                           ymax = asymp.UCL,
-                           color = cage.treatment_std,
-                           group = var_ecotype1)) +
-  geom_pointrange(size = 0.7) +
-  geom_line(color = "grey50") +
-  facet_wrap(~ var_ecotype1, scales = "free_y") +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = NULL, y = "Predicted beta dispersion\n(± 95% CI)") +
-  theme_classic(base_size = 12) +
-  theme(strip.background = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-caged_beta2$fitted_vals.habitat   <- predict(caging.betamod.habitat, type = "response")
-caged_beta2$partial_resid.habitat <- caged_beta2$betadisp.comm.dist -
-  caged_beta2$fitted_vals.habitat
-
-ggplot(caged_beta2, aes(x = gamma.richness_exp.name,
-                        y = partial_resid.habitat + fitted_vals.habitat,
-                        color = cage.treatment_std)) +
-  geom_point(alpha = 0.15, size = 0.7) +
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~ var_ecotype1) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = "Gamma richness (experiment-level)", y = "Beta dispersion (partial)") +
-  theme_classic(base_size = 12) +
-  theme(strip.background = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-ggplot(caged_beta2, aes(x = betadisp.sample.size,
-                        y = partial_resid.habitat + fitted_vals.habitat,
-                        color = cage.treatment_std)) +
-  geom_point(alpha = 0.15, size = 0.7) +
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~ var_ecotype1) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = "Sample size (replicates per treatment)", y = "Beta dispersion (partial)") +
-  theme_classic(base_size = 12) +
-  theme(strip.background = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-
-## ============================================================== ##
-# Caged vs Uncaged Model: Aquatic vs. Terrestrial
-## ============================================================== ##
-caging.betamod.aqterr <- glmmTMB(betadisp.comm.dist  ~ 
-                                   cage.treatment_std * var_aq.or.terr +
-                                   scale(gamma.richness_exp.name) + 
-                                   scale(betadisp.sample.size) +
-                                   (1 | var_upper.source / exp.name), 
-                                 dispformula = ~ cage.treatment_std * var_aq.or.terr + abs.lat,
-                                 family = ordbeta(link = 'probit'),
-                                 control = glmmTMBControl(optimizer = optim, 
-                                                          optArgs = list(method = "BFGS")), 
-                                 data = caged_beta2) 
-summary(caging.betamod.aqterr)    
-car::Anova(caging.betamod.aqterr, type = "II")
-
-## ------------------------------------------- ##
-# DHARMa Validation: caging.betamod.aqterr ----
-## ------------------------------------------- ##
-sim_out.aqterr <- simulateResiduals(fittedModel = caging.betamod.aqterr, n = 1000, plot = FALSE)
-plot(sim_out.aqterr)
-testUniformity(sim_out.aqterr)
-testDispersion(sim_out.aqterr)
-testZeroInflation(sim_out.aqterr)
-plotResiduals(sim_out.aqterr, form = caged_beta2$cage.treatment_std)
-plotResiduals(sim_out.aqterr, form = caged_beta2$var_aq.or.terr)
-plotResiduals(sim_out.aqterr, form = caged_beta2$gamma.richness_exp.name)
-plotResiduals(sim_out.aqterr, form = caged_beta2$betadisp.sample.size)
-plotResiduals(sim_out.aqterr, form = caged_beta2$abs.lat)
-plotResiduals(sim_out.aqterr, form = as.factor(caged_beta2$var_upper.source))
-plotResiduals(sim_out.aqterr, form = as.factor(caged_beta2$exp.name))
-
-## ------------------------------------------- ##
-# Plot 1: Model predictions over raw data ----
-## ------------------------------------------- ##
-emm.aqterr <- emmeans(caging.betamod.aqterr,
-                      specs  = ~ cage.treatment_std * var_aq.or.terr,
-                      type   = "response")
-emm_df.aqterr <- as.data.frame(emm.aqterr)
-
-ggplot() +
-  geom_jitter(data = caged_beta2,
-              aes(x = var_aq.or.terr,
-                  y = betadisp.comm.dist,
-                  color = cage.treatment_std),
-              alpha = 0.15, size = 0.8,
-              position = position_jitterdodge(jitter.width = 0.2, dodge.width = 0.6)) +
-  geom_pointrange(data = emm_df.aqterr,
-                  aes(x = var_aq.or.terr,
-                      y = response,
-                      ymin = asymp.LCL,
-                      ymax = asymp.UCL,
-                      color = cage.treatment_std),
-                  position = position_dodge(width = 0.6),
-                  size = 0.8) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = "Ecosystem type", y = "Beta dispersion") +
-  theme_classic(base_size = 13)
-
-## ------------------------------------------- ##
-# Plot 2: Partial regression plots ----
-## ------------------------------------------- ##
-ggplot(emm_df.aqterr, aes(x = cage.treatment_std,
-                          y = response,
-                          ymin = asymp.LCL,
-                          ymax = asymp.UCL,
-                          color = cage.treatment_std,
-                          group = var_aq.or.terr)) +
-  geom_pointrange(size = 0.7) +
-  geom_line(color = "grey50") +
-  facet_wrap(~ var_aq.or.terr) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = NULL, y = "Predicted beta dispersion\n(± 95% CI)") +
-  theme_classic(base_size = 12) +
-  theme(strip.background = element_blank(),
-        axis.text.x = element_text(angle = 35, hjust = 1))
-
-caged_beta2$fitted_vals.aqterr   <- predict(caging.betamod.aqterr, type = "response")
-caged_beta2$partial_resid.aqterr <- caged_beta2$betadisp.comm.dist -
-  caged_beta2$fitted_vals.aqterr
-
-ggplot(caged_beta2, aes(x = gamma.richness_exp.name,
-                        y = partial_resid.aqterr + fitted_vals.aqterr,
-                        color = cage.treatment_std)) +
-  geom_point(alpha = 0.15, size = 0.7) +
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~ var_aq.or.terr) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = "Gamma richness (experiment-level)", y = "Beta dispersion (partial)") +
-  theme_classic(base_size = 12) +
-  theme(strip.background = element_blank())
-
-ggplot(caged_beta2, aes(x = betadisp.sample.size,
-                        y = partial_resid.aqterr + fitted_vals.aqterr,
-                        color = cage.treatment_std)) +
-  geom_point(alpha = 0.15, size = 0.7) +
-  geom_smooth(method = "lm", se = TRUE) +
-  facet_wrap(~ var_aq.or.terr) +
-  scale_color_manual(values = c("caged" = "royalblue", "uncaged" = "darkorange"),
-                     name = "Treatment") +
-  labs(x = "Sample size (replicates per treatment)", y = "Beta dispersion (partial)") +
-  theme_classic(base_size = 12) +
-  theme(strip.background = element_blank())
-
-
-# MAX STOPPED HERE 6/2/26
-
+summary(caging.betamod)    
+car::Anova(caging.betamod, type = "II") # interaction is significant
+library(effects)
+plot(allEffects(caging.betamod))
 
 
 # MODEL 1: beta dispersion ~ aqu.terr * abslat + gamma + samplesize + (1/exp.name) 
