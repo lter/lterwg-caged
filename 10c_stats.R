@@ -25,9 +25,14 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
+
+#CAUTION CAUTION .... The data I used for the models on 6/4 may not be exactly what is below in these csvs. I had to circumvent the workflow to get these habitat types ready for our last day. it should be 08_caged_experiment-level-everything_fine-scales.csv, then run through the code in 09 prepare for stats. But of note is that I did not run this below code
+
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 
 caged_beta <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_finest-scales.csv"))
+
+rawbetas_v1 <- read.csv("~/Documents/_data/CAGED/data/08-B_caged_expname-effect-size_fine-scales.csv")
 
 dim(caged_effectsize) # 347 rows
 dim(caged_beta) # 13964 rows
@@ -110,6 +115,8 @@ car::Anova(lrr.mod1, type =2)
 #abs.lat         3.5727  1    0.05874 .
 #var_aq.or.terr2 0.5874  1    0.44344  
 
+coeff(lrr.mod1$lat_ecotype)
+
 car::Anova(lrr.mod1, test.statistic = "F")
 #Response: betadisp.mean.lrr
 #F Df Df.res  Pr(>F)  
@@ -119,8 +126,12 @@ car::Anova(lrr.mod1, test.statistic = "F")
 library(effects)
 plot(allEffects(lrr.mod1))
 
-lrr.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat +
-               (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
+lrr.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat + 
+                   #scale(gamma.richness_exp.name) +
+                   lat_ecotype +
+                   (1|var_upper.source), 
+                 data = caged_effectsize_neweco)
+
 summary(lrr.mod2)
 glance(lrr.mod2)
 check_model(lrr.mod2)
@@ -280,13 +291,13 @@ Fig1AGrassSub =
   caged_effectsize_neweco %>% 
   filter(lat_ecotype != "") %>% 
   ggplot(aes(x = lat_ecotype, y = alpha.diversity_cage.treat.lrr)) + 
-  #geom_jitter(width = 0.01, alpha = 0.2) + 
+  geom_jitter(width = 0.01, alpha = 0.2) + 
   geom_hline(yintercept = 0, color = "black", 
              alpha = 0.3) +
   stat_summary(fun.data = "mean_cl_boot", 
                geom = "pointrange", size = 1, color = "hotpink") + 
   theme_pubr(base_size= 18) +
-  labs(x= "Ecosystem",
+  labs(x= "",
        y="Alpha Diversity LRR") +
   theme(#plot.margin = unit(c(1,1,1,1), "cm"),
     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
@@ -326,6 +337,8 @@ glance(betadom.mod1)
 check_model(betadom.mod1)
 car::Anova(betadom.mod1, type =2)
 
+car::Anova(betadom.mod1, test.statistic = "F")
+
 #Beta Div LRR ~ Dominance LRR Figure####
 Fig3BetaDom = 
   caged_effectsize_neweco %>% 
@@ -335,6 +348,8 @@ Fig3BetaDom =
               aes(color = lat_ecotype)) + 
   geom_hline(yintercept = 0, color = "black", 
              alpha = 0.7) +
+  geom_vline(xintercept = 0, color = "black", 
+             alpha = 0.3) +
   stat_smooth(method = "lm", size = 1,
               aes(color = lat_ecotype)) + 
   theme_pubr(base_size= 18) +
@@ -346,21 +361,6 @@ Fig3BetaDom =
 
 Fig3BetaDom
 
-Fig1ALat = 
-  caged_effectsize_neweco %>% 
-  filter(lat_ecotype != "") %>% 
-  ggplot(aes(x = abs(lat), y = alpha.diversity_cage.treat.lrr)) + 
-  # stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
-  geom_jitter(width = 0.05, aes(color = lat_ecotype)) + 
-  geom_hline(yintercept = 0, color = "black", 
-             alpha = 0.3) +
-  theme_pubr(base_size= 18) +
-  labs(x= "Absolute Latitude",
-       y="Alpha Diversity LRR") +
-  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
-    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
-
-Fig1ALat
 
 #Building Figure 1 for the Paper 1 fam####
 
@@ -392,6 +392,104 @@ car::Anova(domlrr.mod1, test.statistic = "F")
 
 plot(allEffects(domlrr.mod1))
 
+Fig3.5LatHabDom = 
+  caged_effectsize_neweco %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = abs.lat, y = dominance_cage.treat.lrr)) + 
+  geom_jitter(width = 0.01, alpha = 0.8, size = 1,
+              aes(color = lat_ecotype)) + 
+  geom_hline(yintercept = 0, color = "black", 
+             alpha = 0.7) +
+  #geom_vline(xintercept = 0, color = "black", 
+   #          alpha = 0.3) +
+  stat_smooth(method = "lm", size = 1,
+              aes(color = lat_ecotype)) + 
+  theme_pubr(base_size= 18) +
+  labs(x= "Absolute Latitude",
+       y= "Dominance LRR") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #legend.position = "", 
+    legend.title = element_blank())
+
+Fig3.5LatHabDom
+
+#Raw Dominance#####
+rawdom.df = rawbetas_v1 %>% 
+  mutate(lat_ecotype = 
+           case_when(var_ecotype1 == "grassland" ~ "grassy systems", 
+                     var_ecotype1 == "savanna" ~ "grassy systems",
+                     var_ecotype1 == "tundra" ~ "grassy systems",
+                     var_ecotype1 == "desert" ~ "grassy systems",
+                     var_ecotype1 == "subtidal" ~ "subtidal systems",
+                     var_ecotype1 == "coral reef" ~ "subtidal systems",
+                     #var_ecotype1 == "forest" ~ "trees", 
+                     .default = NA)) %>% 
+  filter(lat_ecotype != "")
+
+domuncaged.mod1 <- lmer(dominance.uncaged ~ 
+                      abs(lat) * lat_ecotype +
+                      (1|var_upper.source), data = rawdom.df) # 241 samples
+summary(domuncaged.mod1)
+glance(domuncaged.mod1)
+check_model(domuncaged.mod1)
+car::Anova(domuncaged.mod1, type =2)
+
+#Response: dominance.uncaged
+#F Df  Df.res  Pr(>F)  
+#abs(lat)             0.0071  1 172.961 0.93310  
+#lat_ecotype          3.0958  1  52.616 0.08431 .
+#abs(lat):lat_ecotype 1.0074  1 146.202 0.31718  
+
+car::Anova(domuncaged.mod1, test.statistic = "F")
+
+FigLatRawDom = 
+  rawdom.df %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = abs(lat), y = dominance.uncaged)) + 
+  geom_jitter(width = 0.01, alpha = 0.8, size = 1) + #,
+            #  aes(color = lat_ecotype)) + 
+  #geom_vline(xintercept = 0, color = "black", 
+  #          alpha = 0.3) +
+  #stat_smooth(method = "gam", size = 1, 
+  #            aes(color = lat_ecotype)) + 
+  theme_pubr(base_size= 14) +
+  labs(x= "Absolute Latitude",
+       y= "Dominance (raw) in Uncaged") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #legend.position = "", 
+    legend.title = element_blank()) 
+
+FigLatRawDom
+
+FigLatRawDom2=
+rawdom.df %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = abs(lat), y = dominance.caged)) + 
+  geom_jitter(width = 0.01, alpha = 0.8, size = 1,
+              aes(color = lat_ecotype)) + 
+  stat_smooth(method = "gam", size = 1, 
+              aes(color = lat_ecotype)) + 
+  theme_pubr(base_size= 14) +
+  labs(x= "Absolute Latitude",
+       y= "Dominance (raw) in Caged") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #legend.position = "", 
+    legend.title = element_blank()) 
+
+FigLatRawDom / FigLatRawDom2
+
+rawdom.df %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = lat_ecotype, y = dominance.uncaged)) + 
+  geom_jitter(width = 0.01, alpha = 0.8, size = 1) + 
+  stat_summary(fun.data = "mean_cl_boot", size = 1,
+              aes(color = lat_ecotype)) + 
+  theme_pubr(base_size= 18) +
+  labs(x= "",
+       y= "Dominance Raw in Uncaged") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), #legend.position = "", 
+    legend.title = element_blank()) 
 
 
 
