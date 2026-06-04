@@ -188,6 +188,7 @@ for(finest_src in sort(unique(w.meta_v2$source))){
   # Subset to that source
   w.meta_fine_src <- dplyr::filter(w.meta_v2, source == finest_src)
   
+  # Iterate across exp.names
   for(finest_name in sort(unique(w.meta_fine_src$exp.name))){
     # finest_name <- "Fire"
     
@@ -198,11 +199,16 @@ for(finest_src in sort(unique(w.meta_v2$source))){
     w.meta_fine_sub <- dplyr::filter(w.meta_fine_src, exp.name == finest_name)
     
     # Make another subset for each design level
-    w.meta_fine_sub_des1 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.1")
-    w.meta_fine_sub_des2 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.2")
-    w.meta_fine_sub_des3 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.3")
-    w.meta_fine_sub_des4 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.4")
-    w.meta_fine_sub_name <- dplyr::filter(w.meta_fine_sub, design.level == "exp.name")
+    w.meta_fine_sub_des1 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.1") %>% 
+      dplyr::filter(!is.na(betadisp.median))
+    w.meta_fine_sub_des2 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.2") %>% 
+      dplyr::filter(!is.na(betadisp.median))
+    w.meta_fine_sub_des3 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.3") %>% 
+      dplyr::filter(!is.na(betadisp.median))
+    w.meta_fine_sub_des4 <- dplyr::filter(w.meta_fine_sub, design.level == "exp.design.4") %>% 
+      dplyr::filter(!is.na(betadisp.median))
+    w.meta_fine_sub_name <- dplyr::filter(w.meta_fine_sub, design.level == "exp.name") %>% 
+      dplyr::filter(!is.na(betadisp.median))
     
     # Work through the design levels sequentially (lowest to highest)
     ## And add the lowest one with beta dispersion for both standardized cage treatments to the output list
