@@ -262,20 +262,49 @@ Fig1ALat =
   caged_effectsize_neweco %>% 
   filter(lat_ecotype != "") %>% 
   ggplot(aes(x = abs(lat), y = alpha.diversity_cage.treat.lrr)) + 
-  stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
+ # stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
   geom_jitter(width = 0.05, aes(color = lat_ecotype)) + 
   geom_hline(yintercept = 0, color = "black", 
              alpha = 0.3) +
   theme_pubr(base_size= 18) +
   labs(x= "Absolute Latitude",
-       y="Beta Dispersion LRR") +
+       y="Alpha Diversity LRR") +
   theme(#plot.margin = unit(c(1,1,1,1), "cm"),
     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
 
 Fig1ALat
 
+#Building Figure 1 for the Paper 1 fam####
+
+Fig1BLat / Fig1AGrassSub 
 
 # Paper 1 Raw Dominance Figure
+#Dominance LRR models ####
+
+domlrr.mod1 <- lmer(dominance_cage.treat.lrr ~ 
+                        abs.lat * lat_ecotype +
+                        (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
+summary(domlrr.mod1)
+glance(domlrr.mod1)
+check_model(domlrr.mod1)
+car::Anova(domlrr.mod1, type =2)
+
+#Response: dominance_cage.treat.lrr
+#Chisq Df Pr(>Chisq)  
+#abs.lat             2.6144  1     0.1059  
+#lat_ecotype         1.2495  1     0.2636  
+#abs.lat:lat_ecotype 4.6254  1     0.0315 *
+
+car::Anova(domlrr.mod1, test.statistic = "F")
+#Response: dominance_cage.treat.lrr
+#F Df Df.res  Pr(>F)  
+#abs.lat             2.4133  1 79.723 0.12427  
+#lat_ecotype         1.3381  1 20.469 0.26069  
+#abs.lat:lat_ecotype 4.2763  1 87.980 0.04158 *
+
+plot(allEffects(domlrr.mod1))
+
+
 beta_df1 <- caged_beta %>%
   #filter(var_succ.vs.late == "late") %>%
   drop_na(dominance)%>%
