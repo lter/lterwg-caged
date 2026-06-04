@@ -27,8 +27,9 @@ VARIABLE_PALETTES <- list(
     uncaged = "#56B4E9"    # light blue — consumers present
   ),
   var_aq.or.terr = c(
-    aquatic     = "#0096C7",   # ocean blue
-    terrestrial = "#40916C"    # forest green
+    aquatic      = "#0096C7",   # ocean blue
+    terrestrial  = "#40916C",   # forest green
+    transitional = "#CC6677"    # muted rose — neither aquatic nor terrestrial
   ),
   var_succ.vs.late = c(
     early = "#F4A261",   # amber  — open early-successional habitats
@@ -67,6 +68,23 @@ get_var_pal <- function(var_name, levels) {
 sv_transform <- function(y, n) { (y * (n - 1) + 0.5) / n }
 
 ## ------------------------------------------- ##
+# Significance helpers ----
+## ------------------------------------------- ##
+
+# Stars label for p < 0.05; NULL (no annotation) when non-significant.
+sig_label_fn <- function(p) {
+  if (is.null(p) || is.na(p)) return(NULL)
+  if (p < 0.001) "***" else if (p < 0.01) "**" else if (p < 0.05) "*" else "NS"
+}
+
+# Look up the p-value for an exact term string in a car::Anova table
+# (returned by summarise_model()).
+lookup_p <- function(anova_tbl, term_str) {
+  idx <- which(anova_tbl$term == term_str)
+  if (length(idx) == 0) NA_real_ else anova_tbl[["Pr(>Chisq)"]][idx[1]]
+}
+
+## ------------------------------------------- ##
 # fmt_pval() ----
 ## ------------------------------------------- ##
 # Format p-values for printing: fixed notation for p >= 1e-4,
@@ -87,7 +105,7 @@ fmt_pval <- function(p, digits = 4) {
 ## ------------------------------------------- ##
 # Prints and exports Type II ANOVA table; reports AIC and R².
 
-summarise_model <- function(model, label, outdir = file.path("..", "results")) {
+summarise_model <- function(model, label, outdir = "results") {
 
   cat("\n", strrep("=", 60), "\n", label, "\n", strrep("=", 60), "\n\n", sep = "")
 
@@ -95,10 +113,18 @@ summarise_model <- function(model, label, outdir = file.path("..", "results")) {
   cat("Convergence:", if (isTRUE(conv)) "OK" else "CHECK WARNINGS", "\n")
   cat("AIC:", round(AIC(model), 2), "\n")
 
-  r2 <- tryCatch(r.squaredGLMM(model), error = function(e) NULL)
+  r2 <- tryCatch({
+    re_bars  <- lme4::findbars(formula(model))
+    re_str   <- paste(vapply(re_bars, function(b) paste0("(", deparse(b), ")"), character(1)),
+                      collapse = " + ")
+    lhs      <- deparse(lme4::nobars(formula(model))[[2]])
+    null_f   <- as.formula(paste(lhs, "~ 1 +", re_str))
+    null_mod <- update(model, formula = null_f, data = model.frame(model))
+    r.squaredLR(model, null = null_mod)
+  }, error = function(e) NULL)
   if (!is.null(r2))
-    cat(sprintf("R2 marginal = %.4f  |  R2 conditional = %.4f\n",
-                r2[1, "R2m"], r2[1, "R2c"]))
+    cat(sprintf("R2_LR = %.4f  |  R2_LR adj = %.4f\n",
+                r2[[1]], attr(r2, "adj.r.squared")))
 
   anova_tbl <- car::Anova(model, type = "II") %>%
     as.data.frame() %>%
@@ -132,7 +158,7 @@ summarise_model <- function(model, label, outdir = file.path("..", "results")) {
 
 validate_dharma <- function(model, data, prefix,
                              pred_vars = NULL,
-                             outdir    = file.path("..", "graphs", "model_validation"),
+                             outdir    = file.path("graphs", "model_validation"),
                              nsim      = 500,
                              seed      = 42) {
   set.seed(seed)
@@ -210,7 +236,8 @@ validate_dharma <- function(model, data, prefix,
 #   save            — write PNG to outdir (FALSE to suppress and return plot only)
 
 plot_partial_with_data <- function(model, data, terms, prefix,
-                                    outdir            = file.path("..", "graphs", "model_predictions"),
+                                    p_value           = NULL,
+                                    outdir            = file.path("graphs", "model_predictions"),
                                     ylab              = "Beta dispersion (SV-transformed)",
                                     x_lab             = NULL,
                                     width             = 7,
@@ -245,6 +272,10 @@ plot_partial_with_data <- function(model, data, terms, prefix,
   x_angle  <- if (n_x_cats > 5) 40 else 0
   x_hjust  <- if (n_x_cats > 5) 1  else 0.5
 
+  # Significance annotation pre-computation (used across all cases below)
+  ltype   <- if (!is.null(p_value) && !is.na(p_value) && p_value < 0.05) "solid" else "dashed"
+  sig_lbl <- sig_label_fn(p_value)
+
   base_theme <- theme_classic(base_size = 12) +
     theme(panel.border    = element_rect(color = "black", fill = NA, linewidth = 0.7),
           axis.text       = element_text(color = "black"),
@@ -269,7 +300,7 @@ plot_partial_with_data <- function(model, data, terms, prefix,
                     alpha = 0.35) +
         geom_line(data   = pred_df,
                   aes(x  = x, y = predicted, color = grp),
-                  linewidth = 1.1) +
+                  linewidth = 1.1, linetype = ltype) +
         scale_color_manual(values = pal, name = grp_var) +
         scale_fill_manual( values = pal, name = grp_var)
     } else {
@@ -282,13 +313,17 @@ plot_partial_with_data <- function(model, data, terms, prefix,
                     alpha = 0.25, fill = CAGED_PALETTE[1]) +
         geom_line(data  = pred_df,
                   aes(x = x, y = predicted),
-                  color = CAGED_PALETTE[1], linewidth = 1.1)
+                  color = CAGED_PALETTE[1], linewidth = 1.1, linetype = ltype)
     }
 
     p <- p +
       coord_cartesian(ylim = c(0, 1)) +
       labs(x = if (!is.null(x_lab)) x_lab else x_var, y = ylab) +
       base_theme
+
+  if (!is.null(sig_lbl))
+    p <- p + annotate("text", x = Inf, y = Inf, label = sig_lbl,
+                      hjust = 1.3, vjust = 1.8, size = 5, fontface = "bold")
 
   ## ---------- Case 2: many-group categorical → facets ----------
   } else if (use_facets) {
@@ -328,6 +363,10 @@ plot_partial_with_data <- function(model, data, terms, prefix,
       base_theme +
       theme(strip.background = element_rect(fill = "grey92", color = "black"),
             strip.text       = element_text(size = 9))
+
+  if (!is.null(sig_lbl))
+    p <- p + annotate("text", x = Inf, y = Inf, label = sig_lbl,
+                      hjust = 1.3, vjust = 1.8, size = 5, fontface = "bold")
 
   ## ---------- Case 3: categorical x, few groups → dodge ----------
   } else {
@@ -392,6 +431,24 @@ plot_partial_with_data <- function(model, data, terms, prefix,
       coord_cartesian(ylim = c(0, 1)) +
       labs(x = if (!is.null(x_lab)) x_lab else x_var, y = ylab) +
       base_theme
+
+  if (!is.null(sig_lbl)) {
+    y_b <- min(0.93, max(pred_df$conf.high, na.rm = TRUE) + 0.07)
+    if (n_x_cats == 2) {
+      p <- p +
+        annotate("segment", x = 1,   xend = 2,   y = y_b,        yend = y_b,
+                 linewidth = 0.5) +
+        annotate("segment", x = 1,   xend = 1,   y = y_b,        yend = y_b - 0.02,
+                 linewidth = 0.5) +
+        annotate("segment", x = 2,   xend = 2,   y = y_b,        yend = y_b - 0.02,
+                 linewidth = 0.5) +
+        annotate("text",    x = 1.5, y = y_b + 0.02, label = sig_lbl,
+                 size = 5, fontface = "bold")
+    } else {
+      p <- p + annotate("text", x = Inf, y = Inf, label = sig_lbl,
+                        hjust = 1.3, vjust = 1.8, size = 5, fontface = "bold")
+    }
+  }
   }
 
   if (save)
@@ -413,7 +470,7 @@ plot_partial_with_data <- function(model, data, terms, prefix,
 # Defaults to the original two-covariate set for backward compatibility.
 
 plot_covariate_effects <- function(model, data, prefix,
-                                    outdir          = file.path("..", "graphs", "model_predictions"),
+                                    outdir          = file.path("graphs", "model_predictions"),
                                     ylab            = "Beta dispersion (SV-transformed)",
                                     covariate_terms = list(
                                       list(term  = "gamma.richness_exp.name [n=150]",
@@ -437,21 +494,27 @@ plot_covariate_effects <- function(model, data, prefix,
     )
     if (is.null(pd)) return(NULL)
 
+    ct_ltype   <- if (!is.null(ct$p_value) && !is.na(ct$p_value) && ct$p_value < 0.05) "solid" else "dashed"
+    ct_sig_lbl <- sig_label_fn(ct$p_value)
     p <- ggplot()
     if (raw_var %in% names(data))
       p <- p + geom_point(data  = data,
                           aes(x = .data[[raw_var]], y = betadisp_t),
                           color = "grey40", alpha = 0.06, size = 0.5)
-    p +
+    p <- p +
       geom_ribbon(data = pd,
                   aes(x = x, ymin = conf.low, ymax = conf.high),
                   alpha = 0.25, fill = ct$color) +
       geom_line(data  = pd,
                 aes(x = x, y = predicted),
-                color = ct$color, linewidth = 1.1) +
+                color = ct$color, linewidth = 1.1, linetype = ct_ltype) +
       coord_cartesian(ylim = c(0, 1)) +
       labs(x = ct$xlab, y = ylab) +
       cov_theme
+    if (!is.null(ct_sig_lbl))
+      p <- p + annotate("text", x = Inf, y = Inf, label = ct_sig_lbl,
+                        hjust = 1.3, vjust = 1.8, size = 5, fontface = "bold")
+    p
   })
 
   panels <- Filter(Negate(is.null), panels)
@@ -482,7 +545,7 @@ plot_covariate_effects <- function(model, data, prefix,
 #   label   — string prefix for output file and console header
 #   outdir  — directory for the _vif.csv output
 
-check_model_vif <- function(model, data, label, outdir = file.path("..", "results")) {
+check_model_vif <- function(model, data, label, outdir = "results") {
 
   f       <- formula(model)
   re_bars <- lme4::findbars(f)
