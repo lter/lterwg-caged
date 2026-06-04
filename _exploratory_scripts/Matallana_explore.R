@@ -16,6 +16,8 @@ librarian::shelf(tidyverse, googledrive, supportR, raster, ncdf4,
 
 raw.meta = read_xlsx("./data/2026.06.03 sitelevel-metadata.xlsx")
 
+
+
 # Read in raw metadata
 #raw.meta = read_xlsx("./data/sitelevel-metadata.xlsx")
 
@@ -123,6 +125,22 @@ length(meta.tidy.simple[meta.tidy.simple$var_aq.or.terr == "aquatic",]$source) #
 #bio datasets use average value across 1970 - 2000 (1 value per year for each variable, ex: average yearly temperature)
 #bio vars: https://www.worldclim.org/data/bioclim.html
 #resolution: 10 minute x 10 minute cells (18.5km2)
+
+# which metadata to use?
+# raw metadata
+meta.tidy.simple = raw.meta %>%
+  dplyr::select(source, exp.name, var_aq.or.terr, var_lat, var_long) %>%
+  distinct() %>% #collapse duplicates
+  drop_na() #Remove sites with no lat/longs
+
+trans.sites = read.csv("./data/Kelly_site_temps_new_coords.csv") %>%
+  dplyr::select(-mean_sst) %>%
+  drop_na() #
+  #filter(if_any(everything(), is.na))
+
+trans.exp.names = trans.sites$exp.name
+
+
 wc.bio.10min.1970_2000 = worldclim_global(var = "bio", res = 10, path = "C:/Users/Owner/OneDrive - Colostate/Documents/Grad School/Misc/CAGED NCEAS 2025/Datasets/worldclim/tavg.10min.1970_200")
 wc.crs = crs(wc.bio.10min.1970_2000) #save CRS for later use
 
@@ -131,7 +149,7 @@ plot(wc.bio.10min.1970_2000$wc2.1_10m_bio_1)
   
 #Turn dataframe into a spatial object
 
-meta.sp = st_as_sf(meta.tidy.simple, coords = c("long", "lat"), crs = wc.crs) 
+meta.sp = st_as_sf(meta.tidy.simple, coords = c("var_long", "var_lat"), crs = wc.crs) 
 
 #check mapping
 par(mfrow=(c(1,1)))
@@ -149,8 +167,12 @@ meta.wc.extracts = cbind(meta.tidy.simple, tavg.pts, t.sd.pts, ppt.pts) %>%
   rename("t.avg.C" = "wc2.1_10m_bio_1") %>% #rename vars
   rename("t.sd.C" = "wc2.1_10m_bio_4") %>%
   rename("ppt.mm" = "wc2.1_10m_bio_12") %>%
-  filter(var_aq.or.terr == "terrestrial") #filter out aquatic points
+  filter(var_aq.or.terr == "terrestrial" | var_aq.or.terr == "transitional") %>% #filter out aquatic points
+  filter(!(exp.name %in% trans.sites$exp.name)) %>%
+  anti_join(trans.sites, by = "exp.name")
 
+
+  
 ## Inspect data ##
 #histrograms
 par(mfrow=c(2,2))
@@ -159,10 +181,55 @@ hist(meta.wc.extracts$t.sd.C, main = "Temp S.D. * 100")
 hist(meta.wc.extracts$ppt.mm, main = "Precip. mm") #Some outliers above ~2,000
 hist(meta.wc.extracts[meta.wc.extracts$ppt.mm < 2000,]$ppt.mm, main = "precip < 2000") #precip under 2000mm cutoff
 
+# save worldcim + metadata for 06/04/2026
+write.csv(meta.wc.extracts, "./data/WorldClim_meta.data_avg.temp.ppt_1970-2000_2026.06.04.csv")
+  
+
+
+
+#
+# Combine WorldClim & aquatic temperature ----
+
+colnames(meta.wc.extracts)
+
+
+kelly.aquatic.data = read.csv("./data/Kelly_site_temps.csv")
+
+colnames(kelly.aquatic.data)
+
+kelly.clean = kelly.aquatic.data %>%
+  dplyr::select(source, exp.name, var_aq.or.terr, var_lat, var_long, mean_sst) %>%
+  rename("t.avg.C" = "mean_sst")
+
+avg.temp.terr.aq = meta.wc.extracts %>%
+  dplyr::select(-t.sd.C, -ppt.mm) %>%
+  rbind(kelly.clean)
+  
+write.csv(avg.temp.terr.aq, "./data/temp.terr.aq.2026.06.04.csv")
+
+#
 # TerraClimate data prep ----
 
 #Terraclim dataset: https://www.climatologylab.org/terraclimate.html
 #Uses WorldClim & other datasets to interpolate from 1958 up to the present
+
+# Use raw metadata?
+meta.tidy.simple = raw.meta %>%
+  dplyr::select(source, exp.name, var_aq.or.terr, var_lat, var_long) %>%
+  distinct() %>% #collapse duplicates
+  drop_na() #Remove sites with no lat/longs
+
+#old terraclim data
+terraclim2025 = read.csv("./data/terraclim.data.w.meta.2025-05-23.csv")
+
+meta.ajoin = terraclim2025 %>%
+  anti_join(raw.meta, by = "exp.name") # sites in terraclim not found in new raw meta
+
+meta.ajoin = raw.meta %>%
+  anti_join(terraclim2025, by = "exp.name") # sites in new raw meta not found in terraclim
+  
+# okay lots of new sites, definitely need to re-run terraclim
+
 
 #prep data
 meta.terr = meta.tidy.simple %>%
@@ -171,8 +238,8 @@ meta.terr = meta.tidy.simple %>%
   filter(var_aq.or.terr == "terrestrial")
 
 #Edit problematic coordinates
-meta.terr$long = if_else(meta.terr$ID == 163, 13.45, meta.terr$long) #original long was 13.5
-meta.terr$long = if_else(meta.terr$ID == 179, -121.0, meta.terr$long) #original long was -121.1
+#meta.terr$long = if_else(meta.terr$ID == 163, 13.45, meta.terr$long) #original long was 13.5
+#meta.terr$long = if_else(meta.terr$ID == 179, -121.0, meta.terr$long) #original long was -121.1
 
 ### TerraClimate tmax ----
 
@@ -181,7 +248,7 @@ meta.terr$long = if_else(meta.terr$ID == 179, -121.0, meta.terr$long) #original 
 var = "tmax"
 
 # enter in variable you want to download see: http://thredds.northwestknowledge.net:8080/thredds/terraclimate_aggregated.html
-baseurlagg <- paste0(paste0("http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg_terraclimate_",var),"_1958_CurrentYear_GLOBE.nc")
+baseurlagg <- paste0(paste0("http://thredds.northwestknowledge.net:8080/thredds/dodsC/agg_terraclimate_",var),"_1958_2024_GLOBE.nc")
 
 #tmax
 nc <- nc_open(baseurlagg)
@@ -1110,7 +1177,7 @@ sites.map <- ggplot() +
                          style = north_arrow_fancy_orienteering) +
   geom_point(data = meta.filt, aes(x = var_long, y = var_lat, color = var_aq.or.terr),
              shape = 19, alpha = 0.5, size = 4) +
-  scale_color_manual(values=c("#023E8A",'#D55E00',"#009E73"), # "#009E73"), "#8D4585", "#E6E6FA" "#023E8A"
+  scale_color_manual(values=c("#023E8A",'#D55E00',"#882255"), # "#009E73"), "#8D4585", "#E6E6FA" "#023E8A" "#CC6677"
                      breaks = c("aquatic","terrestrial", "transitional"),
                      labels = c("Aquatic","Terrestrial", "Transitional")) +
   guides(color=guide_legend(bquote(paste("Systems")))) +
@@ -1165,6 +1232,11 @@ jpeg("./graphs/new.ecotype.counts.2026-06-03.jpeg", width = 7, height = 5, units
 ecotypes.26.06.03
 
 dev.off()
+
+#
+# Exploring response vars ~ climate vars ----
+
+df = read.csv("./data/08-A_caged_w.meta-beta-disp_all-scales.csv")
 
 #
 # End ----
