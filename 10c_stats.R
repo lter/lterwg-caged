@@ -12,7 +12,7 @@
 librarian::shelf(tidyverse, ltertools, lme4, lmerTest, glmmTMB, DHARMa,
                  performance, easystats, lubridate, car, broom.mixed,
                  njlyon0/supportR, MuMIn, visreg, grid, gridExtra,
-                 emmeans, tidymodels, qqplotr, sjPlot) #, update_all= TRUE) 
+                 emmeans, tidymodels, qqplotr, sjPlot, ggpubr) #, update_all= TRUE) 
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -62,9 +62,22 @@ hist(df1$betadisp.mean.lrr)
 colnames(df1)
 str(df1)
 
-
-
-newecotype_ES <- df1 %>% 
+#Build new ecotype columns
+caged_effectsize_neweco <- df1 %>% 
+  mutate(var_aq.or.terr2 = 
+           case_when(var_ecotype1 == "rocky intertidal" ~ "transitional", 
+                     var_ecotype1 == "soft-intertidal" ~ "transitional",
+                     var_ecotype1 == "salt marsh" ~ "transitional",
+                     var_ecotype1 == "wetland" ~ "transitional",
+                     var_ecotype1 == "tundra" ~ "terrestrial",
+                     var_ecotype1 == "grassland" ~ "terrestrial",
+                     var_ecotype1 == "forest" ~ "terrestrial",
+                     var_ecotype1 == "savanna" ~ "terrestrial",
+                     var_ecotype1 == "desert" ~ "terrestrial",
+                     var_ecotype1 == "subtidal" ~ "marine",
+                     var_ecotype1 == "coral reef" ~ "marine",
+                     var_ecotype1 == "seagrass" ~ "marine",
+                     .default = NA)) %>% 
   mutate(lat_ecotype = 
            case_when(var_ecotype1 == "grassland" ~ "grassy systems", 
                      var_ecotype1 == "savanna" ~ "grassy systems",
@@ -76,38 +89,111 @@ newecotype_ES <- df1 %>%
                      .default = NA)) %>% 
   filter(lat_ecotype != "")
 
-
-grassy <- newecotype_ES %>%
+caged_effectsize_grassy <- caged_effectsize_neweco %>%
   filter(lat_ecotype == "grassy systems")
 
-subtidal <- newecotype_ES %>%
+caged_effectsize_subtidal <- caged_effectsize_neweco %>%
   filter(lat_ecotype == "subtidal systems")
-  
-mod1 <- lmer(betadisp.mean.lrr ~ abs.lat + var_aq.or.terr +
-               (1|var_upper.source), data = newecotype_ES) # 241 samples
-summary(mod1)
-car::Anova(mod1, type =2)
+
+#Beta LRR Models ####
+lrr.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat + lat_ecotype +
+               (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
+summary(lrr.mod1)
+glance(lrr.mod1)
+check_model(lrr.mod1)
+car::Anova(lrr.mod1, type =2)
+#Response: betadisp.mean.lrr
+#Chisq Df Pr(>Chisq)  
+#abs.lat         3.5727  1    0.05874 .
+#var_aq.or.terr2 0.5874  1    0.44344  
+
+car::Anova(lrr.mod1, test.statistic = "F")
+#Response: betadisp.mean.lrr
+#F Df Df.res  Pr(>F)  
+#abs.lat         3.2960  1 81.151 0.07314 .
+#var_aq.or.terr2 0.5196  1 20.745 0.47907  
 
 library(effects)
-plot(allEffects(mod1))
+plot(allEffects(lrr.mod1))
 
-mod2 <- lmer(betadisp.mean.lrr ~ abs.lat +
-               (1|var_upper.source), data = newecotype_ES) # 241 samples
+lrr.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat +
+               (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
+summary(lrr.mod2)
+glance(lrr.mod2)
+check_model(lrr.mod2)
+car::Anova(lrr.mod2, type =2)
 
+AICc(lrr.mod1, lrr.mod2)
 
-mod3 <- lmer(alpha.diversity_cage.treat.lrr ~ abs.lat + var_aq.or.terr +
-               (1|var_upper.source), data = newecotype_ES) # 241 samples
+#alt model structure (beta)
+lrr.Bmod1 <- glmmTMB(
+  betadisp.mean.lrr ~
+    abs(lat) + 
+    lat_ecotype +
+    scale(gamma.richness_exp.name) +
+    (1 | var_upper.source ),
+  # family  = beta_family(link = "probit"),
+  # control = ctrl,
+  data    = caged_effectsize_neweco 
+)
 
-summary(mod3)
-car::Anova(mod3, type =2)
+glance(lrr.Bmod1)
+summary(lrr.Bmod1)
+car::Anova(lrr.Bmod1, type = 2) 
+
+#Response: betadisp.mean.lrr
+#Chisq Df Pr(>Chisq)  
+#abs(lat)                       3.6543  1    0.05593 .
+#lat_ecotype                    0.0976  1    0.75470  
+#scale(gamma.richness_exp.name) 0.3079  1    0.57895  
+
+#Beta LRR Figure Draft####
+caged_effectsize_neweco
+caged_effectsize_grassy 
+caged_effectsize_subtidal
+
+Fig1BLat = 
+caged_effectsize_neweco %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = abs(lat), y = betadisp.mean.lrr)) + 
+  stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
+  geom_jitter(width = 0.05, aes(color = lat_ecotype)) + 
+  geom_hline(yintercept = 0, color = "black", 
+             alpha = 0.3) +
+  theme_pubr(base_size= 18) +
+  labs(x= "Absolute Latitude",
+       y="Beta Dispersion LRR") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
+
+Fig1BLat
+
+#Grassy and Subtidal seperate but equal modeling####
+lrr_grassy.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat +
+                   (1|var_upper.source), data = caged_effectsize_grassy) # 241 samples
+summary(lrr_grassy.mod1)
+glance(lrr_grassy.mod1)
+check_model(lrr_grassy.mod1)
+car::Anova(lrr_grassy.mod1, type =2)
+#Response: betadisp.mean.lrr
+#Chisq Df Pr(>Chisq)
+#abs.lat 0.4263  1     0.5138
 
 library(effects)
-plot(allEffects(mod3))
+plot(allEffects(lrr.mod1))
 
+lrr_subtidal.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat +
+                          (1|var_upper.source), data = caged_effectsize_subtidal) # 241 samples
+summary(lrr_subtidal.mod1)
+glance(lrr_subtidal.mod1)
+check_model(lrr_subtidal.mod1)
+car::Anova(lrr_subtidal.mod1, type =2)
+#Response: betadisp.mean.lrr
+#Chisq Df Pr(>Chisq)
+#abs.lat 1.9446  1     0.1632
 
-
-AICc(mod1, mod2, mod3)
-
+#Beta Dispersion (raw) models####
+#NOT paper 1
 newecotype_B.grassy = newecotype_B %>% 
   filter(lat_ecotype == "grassy systems")
 glimpse(newecotype_B.grassy)
@@ -131,32 +217,94 @@ glance(ESmod_grassy.B)
 summary(ESmod_grassy.B)
 car::Anova(ESmod_grassy.B) #LAT = .6
 
-
-
-
-
-
+#Alpha Diversity LRR ####
 range(df1$alpha.diversity_cage.treat.lrr) # -6.671471  6.629928
 
-mod1 <- lmer(abs(alpha.diversity_cage.treat.lrr) ~ abs.lat + 
-               (1|var_upper.source), data = df1)
+alphalrr.mod1 <- lmer(alpha.diversity_cage.treat.lrr ~ 
+                        abs.lat + lat_ecotype +
+                   (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
+summary(alphalrr.mod1)
+glance(alphalrr.mod1)
+check_model(alphalrr.mod1)
+car::Anova(alphalrr.mod1, type =2)
+#Response: alpha.diversity_cage.treat.lrr
+#F Df  Df.res Pr(>F)  
+#abs.lat     0.2065  1 118.768 0.6504  
+#lat_ecotype 5.8977  1  35.875 0.0203 *
 
-summary(mod1)
+car::Anova(alphalrr.mod1, test.statistic = "F")
+#Response: alpha.diversity_cage.treat.lrr
+#Chisq Df Pr(>Chisq)  
+#abs.lat     0.2149  1     0.6430  
+#at_ecotype 6.2101  1     0.0127 *
 
-plot(allEffects(mod1))
+plot(allEffects(alphalrr.mod1))
 
+Fig1AGrassSub = 
+  caged_effectsize_neweco %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = lat_ecotype, y = alpha.diversity_cage.treat.lrr)) + 
+  #geom_jitter(width = 0.01, alpha = 0.2) + 
+  geom_violin() +
+  geom_hline(yintercept = 0, color = "black", 
+             alpha = 0.3) +
+  stat_summary(fun.data = "mean_cl_boot", 
+               geom = "pointrange", size = 1, color = "hotpink") + 
+  theme_pubr(base_size= 18) +
+  labs(x= "Ecosystem",
+       y="Alpha Diversity LRR") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
 
+Fig1AGrassSub
 
-mod1 <- lmer(abs(dominance_cage.treat.lrr) ~ abs.lat + 
-               (1|var_upper.source), data = df1)
+Fig1ALat = 
+  caged_effectsize_neweco %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = abs(lat), y = alpha.diversity_cage.treat.lrr)) + 
+ # stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
+  geom_jitter(width = 0.05, aes(color = lat_ecotype)) + 
+  geom_hline(yintercept = 0, color = "black", 
+             alpha = 0.3) +
+  theme_pubr(base_size= 18) +
+  labs(x= "Absolute Latitude",
+       y="Alpha Diversity LRR") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
 
-plot(allEffects(mod1))
+Fig1ALat
 
-summary(mod1)
+#Building Figure 1 for the Paper 1 fam####
 
-
+Fig1BLat / Fig1AGrassSub 
 
 # Paper 1 Raw Dominance Figure
+#Dominance LRR models ####
+
+domlrr.mod1 <- lmer(dominance_cage.treat.lrr ~ 
+                        abs.lat * lat_ecotype +
+                        (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
+summary(domlrr.mod1)
+glance(domlrr.mod1)
+check_model(domlrr.mod1)
+car::Anova(domlrr.mod1, type =2)
+
+#Response: dominance_cage.treat.lrr
+#Chisq Df Pr(>Chisq)  
+#abs.lat             2.6144  1     0.1059  
+#lat_ecotype         1.2495  1     0.2636  
+#abs.lat:lat_ecotype 4.6254  1     0.0315 *
+
+car::Anova(domlrr.mod1, test.statistic = "F")
+#Response: dominance_cage.treat.lrr
+#F Df Df.res  Pr(>F)  
+#abs.lat             2.4133  1 79.723 0.12427  
+#lat_ecotype         1.3381  1 20.469 0.26069  
+#abs.lat:lat_ecotype 4.2763  1 87.980 0.04158 *
+
+plot(allEffects(domlrr.mod1))
+
+
 beta_df1 <- caged_beta %>%
   #filter(var_succ.vs.late == "late") %>%
   drop_na(dominance)%>%
