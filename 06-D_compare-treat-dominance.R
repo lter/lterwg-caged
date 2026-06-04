@@ -68,11 +68,30 @@ dom.diff_v04 <- dom.diff_v03 %>%
 dplyr::glimpse(dom.diff_v04)
 
 ## ------------------------------------------- ##
+# Streamline Output ----
+## ------------------------------------------- ##
+
+# Pare down this output somewhat
+dom.diff_v05 <- dom.diff_v04 %>% 
+  dplyr::group_by(dplyr::across(dplyr::all_of(
+    setdiff(x = names(.), 
+      y = c(paste0("dominance_", c("caged", "uncaged", 
+        "cage.treat.diff", "cage.treat.lrr")), "cage.treatment_orig"))))) %>% 
+  dplyr::summarize(dominance.caged = mean(dominance_caged, na.rm = TRUE),
+    dominance.uncaged = mean(dominance_uncaged, na.rm = TRUE),
+    dominance.diff = mean(dominance_cage.treat.diff, na.rm = TRUE), 
+    dominance.lrr = mean(dominance_cage.treat.lrr, na.rm = TRUE),
+    .groups = "drop")
+
+# Check structure
+dplyr::glimpse(dom.diff_v05)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-dom.diff_v99 <- dom.diff_v04
+dom.diff_v99 <- dom.diff_v05
 
 # Count number of sources/experiments at end
 unique(dom.diff_v99$source) # 121
@@ -86,8 +105,9 @@ dom.diff_path <- file.path("data", dom.diff_name)
 write.csv(x = dom.diff_v99, row.names = F, na = '', file = dom.diff_path)
 
 # Make an 'experiment name' only
-dom.diff_exp <- dplyr::filter(dom.diff_v99, dominance_design.level == "exp.name") %>% 
-  dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
+dom.diff_exp <- dom.diff_v99 %>% 
+  dplyr::filter(dominance_design.level == "exp.name") %>% 
+  dplyr::select(-dplyr::starts_with("exp.design."))
 
 # Check structure
 dplyr::glimpse(dom.diff_exp)

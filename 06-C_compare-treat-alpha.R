@@ -29,8 +29,6 @@ dplyr::glimpse(alp.diff_v01)
 
 # Filter to only experiment name-level, desired treatments, and average across replicates
 alp.diff_v02 <- alp.diff_v01 %>% 
-  dplyr::select(-dplyr::starts_with("exp.design.")) %>% 
-  # dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
   dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
   dplyr::mutate(cage.treatment_std = paste0("alpha.diversity_", cage.treatment_std))
 
@@ -72,11 +70,30 @@ alp.diff_v04 <- alp.diff_v03 %>%
 dplyr::glimpse(alp.diff_v04)
 
 ## ------------------------------------------- ##
+# Streamline Output ----
+## ------------------------------------------- ##
+
+# Pare down this output somewhat
+alp.diff_v05 <- alp.diff_v04 %>% 
+  dplyr::group_by(dplyr::across(dplyr::all_of(
+    setdiff(x = names(.), 
+      y = c(paste0("alpha.diversity_", c("caged", "uncaged", 
+        "cage.treat.diff", "cage.treat.lrr")), "cage.treatment_orig"))))) %>% 
+  dplyr::summarize(alpha.caged = mean(alpha.diversity_caged, na.rm = TRUE),
+    alpha.uncaged = mean(alpha.diversity_uncaged, na.rm = TRUE),
+    alpha.diff = mean(alpha.diversity_cage.treat.diff, na.rm = TRUE), 
+    alpha.lrr = mean(alpha.diversity_cage.treat.lrr, na.rm = TRUE),
+    .groups = "drop")
+
+# Check structure
+dplyr::glimpse(alp.diff_v05)
+
+## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
 # Create final object name
-alp.diff_v99 <- alp.diff_v04
+alp.diff_v99 <- alp.diff_v05
 
 # Count number of sources/experiments at end
 unique(alp.diff_v99$source) # 121
@@ -90,7 +107,9 @@ alp.diff_path <- file.path("data", alp.diff_name)
 write.csv(x = alp.diff_v99, row.names = F, na = '', file = alp.diff_path)
 
 # Make an 'experiment name' only
-alp.diff_exp <- dplyr::filter(alp.diff_v99, alpha.diversity_design.level == "exp.name")
+alp.diff_exp <- alp.diff_v99 %>% 
+  dplyr::filter(alpha.diversity_design.level == "exp.name") %>% 
+  dplyr::select(-dplyr::starts_with("exp.design."))
 
 # Check structure
 dplyr::glimpse(alp.diff_exp)

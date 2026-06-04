@@ -78,7 +78,7 @@ for(focal_beta in beta_outs){
   diff_v5 <- diff_v2 %>% 
     # ALWAYS CHECK THE 'Y' OBJECT IS CORRECT IF UPDATING SCRIPT
     dplyr::left_join(y = diff_v4,  by = diff_groupcols) %>% 
-    dplyr::select(-betadisp.mean) %>% 
+    dplyr::select(-betadisp.mean, -cage.treatment_std) %>% 
     dplyr::distinct()
   
   # Add this to the output list
