@@ -64,7 +64,21 @@ str(df1)
 
 
 
-newecotype_ES <- df1 %>% 
+caged_effectsize_neweco <- df1 %>% 
+  mutate(var_mar.or.terr.or.trans = 
+           case_when(var_ecotype1 == "rocky intertidal" ~ "transitional", 
+                     var_ecotype1 == "soft-intertidal" ~ "transitional",
+                     var_ecotype1 == "salt marsh" ~ "transitional",
+                     var_ecotype1 == "wetland" ~ "transitional",
+                     var_ecotype1 == "tundra" ~ "terrestrial",
+                     var_ecotype1 == "grassland" ~ "terrestrial",
+                     var_ecotype1 == "forest" ~ "terrestrial",
+                     var_ecotype1 == "savanna" ~ "terrestrial",
+                     var_ecotype1 == "desert" ~ "terrestrial",
+                     var_ecotype1 == "subtidal" ~ "marine",
+                     var_ecotype1 == "coral reef" ~ "marine",
+                     var_ecotype1 == "seagrass" ~ "marine",
+                     .default = NA)) %>% 
   mutate(lat_ecotype = 
            case_when(var_ecotype1 == "grassland" ~ "grassy systems", 
                      var_ecotype1 == "savanna" ~ "grassy systems",
@@ -77,14 +91,14 @@ newecotype_ES <- df1 %>%
   filter(lat_ecotype != "")
 
 
-grassy <- newecotype_ES %>%
+caged_effectsize_grassy <- caged_effectsize_neweco %>%
   filter(lat_ecotype == "grassy systems")
 
-subtidal <- newecotype_ES %>%
+caged_effectsize_subtidal <- caged_effectsize_neweco %>%
   filter(lat_ecotype == "subtidal systems")
   
-mod1 <- lmer(betadisp.mean.lrr ~ abs.lat + var_aq.or.terr +
-               (1|var_upper.source), data = newecotype_ES) # 241 samples
+lrr.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat + var_aq.or.terr +
+               (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
 summary(mod1)
 car::Anova(mod1, type =2)
 
@@ -92,11 +106,11 @@ library(effects)
 plot(allEffects(mod1))
 
 mod2 <- lmer(betadisp.mean.lrr ~ abs.lat +
-               (1|var_upper.source), data = newecotype_ES) # 241 samples
+               (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
 
 
 mod3 <- lmer(alpha.diversity_cage.treat.lrr ~ abs.lat + var_aq.or.terr +
-               (1|var_upper.source), data = newecotype_ES) # 241 samples
+               (1|var_upper.source), data = caged_effectsize_neweco) # 241 samples
 
 summary(mod3)
 car::Anova(mod3, type =2)
