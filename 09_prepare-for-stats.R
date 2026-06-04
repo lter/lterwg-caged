@@ -25,8 +25,11 @@ rm(list = ls()); gc()
 
 # Read in relevant data file
 betadisp_v1 <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_finest-scales.csv"))
-effectsizes_v1 <- read.csv(file.path("data", "08_caged_experiment-level-everything_fine-scales.csv"))
+#effectsizes_v1 <- read.csv(file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
+# this one doesn't work for now 
 
+effectsizes_v1 <- read.csv(file.path("data", "08_caged_experiment-level-everything_fine-scales.csv"))
+# can use this old version for now for it to work - it all seems correct still 
 
 # Check structure
 dplyr::glimpse(betadisp_v1)
@@ -34,16 +37,16 @@ dplyr::glimpse(effectsizes_v1)
 
 
 # Check number of sources
-unique(effectsizes_v1$source) # 117
-unique(effectsizes_v1$exp.name) # 347
-# now this is fixed? 
+unique(effectsizes_v1$source) # 118
+unique(effectsizes_v1$exp.name) # 356
+# this seems wrong 
 
 unique(betadisp_v1$source) # 117
 unique(betadisp_v1$exp.name) # 347
 
 # Check number of rows and dataframe
-dim(effectsizes_v1) # 694  46
-dim(effectsizes_v1) # 694  46
+dim(effectsizes_v1) # 1556   43
+dim(effectsizes_v1) # 1556   43
 # so the effect size needs to be set to only unique 
 
 dim(betadisp_v1) # 13964    42
@@ -58,7 +61,7 @@ effectsizes_v2 <- effectsizes_v1 %>%
          contains("lrr")) %>%
 distinct()
 
-dim(effectsizes_v2) # 347
+dim(effectsizes_v2) # 760  12 (wrong - should be 347)
 
 
 
