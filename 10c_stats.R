@@ -126,9 +126,9 @@ car::Anova(lrr.mod1, test.statistic = "F")
 library(effects)
 plot(allEffects(lrr.mod1))
 
-lrr.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat + 
-                   #scale(gamma.richness_exp.name) +
-                   lat_ecotype +
+lrr.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat * 
+                   dominance_cage.treat.lrr +
+                   #lat_ecotype +
                    (1|var_upper.source), 
                  data = caged_effectsize_neweco)
 
@@ -181,6 +181,43 @@ caged_effectsize_neweco %>%
     panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "", legend.title = element_blank())
 
 Fig1BLat
+
+#Tyler's Idea about Dominance ####
+
+dom.df.tyler = caged_effectsize_neweco %>% 
+  mutate(inc.dom = case_when(dominance_cage.treat.lrr > 0 ~ "Increases Dom", 
+                             dominance_cage.treat.lrr < 0 ~ "Decreases Dom"))
+
+lrrDom.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat * 
+                      inc.dom * lat_ecotype +
+                   (1|var_upper.source), 
+                 data = dom.df.tyler)
+
+summary(lrr.mod2)
+glance(lrr.mod2)
+check_model(lrr.mod2)
+car::Anova(lrrDom.mod2, type =2)
+
+plot(allEffects(lrrDom.mod2))
+
+Fig1BLat_DOM = 
+  dom.df.tyler %>% 
+  filter(lat_ecotype != "") %>% 
+  ggplot(aes(x = abs(lat), y = betadisp.mean.lrr)) + 
+  stat_smooth(method = "lm", geom = "smooth", linewidth = 2,
+              aes(color = inc.dom)) + 
+#  stat_smooth(method = "lm", geom = "smooth", linewidth = 2,
+#              color = "black") + 
+  geom_jitter(width = 0.05, aes(color = inc.dom)) + 
+  geom_hline(yintercept = 0, color = "black", alpha = 0.3) +
+  theme_pubr(base_size= 18) +
+  labs(x= "Absolute Latitude",
+       y="Beta Dispersion LRR") +
+  theme(#plot.margin = unit(c(1,1,1,1), "cm"),
+    panel.grid.major = element_blank(), panel.grid.minor = element_blank(), legend.position = "right", legend.title = element_blank()) +
+  facet_grid(~lat_ecotype)
+
+Fig1BLat_DOM
 
 #Grassy and Subtidal seperate but equal modeling####
 lrr_grassy.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat +
