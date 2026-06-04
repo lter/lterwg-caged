@@ -29,16 +29,18 @@ dplyr::glimpse(gamma_v1)
 
 # Do needed wrangling
 gamma_trt <- gamma_v1 %>% 
-  # Drop zero abundance taxa
-  dplyr::filter(abundance > 0 & !is.na(abundance)) %>% 
   # Drop unwanted columns
-  dplyr::select(-dplyr::starts_with("exp.design."), -abundance) %>% 
+  dplyr::select(-dplyr::starts_with("exp.design.")) %>% 
     # Group by only desired columns & count number of unique taxa
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c("year", "taxa", "abundance"))) 
     )) %>% 
-  dplyr::summarize(gamma.richness = length(unique(taxa)),
-    .groups = "drop")
+  dplyr::summarize(
+    total.abun = sum(abundance, na.rm = TRUE),
+    gamma.richness = length(unique(taxa)),
+    .groups = "drop") %>% 
+  dplyr::mutate(gamma.richness = ifelse(total.abun == 0, yes = 0, no = gamma.richness)) %>% 
+  dplyr::select(-total.abun)
 
 # Do we have the expected number of values?
 nrow(gamma_trt) == length(unique(paste(gamma_trt$source, gamma_trt$exp.name, gamma_trt$cage.treatment_orig)))
