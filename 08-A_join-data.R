@@ -132,7 +132,7 @@ for(des_lvl in c(paste0("exp.design.", 1:4), "exp.name")){
   ## Dominance
   dom_des <- dplyr::filter(dom_v2, design.level == des_lvl) %>% 
     dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
-
+  
   # Join everything (incl. gamma/meta this time)
   join_des <- beta_des %>% 
     dplyr::left_join(x = ., y = alpha_des, 
@@ -149,8 +149,11 @@ for(des_lvl in c(paste0("exp.design.", 1:4), "exp.name")){
 
 }
 
-# Unlist to dataframe
-w.meta_v1 <- purrr::list_rbind(x = w.meta_outs)
+# Unlist to dataframe and zero-fill alpha diversity, gamma richness, and dominance
+## Both became NA for 0 abundance groups as an artifact of how they were calculated
+w.meta_v1 <- purrr::list_rbind(x = w.meta_outs) %>% 
+  dplyr::mutate(dplyr::across(.cols = c(alpha.diversity_richness, gamma.richness, dominance),
+    .fns = ~ ifelse(is.na(.), yes = 0, no = .)))
 
 # Check structure
 dplyr::glimpse(w.meta_v1)
