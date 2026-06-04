@@ -58,6 +58,7 @@ effectsizes_v2 <- effectsizes_v1 %>%
   select(source, exp.name, lat,var_succ.vs.late,
          var_upper.source, gamma.richness_exp.name,
          var_aq.or.terr,var_exclusion.duration.continuousyears,
+         var_ecotype1, var_resource.type.category,
          contains("lrr")) %>%
 distinct()
 

@@ -46,9 +46,10 @@ range(caged_effectsize$betadisp.mean.lrr)
 # why is there a NA in beta disp mean LRR? 
 
 df1 <- caged_effectsize %>%
-  filter(var_succ.vs.late == "late") %>%
+  #filter(var_succ.vs.late == "late") %>%
   drop_na(betadisp.mean.lrr)%>%
-  mutate(abs.lat = abs(lat))
+  mutate(abs.lat = abs(lat)) %>%
+  filter(var_resource.type.category != "mobile animals")
 
 
 unique(df1$exp.name) # 239
@@ -62,21 +63,75 @@ colnames(df1)
 str(df1)
 
 
+
+newecotype_ES <- df1 %>% 
+  mutate(lat_ecotype = 
+           case_when(var_ecotype1 == "grassland" ~ "grassy systems", 
+                     var_ecotype1 == "savanna" ~ "grassy systems",
+                     var_ecotype1 == "tundra" ~ "grassy systems",
+                     var_ecotype1 == "desert" ~ "grassy systems",
+                     var_ecotype1 == "subtidal" ~ "subtidal systems",
+                     var_ecotype1 == "coral reef" ~ "subtidal systems",
+                     #var_ecotype1 == "forest" ~ "trees", 
+                     .default = NA)) %>% 
+  filter(lat_ecotype != "")
+
+
+grassy <- newecotype_ES %>%
+  filter(lat_ecotype == "grassy systems")
+
+subtidal <- newecotype_ES %>%
+  filter(lat_ecotype == "subtidal systems")
   
-mod1 <- lmer(abs(betadisp.mean.lrr) ~ abs.lat +
-               var_exclusion.duration.continuousyears +
-               (1|var_upper.source), data = df1)
+mod1 <- lmer(betadisp.mean.lrr ~ abs.lat + var_aq.or.terr +
+               (1|var_upper.source), data = newecotype_ES) # 241 samples
 summary(mod1)
 car::Anova(mod1, type =2)
 
 library(effects)
 plot(allEffects(mod1))
 
-mod2 <- lmer(betadisp.mean.lrr ~ abs.lat + (1|var_upper.source), data = df1)
-summary(mod2)
-plot(allEffects(mod2))
+mod2 <- lmer(betadisp.mean.lrr ~ abs.lat +
+               (1|var_upper.source), data = newecotype_ES) # 241 samples
 
-AIC(mod1, mod2)
+
+mod3 <- lmer(alpha.diversity_cage.treat.lrr ~ abs.lat + var_aq.or.terr +
+               (1|var_upper.source), data = newecotype_ES) # 241 samples
+
+summary(mod3)
+car::Anova(mod3, type =2)
+
+library(effects)
+plot(allEffects(mod3))
+
+
+
+AICc(mod1, mod2, mod3)
+
+newecotype_B.grassy = newecotype_B %>% 
+  filter(lat_ecotype == "grassy systems")
+glimpse(newecotype_B.grassy)
+
+newecotype_B.subtidal = newecotype_B %>% 
+  filter(lat_ecotype == "subtidal systems")
+glimpse(newecotype_B.subtidal)
+
+ESmod_grassy.B <- glmmTMB(
+  betadisp_t ~
+    cage.treatment_std * abs(lat) +
+    scale(gamma.richness_exp.name) +
+    scale(betadisp.sample.size) +
+    (1 | var_upper.source / exp.name),
+  family  = beta_family(link = "probit"),
+  #control = ctrl,
+  data    = newecotype_B.grassy
+)
+
+glance(ESmod_grassy.B)
+summary(ESmod_grassy.B)
+car::Anova(ESmod_grassy.B) #LAT = .6
+
+
 
 
 
@@ -98,6 +153,31 @@ mod1 <- lmer(abs(dominance_cage.treat.lrr) ~ abs.lat +
 plot(allEffects(mod1))
 
 summary(mod1)
+
+
+
+# Paper 1 Raw Dominance Figure
+beta_df1 <- caged_beta %>%
+  #filter(var_succ.vs.late == "late") %>%
+  drop_na(dominance)%>%
+  mutate(abs.lat = abs(lat)) %>%
+  filter(var_resource.type.category != "mobile animals") %>%
+mutate(lat_ecotype = 
+           case_when(var_ecotype1 == "grassland" ~ "grassy systems", 
+                     var_ecotype1 == "savanna" ~ "grassy systems",
+                     var_ecotype1 == "tundra" ~ "grassy systems",
+                     var_ecotype1 == "desert" ~ "grassy systems",
+                     var_ecotype1 == "subtidal" ~ "subtidal systems",
+                     var_ecotype1 == "coral reef" ~ "subtidal systems",
+                     #var_ecotype1 == "forest" ~ "trees", 
+                     .default = NA)) %>% 
+  filter(lat_ecotype != "") # 9165
+
+
+
+mod1 <- lmer(dominance ~ abs.lat * var_aq)
+
+
 
 
 ## ------------------------------------------- ##

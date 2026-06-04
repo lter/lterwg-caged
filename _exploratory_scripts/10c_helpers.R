@@ -87,7 +87,7 @@ fmt_pval <- function(p, digits = 4) {
 ## ------------------------------------------- ##
 # Prints and exports Type II ANOVA table; reports AIC and R².
 
-summarise_model <- function(model, label, outdir = "results") {
+summarise_model <- function(model, label, outdir = file.path("..", "results")) {
 
   cat("\n", strrep("=", 60), "\n", label, "\n", strrep("=", 60), "\n\n", sep = "")
 
@@ -132,7 +132,7 @@ summarise_model <- function(model, label, outdir = "results") {
 
 validate_dharma <- function(model, data, prefix,
                              pred_vars = NULL,
-                             outdir    = "graphs/model_validation",
+                             outdir    = file.path("..", "graphs", "model_validation"),
                              nsim      = 500,
                              seed      = 42) {
   set.seed(seed)
@@ -210,7 +210,7 @@ validate_dharma <- function(model, data, prefix,
 #   save            — write PNG to outdir (FALSE to suppress and return plot only)
 
 plot_partial_with_data <- function(model, data, terms, prefix,
-                                    outdir            = "graphs/model_predictions",
+                                    outdir            = file.path("..", "graphs", "model_predictions"),
                                     ylab              = "Beta dispersion (SV-transformed)",
                                     x_lab             = NULL,
                                     width             = 7,
@@ -403,63 +403,138 @@ plot_partial_with_data <- function(model, data, terms, prefix,
 ## ------------------------------------------- ##
 # plot_covariate_effects() ----
 ## ------------------------------------------- ##
-# Plots the model-estimated effects of the two standard covariates
-# (gamma.richness_exp.name and betadisp.sample.size) overlaid on raw data.
-# Saved as a two-panel figure: <prefix>_covariates.png
+# Plots model-estimated partial effects of covariates overlaid on raw data.
+# Saved as a multi-panel figure: <prefix>_covariates.png
+#
+# covariate_terms — list of named lists, each with:
+#   term  : ggpredict terms string (e.g. "betadisp.sample.size [n=150]")
+#   xlab  : x-axis label
+#   color : line/ribbon color
+# Defaults to the original two-covariate set for backward compatibility.
 
 plot_covariate_effects <- function(model, data, prefix,
-                                    outdir = "graphs/model_predictions",
-                                    ylab   = "Beta dispersion (SV-transformed)") {
-
-  pg <- tryCatch(
-    as.data.frame(ggpredict(model, terms = "gamma.richness_exp.name [n=150]")),
-    error = function(e) { warning("Could not predict gamma richness for ", prefix); NULL }
-  )
-  ps <- tryCatch(
-    as.data.frame(ggpredict(model, terms = "betadisp.sample.size [n=150]")),
-    error = function(e) { warning("Could not predict sample size for ", prefix); NULL }
-  )
-
-  if (is.null(pg) || is.null(ps)) return(invisible(NULL))
+                                    outdir          = file.path("..", "graphs", "model_predictions"),
+                                    ylab            = "Beta dispersion (SV-transformed)",
+                                    covariate_terms = list(
+                                      list(term  = "gamma.richness_exp.name [n=150]",
+                                           xlab  = "Gamma richness (exp.name)",
+                                           color = "#0072B2"),
+                                      list(term  = "betadisp.sample.size [n=150]",
+                                           xlab  = "Betadisp sample size (# replicates)",
+                                           color = "#D55E00")
+                                    )) {
 
   cov_theme <- theme_classic(base_size = 12) +
     theme(panel.border    = element_rect(color = "black", fill = NA, linewidth = 0.7),
           axis.text       = element_text(color = "black"),
           legend.position = "none")
 
-  p_gamma <- ggplot() +
-    geom_point(data = data,
-               aes(x = gamma.richness_exp.name, y = betadisp_t),
-               color = "grey40", alpha = 0.06, size = 0.5) +
-    geom_ribbon(data = pg,
-                aes(x = x, ymin = conf.low, ymax = conf.high),
-                alpha = 0.25, fill = "#0072B2") +
-    geom_line(data  = pg,
-              aes(x = x, y = predicted),
-              color = "#0072B2", linewidth = 1.1) +
-    coord_cartesian(ylim = c(0, 1)) +
-    labs(x = "Gamma richness (exp.name)", y = ylab) +
-    cov_theme
+  panels <- lapply(covariate_terms, function(ct) {
+    raw_var <- trimws(sub("\\s*\\[.*\\]", "", ct$term))
+    pd <- tryCatch(
+      as.data.frame(ggpredict(model, terms = ct$term)),
+      error = function(e) { warning("Could not predict ", raw_var, " for ", prefix); NULL }
+    )
+    if (is.null(pd)) return(NULL)
 
-  p_ss <- ggplot() +
-    geom_point(data = data,
-               aes(x = betadisp.sample.size, y = betadisp_t),
-               color = "grey40", alpha = 0.06, size = 0.5) +
-    geom_ribbon(data = ps,
-                aes(x = x, ymin = conf.low, ymax = conf.high),
-                alpha = 0.25, fill = "#D55E00") +
-    geom_line(data  = ps,
-              aes(x = x, y = predicted),
-              color = "#D55E00", linewidth = 1.1) +
-    coord_cartesian(ylim = c(0, 1)) +
-    labs(x = "Betadisp sample size (# replicates)", y = ylab) +
-    cov_theme
+    p <- ggplot()
+    if (raw_var %in% names(data))
+      p <- p + geom_point(data  = data,
+                          aes(x = .data[[raw_var]], y = betadisp_t),
+                          color = "grey40", alpha = 0.06, size = 0.5)
+    p +
+      geom_ribbon(data = pd,
+                  aes(x = x, ymin = conf.low, ymax = conf.high),
+                  alpha = 0.25, fill = ct$color) +
+      geom_line(data  = pd,
+                aes(x = x, y = predicted),
+                color = ct$color, linewidth = 1.1) +
+      coord_cartesian(ylim = c(0, 1)) +
+      labs(x = ct$xlab, y = ylab) +
+      cov_theme
+  })
 
-  p_combined <- p_gamma + p_ss + plot_layout(ncol = 2)
+  panels <- Filter(Negate(is.null), panels)
+  if (length(panels) == 0) return(invisible(NULL))
+
+  ncol_fig   <- min(length(panels), 2L)
+  p_combined <- patchwork::wrap_plots(panels, ncol = ncol_fig)
 
   ggsave(file.path(outdir, paste0(prefix, "_covariates.png")),
-         plot = p_combined, width = 10, height = 5, dpi = 300)
+         plot    = p_combined,
+         width   = 5 * ncol_fig,
+         height  = 5 * ceiling(length(panels) / ncol_fig),
+         dpi     = 300)
   invisible(p_combined)
+}
+
+## ------------------------------------------- ##
+# check_model_vif() ----
+## ------------------------------------------- ##
+# Fits a main-effects-only version of the model (stripping interaction terms)
+# and runs check_collinearity() to detect multicollinearity.
+# Prints a flagged VIF table and writes <label>_vif.csv to outdir.
+#
+# Parameters:
+#   model   — fitted glmmTMB model
+#   data    — data frame used to fit the model (must be passed explicitly
+#             because aquatic-only subsets differ from the base dataset)
+#   label   — string prefix for output file and console header
+#   outdir  — directory for the _vif.csv output
+
+check_model_vif <- function(model, data, label, outdir = file.path("..", "results")) {
+
+  f       <- formula(model)
+  re_bars <- lme4::findbars(f)
+  fixed_f <- lme4::nobars(f)
+
+  te         <- attr(terms(fixed_f), "term.labels")
+  main_terms <- te[!grepl(":", te)]
+
+  re_str <- paste(
+    vapply(re_bars, function(b) paste0("(", deparse(b), ")"), character(1)),
+    collapse = " + "
+  )
+  lhs   <- deparse(fixed_f[[2]])
+  new_f <- as.formula(paste(lhs, "~", paste(c(main_terms, re_str), collapse = " + ")))
+
+  mod_vif <- tryCatch(
+    update(model, formula = new_f, data = data),
+    error = function(e) {
+      warning("VIF refit failed for '", label, "': ", e$message)
+      NULL
+    }
+  )
+  if (is.null(mod_vif)) {
+    cat("VIF check skipped (refit failed):", label, "\n")
+    return(invisible(NULL))
+  }
+
+  cat("\n--- VIF (", label, "— main effects only) ---\n", sep = "")
+  vif_tbl <- tryCatch(
+    as.data.frame(check_collinearity(mod_vif)),
+    error = function(e) { warning("check_collinearity failed: ", e$message); NULL }
+  )
+  if (is.null(vif_tbl)) return(invisible(NULL))
+
+  print(vif_tbl, digits = 3)
+
+  vif_col  <- names(vif_tbl)[grep("^VIF$",  names(vif_tbl))[1]]
+  term_col <- if ("Term" %in% names(vif_tbl)) "Term" else names(vif_tbl)[1]
+  vif_vals  <- vif_tbl[[vif_col]]
+  vif_terms <- vif_tbl[[term_col]]
+
+  high     <- vif_terms[!is.na(vif_vals) & vif_vals >= 10]
+  moderate <- vif_terms[!is.na(vif_vals) & vif_vals >= 5 & vif_vals < 10]
+
+  if (length(high)     > 0) cat("!! HIGH VIF (>=10):",     paste(high,     collapse = ", "), "\n")
+  if (length(moderate) > 0) cat("!  MODERATE VIF (5-10):", paste(moderate, collapse = ", "), "\n")
+  if (length(c(high, moderate)) == 0) cat("All VIF < 5 — no collinearity concerns.\n")
+
+  write.csv(vif_tbl, row.names = FALSE,
+    file = file.path(outdir, paste0(gsub("[^A-Za-z0-9_]", "_", label), "_vif.csv")))
+
+  invisible(vif_tbl)
 }
 
 # End helpers ----
