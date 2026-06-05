@@ -35,26 +35,18 @@ for(focal_beta in beta_outs){
   # Read the file in
   diff_v1 <- read.csv(file = file.path("data", focal_beta))
   
-  # Identify the grouping columns (we'll use this twice)
-  diff_groupcols <- c("source", "organization", "site", 
-                      "excluded.group", "measured.group", 
-                      "exp.name", "year", "betadisp.design.level")
-  
   # Do some needed preparatory calculatation
   diff_v2 <- diff_v1 %>% 
     # Remove missing beta disp & bad cage treatments
     dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
     dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
     # Summarize within treatments/etc.
-    dplyr::group_by(dplyr::across(
-      dplyr::all_of(c(diff_groupcols, "cage.treatment_std"))
-      )) %>% 
-    dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = T),
-                    #  betadisp.sd = sd(betadisp.comm.dist, na.rm = T),
-                    #  betadisp.n = dplyr::n(),
-                    #  betadisp.se = within.cage.treat_betadisp.sd / sqrt(betadisp.n),
-                     .groups = "drop")
-  
+    dplyr::group_by(dplyr::across(dplyr::all_of(
+      setdiff(x = names(.), y = c("cage.treatment_orig", 
+        paste0("betadisp.", c("sample.size", "median", "comm.dist"))))))) %>% 
+    dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = TRUE),
+      .groups = "drop")
+
   # Caculate difference in means
   diff_v3 <- diff_v2 %>% 
     # Bump beta dispersion to get rid of dividing by zero problem
@@ -76,8 +68,10 @@ for(focal_beta in beta_outs){
   
   # Attach that back on the summarized version of the output
   diff_v5 <- diff_v2 %>% 
-    # ALWAYS CHECK THE 'Y' OBJECT IS CORRECT IF UPDATING SCRIPT
-    dplyr::left_join(y = diff_v4,  by = diff_groupcols) %>% 
+    dplyr::left_join(x = ., y = diff_v4,
+      by = dplyr::join_by(source, organization, site, project.name, sampling.years,
+        excluded.group, measured.group, exp.name, exp.design.4, exp.design.3, 
+        exp.design.2, exp.design.1, year, betadisp.design.level)) %>% 
     dplyr::select(-betadisp.mean, -cage.treatment_std) %>% 
     dplyr::distinct()
   
