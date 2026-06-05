@@ -15,107 +15,210 @@ source(file = file.path("00_setup.R"))
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
+# Load data
+diff_v01 <- read.csv(file = file.path("data", "05-A_caged_beta-disp_all-scales.csv"))
+
+# Check structure
+dplyr::glimpse(diff_v01)
+
 ## ------------------------------------------- ##
-# Calculate Mean Difference ----
+# Prepare the Data ----
 ## ------------------------------------------- ##
 
-# Identify any beta dispersion outputs
-(beta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp"))
+# Do some needed preparatory calculatation
+diff_v02 <- diff_v01 %>% 
+  # Remove columns that we can get back from 'source'
+  dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
+    "sampling.years", "excluded.group", "measured.group"))) %>% 
+  # Remove missing beta disp & bad cage treatments
+  dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
+  dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
+  # Summarize within treatments/etc.
+  dplyr::group_by(dplyr::across(dplyr::all_of(
+    setdiff(x = names(.), y = c(paste0("betadisp.", c("sample.size", "median", "comm.dist"))))))) %>% 
+  dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = TRUE),
+    betadisp.centroid.mean = mean(betadisp.median, na.rm = TRUE),
+    .groups = "drop")
 
-# Make a list for storing outputs
-diff_list <- list()
+# Check structure
+dplyr::glimpse(diff_v02)
 
-# Loop across these to be more interpretable than purrr-style functional programming
-for(focal_beta in beta_outs){
-  # focal_beta <- "05-A_caged_beta-disp_all-scales.csv"
-  
-  # Progress message
-  message("Calculating mean difference / summary stats for ", focal_beta)
-  
-  # Read the file in
-  diff_v1 <- read.csv(file = file.path("data", focal_beta))
-  
-  # Do some needed preparatory calculatation
-  diff_v2 <- diff_v1 %>% 
-    # Remove missing beta disp & bad cage treatments
-    dplyr::filter(!is.na(betadisp.comm.dist)) %>% 
-    dplyr::filter(cage.treatment_std %in% c("caged", "uncaged")) %>% 
-    # Summarize within treatments/etc.
-    dplyr::group_by(dplyr::across(dplyr::all_of(
-      setdiff(x = names(.), y = c("cage.treatment_orig", 
-        paste0("betadisp.", c("sample.size", "median", "comm.dist"))))))) %>% 
-    dplyr::summarize(betadisp.mean = mean(betadisp.comm.dist, na.rm = TRUE),
-      .groups = "drop")
+## ------------------------------------------- ##
+# Separate Caged & Uncaged ---
+## ------------------------------------------- ##
 
-  # Caculate difference in means
-  diff_v3 <- diff_v2 %>% 
-    # Bump beta dispersion to get rid of dividing by zero problem
-    dplyr::mutate(betadisp.bump = betadisp.mean + 0.005) %>% 
-    dplyr::select(-betadisp.mean) %>% 
-    # Pivot wider
-    tidyr::pivot_wider(names_from = cage.treatment_std,
-                       values_from = betadisp.bump) %>% 
-    # Calculate difference between uncaged & caged
-    dplyr::mutate(betadisp.mean.diff = uncaged - caged,
-      betadisp.mean.lrr = log2(uncaged / caged))
-  
-  # Tidy up that output slightly
-  diff_v4 <- diff_v3 %>% 
-    # Drop the cage/uncage columns
-    dplyr::select(-dplyr::ends_with("caged")) %>% 
-    # Keep only unique rows
-    dplyr::distinct()
-  
-  # Attach that back on the summarized version of the output
-  diff_v5 <- diff_v2 %>% 
-    dplyr::left_join(x = ., y = diff_v4,
-      by = dplyr::join_by(source, organization, site, project.name, sampling.years,
-        excluded.group, measured.group, exp.name, exp.design.4, exp.design.3, 
-        exp.design.2, exp.design.1, year, betadisp.design.level)) %>% 
-    dplyr::select(-betadisp.mean, -cage.treatment_std) %>% 
-    dplyr::distinct()
-  
-  # Add this to the output list
-  diff_list[[focal_beta]] <- diff_v5
-  
-} # Close loop
+# Split off uncaged data
+uncage_diff <- diff_v02 %>% 
+  dplyr::filter(cage.treatment_std == "uncaged") %>% 
+  dplyr::select(-dplyr::starts_with("cage.treatment_")) %>% 
+  dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(.),
+    y = c("betadisp.mean", "betadisp.centroid.mean"))))) %>% 
+  dplyr::summarize(uncaged.betadisp.mean = mean(betadisp.mean, na.rm = TRUE),
+    uncaged.betadisp.centroid.mean = mean(betadisp.centroid.mean, na.rm = TRUE),
+    .groups = "drop") 
 
-# Check the structure at various stages
-## Starting version
-dplyr::glimpse(diff_v1)
-## After summary stat calculation
-dplyr::glimpse(diff_v2)
-## After diff calculation
-dplyr::glimpse(diff_v3)
-## Tidy versionof data with diffs calculated
-dplyr::glimpse(diff_v4)
-## After joining the summarized data with the diffs
-dplyr::glimpse(diff_v5)
+# Check structure
+dplyr::glimpse(uncage_diff)
 
+# And ditch uncaged from the other data
+cage_diff <- diff_v02 %>% 
+  dplyr::filter(cage.treatment_std == "caged") %>% 
+  dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(.),
+    y = c("betadisp.mean", "betadisp.centroid.mean"))))) %>% 
+  dplyr::summarize(betadisp.mean = mean(betadisp.mean, na.rm = TRUE),
+    betadisp.centroid.mean = mean(betadisp.centroid.mean, na.rm = TRUE),
+    .groups = "drop") 
+
+# Check structure
+dplyr::glimpse(cage_diff)
+
+## ------------------------------------------- ##
+# Join Caged/Uncaged Data ----
+## ------------------------------------------- ##
+
+# Join the two data together
+diff_v03 <- cage_diff %>% 
+  dplyr::left_join(x = ., y = uncage_diff,
+    by = dplyr::join_by(source, exp.name, exp.design.4, exp.design.3, exp.design.2, 
+      exp.design.1, year, betadisp.design.level))
+
+# Check structure
+dplyr::glimpse(diff_v03)
+
+## ------------------------------------------- ##
+# Calculate Difference & LRR ----
+## ------------------------------------------- ##
+
+# Find minimum betadispersion value greater than 0
+(beta_bump <- diff_v02 %>% 
+  dplyr::filter(!is.na(betadisp.mean) & betadisp.mean > 0) %>% 
+  dplyr::pull(betadisp.mean) %>% 
+  min())
+
+# Calculate diff and LRR
+diff_v04 <- diff_v03 %>% 
+  dplyr::mutate(
+    betadisp.mean.diff = (uncaged.betadisp.mean + beta_bump) - (betadisp.mean + beta_bump),
+    betadisp.mean.lrr = log2((uncaged.betadisp.mean + beta_bump) / (betadisp.mean + beta_bump)),
+    betadisp.centroid.diff = (uncaged.betadisp.centroid.mean + beta_bump) - (betadisp.centroid.mean + beta_bump),
+    betadisp.centroid.lrr = log2((uncaged.betadisp.centroid.mean + beta_bump) / (betadisp.centroid.mean + beta_bump)))
+
+# Check structure
+dplyr::glimpse(diff_v04)
+
+## ------------------------------------------- ##
+# Re-Generate 'Source' Component Columns ----
+## ------------------------------------------- ##
+
+# Split 'source' by delimiter
+diff_v05 <- diff_v04 %>% 
+  tidyr::separate_wider_delim(cols = source, delim = "_",
+    names = c("organization", "site", "project.name", 
+      "sampling.years", "excluded.group", "measured.group"),
+    cols_remove = FALSE)
+
+# Check structure
+dplyr::glimpse(diff_v05)
+
+## ------------------------------------------- ##
+# Re-Identify 'Finest Scales' ----
+## ------------------------------------------- ##
+
+# Get a 'no NA' version of beta dispersion
+diff_fine_v01 <- diff_v05 %>% 
+  dplyr::filter(!is.na(betadisp.mean) & !is.na(uncaged.betadisp.mean))
+
+# Make a list for outputs
+diff_fine_list <- list()
+
+# Loop across sources and experiments to re-identify finest scales
+for(finest_src in sort(unique(diff_fine_v01$source))){
+  # finest_src <- "pascual_argentina_saltmarshexpa_2014_guineapigs_vegetation.csv"
+  
+  # Subset to that source
+  diff_fine_src <- dplyr::filter(diff_fine_v01, source == finest_src)
+  
+  # Iterate across exp.names
+  for(finest_name in sort(unique(diff_fine_src$exp.name))){
+    # finest_name <- "pascual_argentina_saltmarshexpa_2014_guineapigs_vegetation.csv"
+    
+    # Progress message
+    message("Identifying finest scale for '", finest_name, "'")
+    
+    # Subset the data to only this experiment name
+    diff_fine_sub <- dplyr::filter(diff_fine_src, exp.name == finest_name)
+    
+    # Make another subset for each design level
+    diff_fine_sub_des1 <- dplyr::filter(diff_fine_sub, betadisp.design.level == "exp.design.1")
+    diff_fine_sub_des2 <- dplyr::filter(diff_fine_sub, betadisp.design.level == "exp.design.2")
+    diff_fine_sub_des3 <- dplyr::filter(diff_fine_sub, betadisp.design.level == "exp.design.3")
+    diff_fine_sub_des4 <- dplyr::filter(diff_fine_sub, betadisp.design.level == "exp.design.4")
+    diff_fine_sub_name <- dplyr::filter(diff_fine_sub, betadisp.design.level == "exp.name")
+    
+    # Work through the design levels sequentially (lowest to highest)
+    ## And add the lowest one with beta dispersion for both standardized cage treatments to the output list
+    if(nrow(diff_fine_sub_des1) >= 1){
+      
+      # Add to list
+      diff_fine_list[[paste0(finest_src, finest_name)]] <- diff_fine_sub_des1
+      
+      # Print a message too
+      message("For '", finest_name, "' exp.design.1 was the finest level with beta dispersion for both treatments") }
+    
+    # Do the same for design 2
+    else if(nrow(diff_fine_sub_des2) >= 1){      
+      diff_fine_list[[paste0(finest_src, finest_name)]] <- diff_fine_sub_des2
+      message("For '", finest_name, "' exp.design.2 was the finest level with beta dispersion for both treatments") }
+    
+    # And design 3
+    else if(nrow(diff_fine_sub_des3) >= 1){      
+      diff_fine_list[[paste0(finest_src, finest_name)]] <- diff_fine_sub_des3
+      message("For '", finest_name, "' exp.design.3 was the finest level with beta dispersion for both treatments") }
+    
+    # And design 4
+    else if(nrow(diff_fine_sub_des4) >= 1){      
+      diff_fine_list[[paste0(finest_src, finest_name)]] <- diff_fine_sub_des4
+      message("For '", finest_name, "' exp.design.4 was the finest level with beta dispersion for both treatments") }
+    
+    # And the experiment name
+    else if(nrow(diff_fine_sub_name) >= 1){      
+      diff_fine_list[[paste0(finest_src, finest_name)]] <- diff_fine_sub_name
+      message("For '", finest_name, "' exp.name was the finest level with beta dispersion for both treatments") }
+    
+  } # Close 'exp.name' loop
+} # Close 'source' loop
+
+# Unlist the list that we just created
+diff_fine_v02 <- purrr::list_rbind(diff_fine_list)
+
+# Check structure
+dplyr::glimpse(diff_fine_v02)
 
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
 
-# Loop across the list elements to export
-for(diff_outs in unique(names(diff_list))){
-  
-  # Create a final object
-  diff_v99 <- diff_list[[diff_outs]] %>% 
-    dplyr::distinct()
-  
-  # Generate tidy name / path
-  diff_name <- gsub(pattern = "05-A_caged_beta-disp", 
-                    replacement = "06-A_caged_mean-beta-diff", x = diff_outs)
-  diff_path <- file.path("data", diff_name)
-  
-  # Export locally
-  write.csv(x = diff_v99, row.names = F, na = '', file = diff_path)
 
-}
+# Make final data objects
+diff_all <- diff_v05
+diff_fine <- diff_fine_v02
 
-# Count number of sources/experiments at end
-unique(diff_v99$source) # 117
-unique(diff_v99$exp.name) # 347
+# Check structure
+dplyr::glimpse(diff_all)
+dplyr::glimpse(diff_fine)
+
+# Define file names
+diff_all_filename <- "06-A_caged_mean-beta-diff_all-scales.csv"
+diff_fine_filename <- "06-A_caged_mean-beta-diff_fine-scales.csv"
+
+# Export locally
+write.csv(x = diff_all, row.names = FALSE, na = '',
+  file = file.path("data", diff_all_filename))
+write.csv(x = diff_fine, row.names = FALSE, na = '',
+  file = file.path("data", diff_fine_filename))
+
+# Check source/experiment counts for both
+length(unique(diff_all$source)); length(unique(diff_all$exp.name))
+length(unique(diff_fine$source)); length(unique(diff_fine$exp.name))
 
 # End ----
