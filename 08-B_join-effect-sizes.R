@@ -32,7 +32,10 @@ dplyr::glimpse(meta_v1)
 # Load Gamma Diffs & LRRs  ----
 ## ------------------------------------------- ##
 # Read in gamma richness diffs
-gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv"))
+gam.diff_v1 <- read.csv(file = file.path("data", "06-B_caged_gamma-diff.csv")) %>% 
+  # Remove columns that we can get back from 'source'
+  dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
+    "sampling.years", "excluded.group", "measured.group")))
 
 # Check structure
 dplyr::glimpse(gam.diff_v1)
@@ -42,8 +45,12 @@ dplyr::glimpse(gam.diff_v1)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_allscales.csv")) %>% 
-  dplyr::rename(design.level = alpha.diversity_design.level)
+alp.diff_v1 <- read.csv(file = file.path("data", "06-C_caged_alpha-div-diff_all-scales.csv")) %>% 
+  dplyr::rename(design.level = alpha.design.level) %>% 
+  # Remove columns that we can get back from 'source'
+  dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
+    "sampling.years", "excluded.group", "measured.group"))) %>% 
+  dplyr::select(-cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(alp.diff_v1)
@@ -53,8 +60,12 @@ dplyr::glimpse(alp.diff_v1)
 ## ------------------------------------------- ##
 
 # Load alpha diversity diffs
-dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_allscales.csv")) %>% 
-  dplyr::rename(design.level = dominance_design.level)
+dom.diff_v1 <- read.csv(file = file.path("data", "06-D_caged_dominance-diff_all-scales.csv")) %>% 
+  dplyr::rename(design.level = dom.design.level) %>% 
+  # Remove columns that we can get back from 'source'
+  dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
+    "sampling.years", "excluded.group", "measured.group"))) %>% 
+  dplyr::select(-cage.treatment_std)
 
 # Check structure
 dplyr::glimpse(dom.diff_v1)
@@ -67,7 +78,11 @@ dplyr::glimpse(dom.diff_v1)
 beta.diff_v1 <- read.csv(file = file.path("data", "06-A_caged_mean-beta-diff_all-scales.csv")) %>% 
   dplyr::rename(design.level = betadisp.design.level) %>% 
   dplyr::rename_with(.cols = dplyr::starts_with("within.cage.treat"),
-    .fn = ~ gsub("within.cage.treat_", "", x = .))
+    .fn = ~ gsub("within.cage.treat_", "", x = .)) %>% 
+  # Remove columns that we can get back from 'source'
+  dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
+    "sampling.years", "excluded.group", "measured.group"))) %>% 
+  dplyr::select(-cage.treatment_std)
 
 # Check structure of one
 dplyr::glimpse(beta.diff_v1)
@@ -91,8 +106,9 @@ dplyr::glimpse(join_v1)
 # Join 'allscales' alpha & dominance data
 join_v2 <- alp.diff_v1 %>% 
   dplyr::left_join(x = ., y = dom.diff_v1,
-    by = dplyr::join_by(source, organization, site,  
-      excluded.group, measured.group, exp.name, design.level))
+    by = dplyr::join_by(source, exp.name, exp.design.4, exp.design.3, 
+      exp.design.2, exp.design.1, cage.treatment_orig, 
+      year, design.level))
   
 # Check structure
 dplyr::glimpse(join_v2)
@@ -104,8 +120,7 @@ dplyr::glimpse(join_v2)
 # Combine all ancillary data (with 'all scales' on left)
 join_v3 <- join_v2 %>% 
   dplyr::left_join(x = ., y = join_v1,
-    by = dplyr::join_by(source, organization, site,
-      excluded.group, measured.group, exp.name))
+    by = dplyr::join_by(source, exp.name))
 
 # Check structure
 dplyr::glimpse(join_v3)
@@ -114,11 +129,27 @@ dplyr::glimpse(join_v3)
 # Join Beta (Means) with Everything ----
 ## ------------------------------------------- ##
 
-# Join everything with beta differences (again, everything othat than beta in left)
-join_v4 <- join_v3 %>% 
-  dplyr::left_join(x = ., y = beta.diff_v1,
-    by = dplyr::join_by(source, organization, site, excluded.group, measured.group, 
-      exp.name, design.level))
+# Make a list for outputs
+join_list <- list()
+
+# Iterate across design levels
+for(des_level in c(paste0("exp.design.", 1:4), "exp.name")){
+  # des_level <- "exp.design.2"
+
+  # Progress message
+  message("Joining beta dispersion and everything else for ", des_level)
+
+  # Subset both bits
+  beta_sub <- dplyr::filter(beta.diff_v1, design.level == des_level)
+  ee_sub <- dplyr::filter(join_v3, design.level == des_level) %>% 
+    dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
+
+  # Join and add to list
+  join_list[[des_level]] <- dplyr::left_join(x = beta_sub, y = ee_sub)
+}
+
+# Unlist back to dataframe
+join_v4 <- purrr::list_rbind(x = join_list)
 
 # Check structure
 dplyr::glimpse(join_v4)
@@ -128,7 +159,7 @@ dplyr::glimpse(join_v4)
 ## ------------------------------------------- ##
 
 # Make a list for outputs
-join_list <- list()
+fine_list <- list()
 
 # The prior object includes all calculable scales, let's make a 'finest scales' variant
 for(join_src.name in sort(unique(join_v4$source))){
@@ -155,15 +186,15 @@ for(join_src.name in sort(unique(join_v4$source))){
     
     # Work through the design levels sequentially (lowest to highest) to identify finest
     if(any(!is.na(join_des1$betadisp.mean.diff))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des1
+      fine_list[[paste0(join_src.name, join_exp.name)]] <- join_des1
     } else if(any(!is.na(join_des2$betadisp.mean.diff))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des2
+      fine_list[[paste0(join_src.name, join_exp.name)]] <- join_des2
     } else if(any(!is.na(join_des3$betadisp.mean.diff))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des3
+      fine_list[[paste0(join_src.name, join_exp.name)]] <- join_des3
     } else if(any(!is.na(join_des4$betadisp.mean.diff))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_des4
+      fine_list[[paste0(join_src.name, join_exp.name)]] <- join_des4
     } else if(any(!is.na(join_name$betadisp.mean.diff))){
-      join_list[[paste0(join_src.name, join_exp.name)]] <- join_name
+      fine_list[[paste0(join_src.name, join_exp.name)]] <- join_name
     }
   } # Close 'exp.name' loop
 } # Close 'source' loop
