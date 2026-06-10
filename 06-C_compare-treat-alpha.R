@@ -112,7 +112,8 @@ alp.diff_v05 <- alp.diff_v04 %>%
   tidyr::separate_wider_delim(cols = source, delim = "_",
     names = c("organization", "site", "project.name", 
       "sampling.years", "excluded.group", "measured.group"),
-    cols_remove = FALSE)
+    cols_remove = FALSE) %>% 
+  dplyr::relocate(source, .before = dplyr::everything())
 
 # Check structure
 dplyr::glimpse(alp.diff_v05)
