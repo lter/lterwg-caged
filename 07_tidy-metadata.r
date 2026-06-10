@@ -22,14 +22,19 @@ source(file = file.path("00_setup.R"))
 # Clear environment + collect garbage
 rm(list = ls()); gc()
 
-# Identify data files we want to add stuff to
-(w.meta_outs <- dir(path = file.path("data"), pattern = "05-A_caged_beta-disp_"))
-w.meta_in_list <- purrr::map(.x = w.meta_outs,
-                             .f = ~ read.csv(file = file.path("data", .x)))
-names(w.meta_in_list) <- w.meta_outs
+## ------------------------------------------- ##
+# Identify Sources/Experiments in Data ---
+## ------------------------------------------- ##
 
-# Check structure of one
-dplyr::glimpse(w.meta_in_list[[1]])
+# Get a full list of sources/experiments in the data to which the metadata will be joined
+data_v1 <- purrr::map(.x = dir(path = file.path("data"), pattern = "05-A_caged_beta-disp_"),
+    .f = ~ read.csv(file = file.path("data", .x))) %>% 
+  purrr::list_rbind(x = .) %>% 
+  dplyr::select(source, exp.name) %>% 
+  dplyr::distinct()
+
+# Check structure
+dplyr::glimpse(data_v1)
 
 ## ------------------------------------------- ##
 # Load Metadata ----
@@ -127,9 +132,7 @@ meta_v4 %>%
 ## ------------------------------------------- ##
 
 # Check for mismatches in which datasets are in the data but not metadata (or vice versa)
-supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
-                                    w.meta_in_list[[2]]$source)), 
-                     new = unique(meta_v3$source))
+supportR::diff_check(old = data_v1$source, new = unique(meta_v3$source))
 
 # old = data, new = metadata
 # there will be some that are not in the metadata if we decided to exclude them 
@@ -143,14 +146,11 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
 ### (or potentially removed due to confounding treatments)
 
 # Remove any files not found in the data from the metadata
-meta_v5 <- dplyr::filter(.data = meta_v4, source %in% unique(c(w.meta_in_list[[1]]$source,
-                                                               w.meta_in_list[[2]]$source)))
+meta_v5 <- dplyr::filter(.data = meta_v4, source %in% data_v1$source)
 
 # Now check for mismatches in "exp.name" column
 ## This is why this metadata is "site level"
-supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
-                                    w.meta_in_list[[2]]$exp.name)),
-                     new = unique(meta_v5$exp.name))
+supportR::diff_check(old = data_v1$exp.name, new = unique(meta_v5$exp.name))
 # old = data, new = metadata
 ## If any are in data but not *metadata*:
 ### The metadata had this info entered incorrectly
@@ -163,19 +163,11 @@ supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
 ### _OR_ could be caused by new "exp.name" in data and an outdated entry in the metaadata
 
 # Remove any experiment names not found in data
-meta_v6 <- dplyr::filter(.data = meta_v5, exp.name %in% unique(c(w.meta_in_list[[1]]$exp.name,
-                                                                 w.meta_in_list[[2]]$exp.name)))
+meta_v6 <- dplyr::filter(.data = meta_v5, exp.name %in% data_v1$exp.name)
 
 # Re-check that there are no mismatches
-supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$source,
-                                    w.meta_in_list[[2]]$source)),
-                     new = unique(meta_v6$source))
-# old = data, new = metadata
-
-supportR::diff_check(old = unique(c(w.meta_in_list[[1]]$exp.name,
-                                    w.meta_in_list[[2]]$exp.name)),
-                                  new = unique(meta_v6$exp.name))
-# old = data, new = metadata
+supportR::diff_check(old = data_v1$source, new = unique(meta_v6$source))
+supportR::diff_check(old = data_v1$exp.name, new = unique(meta_v6$exp.name))
 
 ## ------------------------------------------- ##
 # Export ----
