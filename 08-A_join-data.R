@@ -79,8 +79,7 @@ dplyr::glimpse(alpha_v1)
 
 # Do needed wrangling
 alpha_v2 <- alpha_v1 %>% 
-  dplyr::relocate(cage.treatment_orig, .after = cage.treatment_std) %>% 
-  dplyr::rename(design.level = alpha.diversity_design.level) %>% 
+  dplyr::rename(design.level = alpha.design.level) %>% 
   dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
     "sampling.years", "excluded.group", "measured.group")))
 
@@ -100,9 +99,8 @@ dplyr::glimpse(dom_v1)
 # Do needed wrangling
 dom_v2 <- dom_v1 %>% 
   dplyr::select(-dplyr::ends_with("abundance")) %>% 
-  dplyr::relocate(cage.treatment_orig, .after = cage.treatment_std) %>% 
   dplyr::filter(!is.na(dominance)) %>% 
-  dplyr::rename(design.level = dominance_design.level) %>% 
+  dplyr::rename(design.level = dom.design.level) %>% 
   dplyr::select(-dplyr::all_of(c("organization", "site", "project.name", 
     "sampling.years", "excluded.group", "measured.group")))
 
@@ -168,8 +166,8 @@ w.meta_v2 <- w.meta_v1 %>%
   dplyr::relocate(dplyr::starts_with(c("betadisp", "alpha", "gamma", "dominance")), 
     .after = dplyr::everything()) %>% 
   tidyr::separate_wider_delim(cols = source, delim = "_",
-    names = c("organization", "site", "project.name", "sampling.years", "excluded.group", "measured.group"),
-    cols_remove = FALSE)
+    names = c("organization", "site", "project.name", "sampling.years", 
+      "excluded.group", "measured.group"), cols_remove = FALSE)
 
 # Check structure
 dplyr::glimpse(w.meta_v2)
