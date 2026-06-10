@@ -73,6 +73,8 @@ vignettes/*.pdf
 # Other file types
 *.pdf
 *.zip
+*.pptx
+*.docx
 
 # Data file types
 ## Delete the hashtag (on the left in the following lines) if you _would_ like to ignore this file type
