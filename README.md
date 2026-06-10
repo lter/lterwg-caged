@@ -29,8 +29,13 @@ Principal Investigators:
 - `06-C_compare-treat-alpha` -- Calculate difference & LRR for between caging treatment alpha diversity (i.e., richness)
 - `06-D_compare-treat-dominance` -- Calculate difference & LRR for between caging treatment dominance
 - `07_tidy-metadata` -- Do QC on metadata file and check for mismatches with beta dispersion data
-- `08_join-data` -- Join site-level metadata, beta dispersion (un-averaged), gamma richnes, alpha richness, dominance, and treament/experiment means of beta dispersion
-- `08_prepare-for-stats` -- Calculate effect size and streamline data to only bits needed for current analysis
+- `08-A_join-data` -- Join site-level metadata, beta dispersion (un-averaged), gamma richnes, alpha richness, and dominance
+- `08-B_join-effect-sizes` -- Join site-level metadata, treament/experiment means of beta dispersion, alpha diversity, gamma richness, and dominance
+- `09_prepare-for-stats` -- Calculate effect size and streamline data to only bits needed for current analysis
+- `10a_raw-data-figs` -- 
+- `10b_sample-size` -- 
+- `10c_stats` -- 
+- `99_upload` -- Upload outputs of core workflow to Drive (file size-permitting)
 
 ## Supplementary Resources
 
