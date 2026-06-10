@@ -133,7 +133,7 @@ dplyr::glimpse(join_v3)
 join_list <- list()
 
 # Iterate across design levels
-for(des_level in c(paste0("exp.design.", 1:4), "exp.name")){
+for(des_level in unique(beta.diff_v1$design.level)){
   # des_level <- "exp.design.2"
 
   # Progress message
