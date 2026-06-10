@@ -44,43 +44,66 @@ diff_v02 <- diff_v01 %>%
 dplyr::glimpse(diff_v02)
 
 ## ------------------------------------------- ##
-# Separate Caged & Uncaged ---
+# Summarize ----
 ## ------------------------------------------- ##
 
-# Split off uncaged data
-uncage_diff <- diff_v02 %>% 
-  dplyr::filter(cage.treatment_std == "uncaged") %>% 
-  dplyr::select(-dplyr::starts_with("cage.treatment_")) %>% 
-  dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(.),
-    y = c("betadisp.mean", "betadisp.centroid.mean"))))) %>% 
-  dplyr::summarize(uncaged.betadisp.mean = mean(betadisp.mean, na.rm = TRUE),
-    uncaged.betadisp.centroid.mean = mean(betadisp.centroid.mean, na.rm = TRUE),
-    .groups = "drop") 
+# Make a list with one element per design level
+diff_list <- list(
+  "exp.design.1" = dplyr::filter(diff_v02, betadisp.design.level == "exp.design.1"),
+  "exp.design.2" = dplyr::filter(diff_v02, betadisp.design.level == "exp.design.2") %>% 
+    dplyr::select(-dplyr::all_of(paste0("exp.design.", 1))),
+  "exp.design.3" = dplyr::filter(diff_v02, betadisp.design.level == "exp.design.3") %>% 
+    dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:2))),
+  "exp.design.4" = dplyr::filter(diff_v02, betadisp.design.level == "exp.design.4") %>% 
+    dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:3))),
+  "exp.name" = dplyr::filter(diff_v02, betadisp.design.level == "exp.name") %>% 
+    dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:4)))
+)
 
-# Check structure
-dplyr::glimpse(uncage_diff)
+# Make another list for outputs
+diff_outs <- list()
 
-# And ditch uncaged from the other data
-cage_diff <- diff_v02 %>% 
-  dplyr::filter(cage.treatment_std == "caged") %>% 
-  dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(.),
-    y = c("betadisp.mean", "betadisp.centroid.mean"))))) %>% 
-  dplyr::summarize(betadisp.mean = mean(betadisp.mean, na.rm = TRUE),
-    betadisp.centroid.mean = mean(betadisp.centroid.mean, na.rm = TRUE),
-    .groups = "drop") 
+# Loop across design levels to summarize
+for(des_level in c(paste0("exp.design.", 1:4), "exp.name")){
+  # des_level <- "exp.design.3"
 
-# Check structure
-dplyr::glimpse(cage_diff)
+  # Progress message
+  message("Summarizing beta dispersion for ", des_level)
 
-## ------------------------------------------- ##
-# Join Caged/Uncaged Data ----
-## ------------------------------------------- ##
+  # Grab the right list element
+  focal_des <- diff_list[[des_level]]
 
-# Join the two data together
-diff_v03 <- cage_diff %>% 
-  dplyr::left_join(x = ., y = uncage_diff,
-    by = dplyr::join_by(source, exp.name, exp.design.4, exp.design.3, exp.design.2, 
-      exp.design.1, year, betadisp.design.level))
+  # Split off uncaged data and average across replicates
+  uncage_diff <- focal_des %>% 
+    dplyr::filter(cage.treatment_std == "uncaged") %>% 
+    dplyr::select(-dplyr::starts_with("cage.treatment_")) %>% 
+    dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(.),
+      y = c("betadisp.mean", "betadisp.centroid.mean"))))) %>% 
+    dplyr::summarize(uncaged.betadisp.mean = mean(betadisp.mean, na.rm = TRUE),
+      uncaged.betadisp.centroid.mean = mean(betadisp.centroid.mean, na.rm = TRUE),
+      .groups = "drop") 
+  
+  # Check structure
+  # dplyr::glimpse(uncage_diff)
+  
+  # And ditch uncaged from the other data
+  cage_diff <- focal_des %>% 
+    dplyr::filter(cage.treatment_std == "caged") %>% 
+    dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(.),
+      y = c("betadisp.mean", "betadisp.centroid.mean"))))) %>% 
+    dplyr::summarize(betadisp.mean = mean(betadisp.mean, na.rm = TRUE),
+      betadisp.centroid.mean = mean(betadisp.centroid.mean, na.rm = TRUE),
+      .groups = "drop") 
+  
+  # Check structure
+  # dplyr::glimpse(cage_diff)
+
+  # Join the two data together and add to output list
+  diff_outs[[des_level]] <- dplyr::left_join(x = cage_diff, y = uncage_diff)
+}
+
+# Unlist to dataframe
+diff_v03 <- purrr::list_rbind(x = diff_outs)
 
 # Check structure
 dplyr::glimpse(diff_v03)
@@ -90,7 +113,7 @@ dplyr::glimpse(diff_v03)
 ## ------------------------------------------- ##
 
 # Find minimum betadispersion value greater than 0
-(beta_bump <- diff_v02 %>% 
+(bump <- diff_v02 %>% 
   dplyr::filter(!is.na(betadisp.mean) & betadisp.mean > 0) %>% 
   dplyr::pull(betadisp.mean) %>% 
   min())
@@ -98,10 +121,10 @@ dplyr::glimpse(diff_v03)
 # Calculate diff and LRR
 diff_v04 <- diff_v03 %>% 
   dplyr::mutate(
-    betadisp.mean.diff = (uncaged.betadisp.mean + beta_bump) - (betadisp.mean + beta_bump),
-    betadisp.mean.lrr = log2((uncaged.betadisp.mean + beta_bump) / (betadisp.mean + beta_bump)),
-    betadisp.centroid.diff = (uncaged.betadisp.centroid.mean + beta_bump) - (betadisp.centroid.mean + beta_bump),
-    betadisp.centroid.lrr = log2((uncaged.betadisp.centroid.mean + beta_bump) / (betadisp.centroid.mean + beta_bump)))
+    betadisp.mean.diff = (uncaged.betadisp.mean + bump) - (betadisp.mean + bump),
+    betadisp.mean.lrr = log2((uncaged.betadisp.mean + bump) / (betadisp.mean + bump)),
+    betadisp.centroid.diff = (uncaged.betadisp.centroid.mean + bump) - (betadisp.centroid.mean + bump),
+    betadisp.centroid.lrr = log2((uncaged.betadisp.centroid.mean + bump) / (betadisp.centroid.mean + bump)))
 
 # Check structure
 dplyr::glimpse(diff_v04)
@@ -115,7 +138,8 @@ diff_v05 <- diff_v04 %>%
   tidyr::separate_wider_delim(cols = source, delim = "_",
     names = c("organization", "site", "project.name", 
       "sampling.years", "excluded.group", "measured.group"),
-    cols_remove = FALSE)
+    cols_remove = FALSE) %>% 
+  dplyr::relocate(source, .before = dplyr::everything())
 
 # Check structure
 dplyr::glimpse(diff_v05)
