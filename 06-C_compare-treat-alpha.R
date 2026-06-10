@@ -77,7 +77,7 @@ dplyr::glimpse(cage_diff)
 alp.diff_v03 <- cage_diff %>% 
   dplyr::left_join(x = ., y = uncage_diff,
     by = dplyr::join_by(source, exp.name, exp.design.4, exp.design.3, exp.design.2, 
-      exp.design.1, alpha.diversity_design.level)) %>% 
+      exp.design.1, year, alpha.design.level)) %>% 
   dplyr::mutate(uncaged.alpha.mean = ifelse(is.na(uncaged.alpha.mean),
     yes = 0, no = uncaged.alpha.mean))
 
@@ -112,8 +112,7 @@ alp.diff_v05 <- alp.diff_v04 %>%
   tidyr::separate_wider_delim(cols = source, delim = "_",
     names = c("organization", "site", "project.name", 
       "sampling.years", "excluded.group", "measured.group"),
-    cols_remove = FALSE) %>% 
-  dplyr::rename(alpha.design.level = alpha.diversity_design.level)
+    cols_remove = FALSE)
 
 # Check structure
 dplyr::glimpse(alp.diff_v05)
