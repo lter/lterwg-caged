@@ -43,8 +43,8 @@ dim(betadisp_v1) # 13964    44
 
 
 # Check number of rows and dataframe
-dim(effectsizes_v1) #1632   52
-# so the effect size needs to be set to only unique?
+dim(effectsizes_v1) # 620 52
+# now there are 620 rows because each intermediate level also has an effect size calculated 
 
 
 
