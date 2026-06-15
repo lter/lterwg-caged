@@ -53,10 +53,13 @@ df1 <- caged_effectsize %>%
   mutate(abs.lat = abs(lat)) %>%
   # get rid of any resources of mobile animals 
   filter(var_resource.type.category != "mobile animals") %>%
-  drop_na(betadisp.mean.diff)
+  # filter out just grassy vs subtidal
+  filter(var_grassy_v_stubtidal %in% c("herbaceous", "reef (marine)"))
 
-unique(df1$exp.name) # 347
-unique(df1$source) # 117
+
+unique(df1$exp.name) # 246 experiments
+unique(df1$source) # 71 sources
+dim(df1) #444 effect sizes
 
 range(df1$betadisp.mean.lrr) 
 hist(df1$betadisp.mean.lrr) # there is a pretty strong outlier? - its an ashton paper
@@ -64,45 +67,14 @@ hist(df1$betadisp.mean.lrr) # there is a pretty strong outlier? - its an ashton 
 colnames(df1)
 str(df1)
 
-#Build new ecotype columns
-caged_effectsize_neweco <- df1 %>% 
-  mutate(var_aq.or.terr2 = 
-           case_when(var_ecotype1 == "rocky intertidal" ~ "transitional", 
-                     var_ecotype1 == "soft-intertidal" ~ "transitional",
-                     var_ecotype1 == "salt marsh" ~ "transitional",
-                     var_ecotype1 == "wetland" ~ "transitional",
-                     var_ecotype1 == "tundra" ~ "terrestrial",
-                     var_ecotype1 == "grassland" ~ "terrestrial",
-                     var_ecotype1 == "forest" ~ "terrestrial",
-                     var_ecotype1 == "savanna" ~ "terrestrial",
-                     var_ecotype1 == "desert" ~ "terrestrial",
-                     var_ecotype1 == "subtidal" ~ "marine",
-                     var_ecotype1 == "coral reef" ~ "marine",
-                     var_ecotype1 == "seagrass" ~ "marine",
-                     .default = NA)) %>% 
-  mutate(lat_ecotype = 
-           case_when(var_ecotype1 == "grassland" ~ "grassy systems", 
-                     var_ecotype1 == "savanna" ~ "grassy systems",
-                     var_ecotype1 == "tundra" ~ "grassy systems",
-                     var_ecotype1 == "desert" ~ "grassy systems",
-                     var_ecotype1 == "subtidal" ~ "subtidal systems",
-                     var_ecotype1 == "coral reef" ~ "subtidal systems",
-                     #var_ecotype1 == "forest" ~ "trees", 
-                     .default = NA)) %>% 
-  filter(lat_ecotype != "")
 
-caged_effectsize_grassy <- caged_effectsize_neweco %>%
-  filter(lat_ecotype == "grassy systems")
-
-caged_effectsize_subtidal <- caged_effectsize_neweco %>%
-  filter(lat_ecotype == "subtidal systems")
 
 #Beta LRR Models ####
 lrr.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat + 
                    #scale(gamma.richness_exp.name) +
-                   lat_ecotype +
+                   var_grassy_v_stubtidal +
                    (1|exp.name), 
-               data = caged_effectsize_neweco) # singular when you use var_upper_source
+               data = df1) # singular when you use var_upper_source
 summary(lrr.mod1) 
 glance(lrr.mod1)
 check_model(lrr.mod1)
@@ -123,34 +95,62 @@ car::Anova(lrr.mod1, test.statistic = "F")
 library(effects)
 plot(allEffects(lrr.mod1))
 
-lrr.mod2 <- lmer(betadisp.mean.lrr ~ abs.lat * 
-                   dominance_cage.treat.lrr +
-                   #lat_ecotype +
-                   (1|var_upper.source), 
-                 data = caged_effectsize_neweco)
-
-summary(lrr.mod2)
-glance(lrr.mod2)
-check_model(lrr.mod2)
-car::Anova(lrr.mod2, type =2)
 
 # Using GLMMTMB instead - still gaussian
-lrr.Bmod1 <- glmmTMB(
-  betadisp.mean.lrr ~
-    abs(lat) + 
-    lat_ecotype +
-    #scale(gamma.richness_exp.name) +
-    (1 | var_upper.source ),
-  data    = caged_effectsize_neweco 
-) # this time its not singular, probably glmmTMB has a better model optimizer
+lrr.Bmod1 <- glmmTMB(betadisp.mean.lrr ~
+                       abs.lat *
+                       var_grassy_v_stubtidal +
+                       (1|var_upper.source),
+                     data = df1) # this time its not singular, probably glmmTMB has a better model optimizer
 
 glance(lrr.Bmod1)
 summary(lrr.Bmod1)
-car::Anova(lrr.Bmod1, type = 2) 
+car::Anova(lrr.Bmod1, type = 2) # interaction is now significant 
+plot(allEffects(lrr.Bmod1))
+# why are we keeping both late and early successional again? i canʻt find anything in our notes
 
 
 
-AICc(lrr.mod1, lrr.mod2, lrr.Bmod1)
+# Alpha Diversity
+alpha.mod1 <- glmmTMB(alpha.mean.lrr ~
+                       abs.lat +
+                       var_grassy_v_stubtidal +
+                       (1|var_upper.source),
+                     data = df1) # this time its not singular, probably glmmTMB has a better model optimizer
+glance(alpha.mod1)
+summary(alpha.mod1)
+car::Anova(alpha.mod1, type = 2) # no interaction
+plot(allEffects(alpha.mod1))
+
+
+# Dominance
+dominance.mod1 <- glmmTMB(dominance.mean.lrr ~
+                        abs.lat +
+                        var_grassy_v_stubtidal +
+                        (1|var_upper.source),
+                      data = df1) # this time its not singular, probably glmmTMB has a better model optimizer
+glance(dominance.mod1)
+summary(dominance.mod1)
+car::Anova(dominance.mod1, type = 2) # no interaction
+plot(allEffects(dominance.mod1))
+
+
+# Centroid
+cent.mod1 <- glmmTMB(betadisp.centroid.lrr ~
+                            abs.lat *
+                            var_grassy_v_stubtidal +
+                            (1|var_upper.source),
+                          data = df1) # this time its not singular, probably glmmTMB has a better model optimizer
+glance(cent.mod1)
+summary(cent.mod1)
+car::Anova(cent.mod1, type = 2) 
+plot(allEffects(cent.mod1)) # looks almost the same as beta dispersion
+
+
+
+
+
+
 
 #Beta LRR Figure Draft####
 caged_effectsize_neweco
