@@ -163,13 +163,13 @@ fine_list <- list()
 
 # The prior object includes all calculable scales, let's make a 'finest scales' variant
 for(join_src.name in sort(unique(join_v4$source))){
-  # join_src.name <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+  # join_src.name <- "lter-mcr_moorea_recharge_2018-2022_fish_benthic.csv"
   
   # Subset to that source
   join_src <- dplyr::filter(join_v4, source == join_src.name)
   
   for(join_exp.name in sort(unique(join_src$exp.name))){
-    # join_exp.name <- "aguilera_chile_rockyintertidal_2010-2011_mollusc_kelp.csv"
+    # join_exp.name <- "Disturbed"
     
     # Progress message
     message("Identifying finest scale for '", join_exp.name, "'")
@@ -200,7 +200,7 @@ for(join_src.name in sort(unique(join_v4$source))){
 } # Close 'source' loop
 
 # Unlist to a dataframe
-join_v5 <- purrr::list_rbind(x = join_list)
+join_v5 <- purrr::list_rbind(x = fine_list)
 
 # Did that work?
 ## The following should return a 0-row tibble (if it worked)
