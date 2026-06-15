@@ -26,20 +26,18 @@ rm(list = ls()); gc()
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
 
-#CAUTION CAUTION .... The data I used for the models on 6/4 may not be exactly what is below in these csvs. I had to circumvent the workflow to get these habitat types ready for our last day. it should be 08_caged_experiment-level-everything_fine-scales.csv, then run through the code in 09 prepare for stats. But of note is that I did not run this below code
 
-caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
+caged_effectsize <- read.csv(file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
 
 caged_beta <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_finest-scales.csv"))
 
-rawbetas_v1 <- read.csv("~/Documents/_data/CAGED/data/08-B_caged_expname-effect-size_fine-scales.csv")
 
-dim(caged_effectsize) # 347 rows
+dim(caged_effectsize) # 620 rows (effect size calculated for each consumer level original treatment)
 dim(caged_beta) # 13964 rows
 
 # Check number of sources
-unique(caged_effectsize$exp.name) # 346
-unique(caged_beta$exp.name) #346
+unique(caged_effectsize$exp.name) # 347
+unique(caged_beta$exp.name) #347
 dim(caged_effectsize)
 
 
@@ -57,12 +55,11 @@ df1 <- caged_effectsize %>%
   filter(var_resource.type.category != "mobile animals")
 
 
-unique(df1$exp.name) # 239
-unique(df1$source) # 94
-# dropped one 
+unique(df1$exp.name) # 347
+unique(df1$source) # 117
 
-range(df1$betadisp.mean.lrr) # -6.671471  6.629928
-hist(df1$betadisp.mean.lrr)
+range(df1$betadisp.mean.lrr) 
+hist(df1$betadisp.mean.lrr) # there is a pretty strong outlier? 
 
 colnames(df1)
 str(df1)
@@ -105,8 +102,8 @@ lrr.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat +
                    #scale(gamma.richness_exp.name) +
                    lat_ecotype +
                    (1|var_upper.source), 
-               data = caged_effectsize_neweco) # 241 samples
-summary(lrr.mod1)
+               data = caged_effectsize_neweco) # singular
+summary(lrr.mod1) 
 glance(lrr.mod1)
 check_model(lrr.mod1)
 car::Anova(lrr.mod1, type =2)
