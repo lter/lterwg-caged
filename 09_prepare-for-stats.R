@@ -6,6 +6,8 @@
 # Purpose:
 ## Create clean dataframes for beta dispersion and effect size (average - average)
 
+# NOTE: this script seems unnecessary now
+
 ## ------------------------------------------- ##
 # Housekeeping ----
 ## ------------------------------------------- ##
