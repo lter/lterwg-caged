@@ -56,6 +56,17 @@ dim(betadisp_v1) # 13964    42
 colnames(effectsizes_v1)
 
 
+
+# which sources and experiment names make it through the pipeline 
+test<- betadisp_v1 %>% 
+  select(exp.name, source) %>% 
+  distinct()
+
+write.csv(test, "data/final.data.through.pipeline.csv")
+
+
+
+
 ## ------------------------------------------- ##
 # Export ----
 ## ------------------------------------------- ##
