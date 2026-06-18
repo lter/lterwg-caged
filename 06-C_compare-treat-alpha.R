@@ -75,11 +75,16 @@ dplyr::glimpse(cage_diff)
 
 # Join the two data together
 alp.diff_v03 <- cage_diff %>% 
-  dplyr::left_join(x = ., y = uncage_diff,
+  dplyr::full_join(x = ., y = uncage_diff,
     by = dplyr::join_by(source, exp.name, exp.design.4, exp.design.3, exp.design.2, 
       exp.design.1, year, alpha.design.level)) %>% 
-  dplyr::mutate(uncaged.alpha.mean = ifelse(is.na(uncaged.alpha.mean),
-    yes = 0, no = uncaged.alpha.mean))
+  dplyr::mutate(dplyr::across(.cols = dplyr::ends_with("alpha.mean"),
+    .fns = ~ ifelse(is.na(.), yes = 0, no = .))) %>% 
+  dplyr::filter(!is.na(cage.treatment_std))
+
+# Which sources/experiments lacked data for either caged or uncaged replicates?
+supportR::diff_check(old = unique(alp.diff_v02$source), new = unique(alp.diff_v03$source))
+supportR::diff_check(old = unique(alp.diff_v02$exp.name), new = unique(alp.diff_v03$exp.name))
 
 # Check structure
 dplyr::glimpse(alp.diff_v03)
