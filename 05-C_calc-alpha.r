@@ -18,7 +18,8 @@ source(file = file.path("00_setup.R"))
 rm(list = ls()); gc()
 
 # Read in data
-alpha_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv"))
+alpha_v1 <- read.csv(file.path("data", "04_caged_zero-filled.csv")) %>% 
+  dplyr::mutate(abundance = ifelse(abundance > 0, yes = 1, no = 0))
 
 # Check structure
 dplyr::glimpse(alpha_v1)
@@ -29,10 +30,9 @@ dplyr::glimpse(alpha_v1)
 
 # Calculate alpha diversity for "exp.design.1"
 alpha_des1 <- alpha_v1 %>% 
-  dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
-  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+  dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.1",
     .after = year)
@@ -46,10 +46,9 @@ dplyr::glimpse(alpha_des1)
 
 # Calculate alpha diversity for "exp.design.2"
 alpha_des2 <- alpha_v1 %>% 
-  dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "taxa", "abundance"))))) %>% 
-  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+  dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.2",
     .after = year)
@@ -63,10 +62,9 @@ dplyr::glimpse(alpha_des2)
 
 # Calculate alpha diversity for "exp.design.3"
 alpha_des3 <- alpha_v1 %>% 
-  dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:2), "taxa", "abundance"))))) %>% 
-  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+  dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.3",
     .after = year)
@@ -80,10 +78,9 @@ dplyr::glimpse(alpha_des3)
 
 # Calculate alpha diversity for "exp.design.4"
 alpha_des4 <- alpha_v1 %>% 
-  dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:3), "taxa", "abundance"))))) %>% 
-  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+  dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.4",
     .after = year)
@@ -97,10 +94,9 @@ dplyr::glimpse(alpha_des4)
 
 # Calculate alpha diversity for "exp.name"
 alpha_name <- alpha_v1 %>% 
-  dplyr::filter(abundance > 0) %>% 
   dplyr::group_by(dplyr::across(
     dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:4), "taxa", "abundance"))))) %>% 
-  dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+  dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.name",
     .after = year)
