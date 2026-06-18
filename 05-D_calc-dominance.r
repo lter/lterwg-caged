@@ -34,7 +34,7 @@ dom_v02 <- dom_v01 %>%
 dplyr::glimpse(dom_v02)
 
 ## ------------------------------------------- ##
-# Calculate Dominance (Design 1) ----
+# Prep to Calculate Dominance (Design 1) ----
 ## ------------------------------------------- ##
 
 # Calculate dominance for "exp.design.1"
@@ -44,14 +44,13 @@ dom_des1 <- dom_v02 %>%
   dplyr::summarize(total.abundance = sum(abundance, na.rm = TRUE),
     max.abundance = max(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
-  dplyr::mutate(dom.design.level = "exp.design.1",
-    dominance = max.abundance / total.abundance)
+  dplyr::mutate(dom.design.level = "exp.design.1")
 
 # Check structure
 dplyr::glimpse(dom_des1)
 
 ## ------------------------------------------- ##
-# Calculate Dominance (Design 2) ----
+# Prep to Calculate Dominance (Design 2) ----
 ## ------------------------------------------- ##
 
 # Calculate dominance for "exp.design.2"
@@ -65,14 +64,13 @@ dom_des2 <- dom_v02 %>%
   dplyr::summarize(total.abundance = sum(tax.abun1, na.rm = TRUE),
     max.abundance = max(tax.abun1, na.rm = TRUE),
     .groups = "drop") %>% 
-  dplyr::mutate(dom.design.level = "exp.design.2",
-    dominance = max.abundance / total.abundance)
+  dplyr::mutate(dom.design.level = "exp.design.2")
 
 # Check structure
 dplyr::glimpse(dom_des2)
 
 ## ------------------------------------------- ##
-# Calculate Dominance (Design 3) ----
+# Prep to Calculate Dominance (Design 3) ----
 ## ------------------------------------------- ##
 
 # Calculate dominance for "exp.design.3"
@@ -90,14 +88,13 @@ dom_des3 <- dom_v02 %>%
   dplyr::summarize(total.abundance = sum(tax.abun2, na.rm = TRUE),
     max.abundance = max(tax.abun2, na.rm = TRUE),
     .groups = "drop") %>% 
-  dplyr::mutate(dom.design.level = "exp.design.3",
-    dominance = max.abundance / total.abundance)
+  dplyr::mutate(dom.design.level = "exp.design.3")
 
 # Check structure
 dplyr::glimpse(dom_des3)
 
 ## ------------------------------------------- ##
-# Calculate Dominance (Design 4) ----
+# Prep to Calculate Dominance (Design 4) ----
 ## ------------------------------------------- ##
 
 # Calculate dominance for "exp.design.4"
@@ -119,8 +116,7 @@ dom_des4 <- dom_v02 %>%
   dplyr::summarize(total.abundance = sum(tax.abun3, na.rm = TRUE),
     max.abundance = max(tax.abun3, na.rm = TRUE),
     .groups = "drop") %>% 
-  dplyr::mutate(dom.design.level = "exp.design.4",
-    dominance = max.abundance / total.abundance)
+  dplyr::mutate(dom.design.level = "exp.design.4")
 
 # Check structure
 dplyr::glimpse(dom_des4)
@@ -152,18 +148,19 @@ dom_name <- dom_v02 %>%
   dplyr::summarize(total.abundance = sum(tax.abun4, na.rm = TRUE),
     max.abundance = max(tax.abun4, na.rm = TRUE),
     .groups = "drop") %>% 
-  dplyr::mutate(dom.design.level = "exp.name",
-    dominance = max.abundance / total.abundance)
+  dplyr::mutate(dom.design.level = "exp.name")
 
 # Check structure
 dplyr::glimpse(dom_name)
 
 ## ------------------------------------------- ##
-# Process Outputs
+# Process Outputs & Calculate Dominance ----
 ## ------------------------------------------- ##
 
-# Combine all of those to create an 'all scales' table
-dom_allscales <- dplyr::bind_rows(dom_des1, dom_des2, dom_des3, dom_des4, dom_name)
+# Combine all of those and actually calculate dominance
+dom_allscales <- dplyr::bind_rows(dom_des1, dom_des2, dom_des3, dom_des4, dom_name) %>% 
+  dplyr::mutate(dominance = ifelse(total.abundance > 0,
+    yes = max.abundance / total.abundance, no = 0))
 
 # Check structure
 dplyr::glimpse(dom_allscales)
