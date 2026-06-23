@@ -48,7 +48,7 @@ unique(caged_raw$exp.name) # 347
 colnames(caged_effectsize)
 
 range(caged_effectsize$betadisp.mean.lrr)
-# why is there a NA in beta disp mean LRR? - its the gilson PA site 
+# why is there a NA in beta disp mean LRR? - now its royo
 
 # clean up the data
 df1 <- caged_effectsize %>%
