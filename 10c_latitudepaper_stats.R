@@ -66,7 +66,7 @@ df1 <- caged_effectsize %>%
 # Now we have a lower sample size
 unique(df1$exp.name) # 245 experiments
 unique(df1$source) # 71 sources
-dim(df1) #444 effect sizes
+dim(df1) #443 effect sizes
 
 range(df1$betadisp.mean.lrr) 
 hist(df1$betadisp.mean.lrr) # there is a pretty strong outlier? - its an ashton paper
@@ -116,7 +116,7 @@ alpha.mod1 <- lmer(alpha.mean.lrr ~
                      data = df1)  # interaction is not significant
 glance(alpha.mod1)
 summary(alpha.mod1)
-car::Anova(alpha.mod1, type = 2) # grassy vs subtidal is sig, not lat
+car::Anova(alpha.mod1, type = 2) # ablat is almost sig
 plot(allEffects(alpha.mod1))
 
 
@@ -138,11 +138,11 @@ cent.mod1 <- lmer(betadisp.centroid.lrr ~
                             abs.lat +
                             var_grassy_v_stubtidal +
                             (1|var_upper.source),
-                          data = df1) # interaction is significant
+                          data = df1) # interaction is not significant
 glance(cent.mod1)
 summary(cent.mod1)
-car::Anova(cent.mod1, type = 2) 
-plot(allEffects(cent.mod1)) # looks almost the same as beta dispersion
+car::Anova(cent.mod1, type = 2) # ablat is not sig, grassy vs subtidal almost 
+plot(allEffects(cent.mod1)) 
 
 
 # How does dominance influence our beta LRR? 
@@ -185,9 +185,9 @@ plot(allEffects(raw.dom.mod1))
 ## ------------------------------------------- ##
 # Raw Data Figures
 ## ------------------------------------------- ##
-# Beta LRR Figure - raw data 
+# Beta LRR Figure
 Fig1BLat <- df1 %>% 
-  ggplot(aes(x = abs(lat), y = betadisp.mean.lrr)) + 
+  ggplot(aes(x = abs.lat, y = betadisp.mean.lrr)) + 
   # this is not our model prediction 
   stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
   geom_jitter(width = 0.05, aes(color = var_grassy_v_stubtidal)) + 
@@ -201,7 +201,7 @@ Fig1BLat
 
 # Dominance influence beta LRR 
 Fig1BLat_DOM <- dom.df.tyler %>% 
-  ggplot(aes(x = abs(lat), y = betadisp.mean.lrr)) + 
+  ggplot(aes(x = abs.lat, y = betadisp.mean.lrr)) + 
   stat_smooth(method = "lm", geom = "smooth", linewidth = 2,
               aes(color = inc.dom)) + 
   geom_jitter(width = 0.05, aes(color = inc.dom)) + 
@@ -283,11 +283,15 @@ Fig3.5LatHabDom
 
 # Raw Uncaged Dominance
 FigLatRawDom <- raw_df1 %>%
-  ggplot(aes(x = abs(lat), y = dominance)) + 
+  ggplot(aes(x = abs.lat, 
+             y = dominance)) + 
   geom_jitter(width = 0.01, alpha = 0.8, size = 1) + 
   theme_pubr(base_size= 14) +
   labs(x= "Absolute Latitude",
-       y= "Dominance (raw) in Uncaged")
+       y= "Dominance (raw) in Uncaged")+
+  facet_grid(~var_grassy_v_stubtidal)  +
+  stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
+  geom_jitter(width = 0.05, aes(color = var_grassy_v_stubtidal)) 
 
 FigLatRawDom
 
