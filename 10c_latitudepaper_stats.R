@@ -91,6 +91,15 @@ raw_df1 <- caged_raw %>%
   # filter(betadisp.mean.lrr < 58)
 
 
+# Convert to factor
+df1$var_grassy_v_stubtidal <- as.factor(df1$var_grassy_v_stubtidal)
+df1$var_upper.source <- as.factor(df1$var_upper.source)
+
+str(df1$var_grassy_v_stubtidal)
+str(df1$abs.lat)
+str(df1$var_upper.source)
+
+
 ## ------------------------------------------- ##
 # Models 
 ## ------------------------------------------- ##
@@ -116,16 +125,15 @@ alpha.mod1 <- lmer(alpha.mean.lrr ~
                      data = df1)  # interaction is not significant
 glance(alpha.mod1)
 summary(alpha.mod1)
-car::Anova(alpha.mod1, type = 2) # ablat is almost sig
+car::Anova(alpha.mod1, type = 2) # nothing is sig
 plot(allEffects(alpha.mod1))
 
 
 # Dominance
-dom.mod1 <- glmmTMB(dominance.mean.lrr ~
+dom.mod1 <- lmer(dominance.mean.lrr ~
                         abs.lat +
                         var_grassy_v_stubtidal +
                         (1|var_upper.source),
-                    family = gaussian(),
                       data = df1) # interaction not sig
 glance(dom.mod1)
 summary(dom.mod1)
