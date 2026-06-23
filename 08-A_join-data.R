@@ -266,7 +266,7 @@ write.csv(x = w.meta_fine, row.names = FALSE, na = '',
   file = file.path("data", w.meta_fine_filename))
 
 # Check source/experiment counts for both
-length(unique(w.meta_all$source)); length(unique(w.meta_all$exp.name))
-length(unique(w.meta_fine$source)); length(unique(w.meta_fine$exp.name))
+length(unique(w.meta_all$source)); length(unique(w.meta_all$exp.name)) # 121 vs 367??
+length(unique(w.meta_fine$source)); length(unique(w.meta_fine$exp.name)) # 117 vs 347 (this looks correct)
 
 # End ----

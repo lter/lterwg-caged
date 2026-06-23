@@ -41,7 +41,7 @@ unique(effectsizes_v1$exp.name) # 347
 
 unique(betadisp_v1$source) # 117
 unique(betadisp_v1$exp.name) # 347
-dim(betadisp_v1) # 13964    44
+dim(betadisp_v1) # 13964    46
 
 
 # Check number of rows and dataframe
@@ -50,8 +50,8 @@ dim(effectsizes_v1) # 620 52
 
 
 
-dim(betadisp_v1) # 13964    42
-dim(betadisp_v1) # 13964    42
+dim(betadisp_v1) # 13964    46
+dim(betadisp_v1) # 13964    46
 
 colnames(effectsizes_v1)
 
