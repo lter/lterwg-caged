@@ -42,6 +42,12 @@ dim(caged_raw) # 13964    46
 unique(caged_raw$source) # 117
 unique(caged_raw$exp.name) # 347
 
+
+all.effectsizes_v1 <- read.csv(file.path("data", "08-B_caged_expname-effect-size_all-scales.csv"))
+
+exp.name.effect <- all.effectsizes_v1 %>%
+  filter(design.level == "exp.name")
+
 ## ------------------------------------------- ##
 # Data Wrangling
 ## ------------------------------------------- ##
@@ -51,6 +57,7 @@ range(caged_effectsize$betadisp.mean.lrr)
 # why is there a NA in beta disp mean LRR? - now its royo
 
 # clean up the data
+# need to replace
 df1 <- caged_effectsize %>%
   # no longer just using late successional 
   #filter(var_succ.vs.late == "late") %>%
@@ -61,15 +68,22 @@ df1 <- caged_effectsize %>%
   # filter out just grassy vs subtidal for this first paper
   filter(var_grassy_v_stubtidal %in% c("herbaceous", "reef (marine)")) %>%
   # get rid of the crazy outlier
-  filter(betadisp.mean.lrr < 58)
+  filter(betadisp.mean.lrr < 58) %>%
+  # average by experiment name
+  group_by(source, var_upper.source, exp.name, abs.lat, var_grassy_v_stubtidal,
+           cage.treatment_orig) %>%
+  summarize(mean.beta.lrr = mean(betadisp.mean.lrr),
+            mean.alpha.lrr = mean(alpha.mean.lrr),
+            mean.dom.lrr = mean(dominance.mean.lrr),
+            mean.cent.lrr = mean(betadisp.centroid.lrr))
 
 # Now we have a lower sample size
 unique(df1$exp.name) # 245 experiments
 unique(df1$source) # 71 sources
-dim(df1) #443 effect sizes
+dim(df1) # 289 effect sizes
 
-range(df1$betadisp.mean.lrr) 
-hist(df1$betadisp.mean.lrr) # there is a pretty strong outlier? - its an ashton paper
+range(df1$mean.beta.lrr) 
+hist(df1$mean.beta.lrr) # there is a pretty strong outlier? - its an ashton paper
 # outlier is gone now
 
 colnames(df1)
@@ -103,7 +117,7 @@ str(df1$var_upper.source)
 ## ------------------------------------------- ##
 # Models 
 ## ------------------------------------------- ##
-beta.mod1 <- lmer(betadisp.mean.lrr ~ abs.lat +
+beta.mod1 <- lmer(mean.beta.lrr ~ abs.lat +
                    var_grassy_v_stubtidal +
                    (1|var_upper.source), 
                data = df1) # interaction is not sig
@@ -118,20 +132,20 @@ plot(allEffects(beta.mod1)) # increasing with abs latitude
 
 
 # Alpha Diversity
-alpha.mod1 <- lmer(alpha.mean.lrr ~
+alpha.mod1 <- lmer(mean.alpha.lrr ~
                        abs.lat +
                        var_grassy_v_stubtidal +
                        (1|var_upper.source),
                      data = df1)  # interaction is not significant
 glance(alpha.mod1)
 summary(alpha.mod1)
-car::Anova(alpha.mod1, type = 2) # nothing is sig
+car::Anova(alpha.mod1, type = 2) # abs lat is marg sig
 plot(allEffects(alpha.mod1))
 
 
 # Dominance
-dom.mod1 <- lmer(dominance.mean.lrr ~
-                        abs.lat +
+dom.mod1 <- lmer(mean.dom.lrr ~
+                        abs.lat *
                         var_grassy_v_stubtidal +
                         (1|var_upper.source),
                       data = df1) # interaction not sig
@@ -142,7 +156,7 @@ plot(allEffects(dom.mod1))
 
 
 # Centroid
-cent.mod1 <- lmer(betadisp.centroid.lrr ~
+cent.mod1 <- lmer(mean.cent.lrr ~
                             abs.lat +
                             var_grassy_v_stubtidal +
                             (1|var_upper.source),
@@ -155,10 +169,10 @@ plot(allEffects(cent.mod1))
 
 # How does dominance influence our beta LRR? 
 dom.df.tyler <- df1 %>% 
-  mutate(inc.dom = case_when(dominance.mean.lrr > 0 ~ "Increases Dom", 
-                             dominance.mean.lrr < 0 ~ "Decreases Dom"))
+  mutate(inc.dom = case_when(mean.dom.lrr > 0 ~ "Increases Dom", 
+                             mean.dom.lrr < 0 ~ "Decreases Dom"))
 
-beta.dom.mod1 <- lmer(betadisp.mean.lrr ~ 
+beta.dom.mod1 <- lmer(mean.beta.lrr ~ 
                         abs.lat * inc.dom * var_grassy_v_stubtidal +
                         (1|var_upper.source), 
                       data = dom.df.tyler)
@@ -209,15 +223,15 @@ Fig1BLat
 
 # Dominance influence beta LRR 
 Fig1BLat_DOM <- dom.df.tyler %>% 
-  ggplot(aes(x = abs.lat, y = betadisp.mean.lrr)) + 
+  ggplot(aes(x = abs.lat, y = mean.beta.lrr)) + 
   stat_smooth(method = "lm", geom = "smooth", linewidth = 2,
               aes(color = inc.dom)) + 
   geom_jitter(width = 0.05, aes(color = inc.dom)) + 
   geom_hline(yintercept = 0, color = "black", alpha = 0.3) +
   theme_pubr(base_size= 18) +
   labs(x= "Absolute Latitude",
-       y="Beta Dispersion LRR") +
-  facet_grid(~var_grassy_v_stubtidal)                 
+       y="Beta Dispersion LRR") #+
+  #facet_grid(~var_grassy_v_stubtidal)                 
 
 Fig1BLat_DOM
 
@@ -253,8 +267,8 @@ Fig1ALat
 
 #Beta Div LRR ~ Dominance LRR Figure
 Fig3BetaDom <- df1 %>%
-  ggplot(aes(x = dominance.mean.lrr, 
-             y = betadisp.mean.lrr)) + 
+  ggplot(aes(x = mean.dom.lrr, 
+             y = mean.beta.lrr)) + 
   geom_jitter(width = 0.01, alpha = 0.8, size = 1,
               aes(color = var_grassy_v_stubtidal)) + 
   geom_hline(yintercept = 0, color = "black", 

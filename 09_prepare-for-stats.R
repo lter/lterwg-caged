@@ -29,6 +29,7 @@ rm(list = ls()); gc()
 betadisp_v1 <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_fine-scales.csv"))
 effectsizes_v1 <- read.csv(file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
 
+
 # Check structure
 dplyr::glimpse(betadisp_v1)
 dplyr::glimpse(effectsizes_v1)
