@@ -46,18 +46,15 @@ dim(betadisp_v1) # 13964    46
 
 
 # Check number of rows and dataframe
-dim(effectsizes_v1) # 620 52
-# now there are 620 rows because each intermediate level also has an effect size calculated 
-
-
-
+dim(effectsizes_v1) # 620 53
 dim(betadisp_v1) # 13964    46
 dim(betadisp_v1) # 13964    46
 
-colnames(effectsizes_v1)
 
 
-
+## ------------------------------------------- ##
+# What data made it through the pipeline? ---- 
+## ------------------------------------------- ##
 # which sources and experiment names make it through the pipeline 
 test<- betadisp_v1 %>% 
   select(exp.name, source) %>% 
@@ -67,6 +64,27 @@ write.csv(test, "data/final.data.through.pipeline.csv")
 
 
 
+
+
+## ------------------------------------------- ##
+# Data Wrangling ---- 
+## ------------------------------------------- ##
+
+effectsizes_v2 <- effectsizes_v1 %>%
+  # average by experiment name because any lower levels have a lrr
+  group_by(source, var_upper.source, exp.name, var_resource.type.category,
+           lat, var_grassy_v_stubtidal,
+           cage.treatment_orig) %>%
+  summarize(mean.beta.lrr = mean(betadisp.mean.lrr),
+            mean.alpha.lrr = mean(alpha.mean.lrr),
+            mean.dom.lrr = mean(dominance.mean.lrr),
+            mean.cent.lrr = mean(betadisp.centroid.lrr))
+# now we will have one value per experiment name 
+
+dim(effectsizes_v1) # 620
+dim(effectsizes_v2) # 404
+# 404 - not the true number of exp.names because some have different original treatments 
+# (e.g., recharge 1X1 and 3X3 have a row here )
 
 ## ------------------------------------------- ##
 # Export ----
