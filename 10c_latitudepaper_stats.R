@@ -25,9 +25,9 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 script
 ## ------------------------------------------- ##
-caged_effectsize <- read.csv(file.path("data", "08-B_caged_expname-effect-size_fine-scales.csv"))
+caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 
-dim(caged_effectsize) # 620 rows (effect size calculated for each consumer level original treatment)
+dim(caged_effectsize) # 404 rows (effect size calculated for each consumer level original treatment)
 
 # Check number of sources
 unique(caged_effectsize$source) # 117
@@ -43,17 +43,12 @@ unique(caged_raw$source) # 117
 unique(caged_raw$exp.name) # 347
 
 
-all.effectsizes_v1 <- read.csv(file.path("data", "08-B_caged_expname-effect-size_all-scales.csv"))
-
-exp.name.effect <- all.effectsizes_v1 %>%
-  filter(design.level == "exp.name")
-
 ## ------------------------------------------- ##
 # Data Wrangling
 ## ------------------------------------------- ##
 colnames(caged_effectsize)
 
-range(caged_effectsize$betadisp.mean.lrr)
+range(caged_effectsize$mean.beta.lrr)
 # why is there a NA in beta disp mean LRR? - now its royo
 
 # clean up the data
@@ -61,21 +56,15 @@ range(caged_effectsize$betadisp.mean.lrr)
 df1 <- caged_effectsize %>%
   # no longer just using late successional 
   #filter(var_succ.vs.late == "late") %>%
-  drop_na(betadisp.mean.lrr)%>%
+  # get rid of royo NA
+  drop_na(mean.beta.lrr)%>% 
   mutate(abs.lat = abs(lat)) %>%
   # get rid of any resources of mobile animals - are there any? 
   filter(var_resource.type.category != "mobile animals") %>%
   # filter out just grassy vs subtidal for this first paper
   filter(var_grassy_v_stubtidal %in% c("herbaceous", "reef (marine)")) %>%
   # get rid of the crazy outlier
-  filter(betadisp.mean.lrr < 58) %>%
-  # average by experiment name
-  group_by(source, var_upper.source, exp.name, abs.lat, var_grassy_v_stubtidal,
-           cage.treatment_orig) %>%
-  summarize(mean.beta.lrr = mean(betadisp.mean.lrr),
-            mean.alpha.lrr = mean(alpha.mean.lrr),
-            mean.dom.lrr = mean(dominance.mean.lrr),
-            mean.cent.lrr = mean(betadisp.centroid.lrr))
+  filter(mean.beta.lrr < 58) 
 
 # Now we have a lower sample size
 unique(df1$exp.name) # 245 experiments
@@ -86,8 +75,6 @@ range(df1$mean.beta.lrr)
 hist(df1$mean.beta.lrr) # there is a pretty strong outlier? - its an ashton paper
 # outlier is gone now
 
-colnames(df1)
-str(df1)
 
 
 # clean up the raw values 
@@ -99,10 +86,6 @@ raw_df1 <- caged_raw %>%
   filter(var_grassy_v_stubtidal %in% c("herbaceous", "reef (marine)")) %>%
   # filter out uncaged only
   filter(cage.treatment_std == "uncaged")
-
-#%>%
-  # # get rid of the crazy outlier
-  # filter(betadisp.mean.lrr < 58)
 
 
 # Convert to factor
@@ -139,13 +122,13 @@ alpha.mod1 <- lmer(mean.alpha.lrr ~
                      data = df1)  # interaction is not significant
 glance(alpha.mod1)
 summary(alpha.mod1)
-car::Anova(alpha.mod1, type = 2) # abs lat is marg sig
+car::Anova(alpha.mod1, type = 2) # grassy vs subtidal is sig 
 plot(allEffects(alpha.mod1))
 
 
 # Dominance
 dom.mod1 <- lmer(mean.dom.lrr ~
-                        abs.lat *
+                        abs.lat +
                         var_grassy_v_stubtidal +
                         (1|var_upper.source),
                       data = df1) # interaction not sig
@@ -163,7 +146,7 @@ cent.mod1 <- lmer(mean.cent.lrr ~
                           data = df1) # interaction is not significant
 glance(cent.mod1)
 summary(cent.mod1)
-car::Anova(cent.mod1, type = 2) # ablat is not sig, grassy vs subtidal almost 
+car::Anova(cent.mod1, type = 2) # not sig
 plot(allEffects(cent.mod1)) 
 
 
@@ -180,7 +163,7 @@ beta.dom.mod1 <- lmer(mean.beta.lrr ~
 summary(beta.dom.mod1)
 glance(beta.dom.mod1)
 check_model(beta.dom.mod1)
-car::Anova(beta.dom.mod1, type =2)
+car::Anova(beta.dom.mod1, type =2) # three way interaction is sig 
 
 plot(allEffects(beta.dom.mod1))
 
@@ -209,7 +192,7 @@ plot(allEffects(raw.dom.mod1))
 ## ------------------------------------------- ##
 # Beta LRR Figure
 Fig1BLat <- df1 %>% 
-  ggplot(aes(x = abs.lat, y = betadisp.mean.lrr)) + 
+  ggplot(aes(x = abs.lat, y = mean.beta.lrr)) + 
   # this is not our model prediction 
   stat_smooth(method = "lm", geom = "smooth", linewidth = 2) + 
   geom_jitter(width = 0.05, aes(color = var_grassy_v_stubtidal)) + 
@@ -230,8 +213,8 @@ Fig1BLat_DOM <- dom.df.tyler %>%
   geom_hline(yintercept = 0, color = "black", alpha = 0.3) +
   theme_pubr(base_size= 18) +
   labs(x= "Absolute Latitude",
-       y="Beta Dispersion LRR") #+
-  #facet_grid(~var_grassy_v_stubtidal)                 
+       y="Beta Dispersion LRR") +
+  facet_grid(~var_grassy_v_stubtidal)                 
 
 Fig1BLat_DOM
 
@@ -287,7 +270,7 @@ Fig3BetaDom
 # Dominance LRR vs ablat
 Fig3.5LatHabDom <- df1 %>%
   ggplot(aes(x = abs.lat, 
-             y = dominance.mean.lrr)) + 
+             y = mean.dom.lrr)) + 
   geom_jitter(width = 0.01, alpha = 0.8, size = 1,
               aes(color = var_grassy_v_stubtidal)) + 
   geom_hline(yintercept = 0, color = "black", 
