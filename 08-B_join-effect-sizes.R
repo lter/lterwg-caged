@@ -144,8 +144,16 @@ for(des_level in unique(beta.diff_v1$design.level)){
   ee_sub <- dplyr::filter(join_v3, design.level == des_level) %>% 
     dplyr::select(-dplyr::where(fn = ~ all(is.na(.) | nchar(.) == 0)))
 
-  # Join and add to list
-  join_list[[des_level]] <- dplyr::left_join(x = beta_sub, y = ee_sub)
+  # Join 'em
+  join_sub <- dplyr::left_join(x = beta_sub, y = ee_sub)
+
+  # Export diagnostic
+  write.csv(x = join_sub, na = '', row.names = FALSE,
+    file = file.path("data", "diagnostic", 
+      paste0("08-B_effect-size_", des_level, "_join-checks.csv")))
+
+  # Add to list
+  join_list[[des_level]] <- join_sub
 }
 
 # Unlist back to dataframe
