@@ -46,8 +46,10 @@ dplyr::glimpse(alpha_des1)
 
 # Calculate alpha diversity for "exp.design.2"
 alpha_des2 <- alpha_v1 %>% 
+  dplyr::select(-dplyr::all_of(paste0("exp.design.", 1))) %>% 
+  dplyr::distinct() %>% 
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c("exp.design.1", "taxa", "abundance"))))) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.2",
@@ -62,8 +64,10 @@ dplyr::glimpse(alpha_des2)
 
 # Calculate alpha diversity for "exp.design.3"
 alpha_des3 <- alpha_v1 %>% 
+  dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:2))) %>% 
+  dplyr::distinct() %>%   
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:2), "taxa", "abundance"))))) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.3",
@@ -78,8 +82,10 @@ dplyr::glimpse(alpha_des3)
 
 # Calculate alpha diversity for "exp.design.4"
 alpha_des4 <- alpha_v1 %>% 
+  dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:3))) %>% 
+  dplyr::distinct() %>%   
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:3), "taxa", "abundance"))))) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.design.4",
@@ -94,8 +100,10 @@ dplyr::glimpse(alpha_des4)
 
 # Calculate alpha diversity for "exp.name"
 alpha_name <- alpha_v1 %>% 
+  dplyr::select(-dplyr::all_of(paste0("exp.design.", 1:4))) %>% 
+  dplyr::distinct() %>%   
   dplyr::group_by(dplyr::across(
-    dplyr::all_of(setdiff(x = names(.), y = c(paste0("exp.design.", 1:4), "taxa", "abundance"))))) %>% 
+    dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
   dplyr::summarize(alpha.diversity_richness = sum(abundance, na.rm = TRUE),
     .groups = "drop") %>% 
   dplyr::mutate(alpha.design.level = "exp.name",
