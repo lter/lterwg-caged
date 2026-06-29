@@ -199,7 +199,7 @@ diagnose_treats <- tidy_v2 %>%
   
 # Export
 write.csv(x = diagnose_treats, na = '', row.names = F,
-  file = file.path("data", "diagnostic", "cage-treatment-standardization.csv"))
+  file = file.path("data", "diagnostic", "02_cage-treatment-standardization.csv"))
 
 # Re-check structure
 dplyr::glimpse(tidy_v2)
@@ -496,7 +496,7 @@ diagnose_years <- tidy_v8 %>%
 
 # Export this locally
 write.csv(x = diagnose_years, na = '', row.names = F,
-  file = file.path("data", "diagnostic", "year-identification.csv"))
+  file = file.path("data", "diagnostic", "02_year-identification.csv"))
 
 ## ------------------------------------------- ##
 # Standardize Misc. Other Variables ----
