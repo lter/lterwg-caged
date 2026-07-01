@@ -223,7 +223,7 @@ Fig1BLat_DOM
 # Alpha Diversity 
 Fig1AGrassSub <-  df1 %>%
   ggplot(aes(x = var_grassy_v_stubtidal,
-             y = alpha.mean.lrr)) + 
+             y = mean.alpha.lrr)) + 
   geom_jitter(width = 0.01, alpha = 0.2) + 
   geom_hline(yintercept = 0, color = "black", 
              alpha = 0.3) +
