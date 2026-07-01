@@ -164,6 +164,7 @@ dplyr::glimpse(join_v4)
 
 ## ------------------------------------------- ##
 # Generate Finest-Scales Experiment-Level Data ----
+# Finest scale = finest scale at which beta dispersion is calculated at 
 ## ------------------------------------------- ##
 
 # Make a list for outputs
