@@ -1,8 +1,8 @@
 ## --------------------------------------------------------------- ##
-# CAGED Alpha Diversity Calculation
+# CAGED Dominance Calculation
 ## --------------------------------------------------------------- ##
 # Purpose:
-## Calculate alpha diversity (i.e., richness) at all design levels
+## Calculate dominance at all design levels
 ## Done _exactly_ the same way as for beta dispersion 
 ### (i.e., aggregating only when beta dispersion replicates needed to be aggregated)
 
@@ -11,7 +11,7 @@
 ## ------------------------------------------- ##
 
 # Load libraries
-librarian::shelf(tidyverse, magrittr, vegan, supportR)
+librarian::shelf(tidyverse, magrittr, supportR)
 
 # Create needed folders
 source(file = file.path("00_setup.R"))
@@ -43,15 +43,14 @@ unique(dom_v1$exp.name) # 367
 ## ------------------------------------------- ##
 
 # Do needed pre-calculation wrangling
-dom_v2 <- dom_v1 %>% 
-  # Convert abundance to either 0 or 1
-  dplyr::mutate(abundance = ifelse(abundance > 0, yes = 1, no = 0))
+dom_v2 <- dom_v1
+  # No such wrangling currently needed
 
 # Re-check structure
 dplyr::glimpse(dom_v2)
 
 ## ------------------------------------------- ##
-# Calculate Beta Dispersion ----
+# Calculate Dominance ----
 ## ------------------------------------------- ##
 
 # Create a list for storing outputs
@@ -88,7 +87,7 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
       yr_sub <- dplyr::filter(trt_sub, year == focal_yr)
       
       ## ------------------------ ##
-      # Beta Disp for Design 1 ----
+      # Dom for Design 1 ----
       ## ------------------------ ##
       
       # Loop across most granular level of experimental design
@@ -98,14 +97,14 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
         # Subset yet again
         des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
         
-        # Calculate beta dispersion
+        # Calculate
         des1_dom <- des1_sub %>% 
-          dplyr::filter(abundance > 0) %>% 
           dplyr::group_by(dplyr::across(
             dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
-          dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+          dplyr::summarize(max.abundance = max(abundance, na.rm = TRUE),
+            total.abundance = sum(abundance, na.rm = TRUE),
             .groups = "drop") %>% 
-          dplyr::mutate(alpha.design.level = "exp.design.1",
+          dplyr::mutate(dom.design.level = "exp.design.1",
             .after = year)
         
         # Add to list
@@ -114,7 +113,7 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
       } # Close "exp.design.1" loop
       
       ## ------------------------ ##
-      # Beta Disp for Design 2 ----
+      # Dom for Design 2 ----
       ## ------------------------ ##
       
       # Loop across experimental design level 2
@@ -126,14 +125,13 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
         
         # Calculate
         des2_dom <- des2_sub %>% 
-          dplyr::filter(abundance > 0) %>% 
           dplyr::select(-dplyr::contains(paste0("exp.design.", 1))) %>% 
-          dplyr::distinct() %>% 
           dplyr::group_by(dplyr::across(
             dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
-          dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+          dplyr::summarize(max.abundance = max(abundance, na.rm = TRUE),
+            total.abundance = sum(abundance, na.rm = TRUE),
             .groups = "drop") %>% 
-          dplyr::mutate(alpha.design.level = "exp.design.2",
+          dplyr::mutate(dom.design.level = "exp.design.2",
             .after = year)
         
         # Add to list
@@ -142,7 +140,7 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
       } # Close "exp.design.2" loop
       
       ## ------------------------ ##
-      # Beta Disp for Design 3 ----
+      # Dom for Design 3 ----
       ## ------------------------ ##
       
       # Loop across experimental design level 3
@@ -173,14 +171,13 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
         
         # Calculate
         des3_dom <- des3_sub %>%
-          dplyr::filter(abundance > 0) %>% 
           dplyr::select(-dplyr::contains(paste0("exp.design.", 1:2))) %>% 
-          dplyr::distinct() %>% 
           dplyr::group_by(dplyr::across(
             dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
-          dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+          dplyr::summarize(max.abundance = max(abundance, na.rm = TRUE),
+            total.abundance = sum(abundance, na.rm = TRUE),
             .groups = "drop") %>% 
-          dplyr::mutate(alpha.design.level = "exp.design.3",
+          dplyr::mutate(dom.design.level = "exp.design.3",
             .after = year)
         
         # Add to list
@@ -189,7 +186,7 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
       } # Close "exp.design.3" loop
       
       ## ------------------------ ##
-      # Beta Disp for Design 4 ----
+      # Dom for Design 4 ----
       ## ------------------------ ##
       
       # Loop across experimental design level 4
@@ -239,14 +236,13 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
         
         # Calculate beta dispersion
         des4_dom <- des4_sub %>% 
-          dplyr::filter(abundance > 0) %>% 
           dplyr::select(-dplyr::contains(paste0("exp.design.", 1:3))) %>% 
-          dplyr::distinct() %>% 
           dplyr::group_by(dplyr::across(
             dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
-          dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+          dplyr::summarize(max.abundance = max(abundance, na.rm = TRUE),
+            total.abundance = sum(abundance, na.rm = TRUE),
             .groups = "drop") %>% 
-          dplyr::mutate(alpha.design.level = "exp.design.4",
+          dplyr::mutate(dom.design.level = "exp.design.4",
             .after = year)
         
         # Add to list
@@ -255,7 +251,7 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
       } # Close "exp.design.4" loop
       
       ## ------------------------ ##
-      # Beta Disp for Exp.Name ----
+      # Dom for Exp.Name ----
       ## ------------------------ ##
       
       # Loop across experimental design level 4
@@ -323,14 +319,13 @@ for(focal_src in setdiff(x = sort(unique(dom_v2$source)),
         
         # Calculate beta dispersion
         name_dom <- name_sub %>% 
-          dplyr::filter(abundance > 0) %>% 
           dplyr::select(-dplyr::contains(paste0("exp.design.", 1:4))) %>% 
-          dplyr::distinct() %>% 
           dplyr::group_by(dplyr::across(
             dplyr::all_of(setdiff(x = names(.), y = c("taxa", "abundance"))))) %>% 
-          dplyr::summarize(alpha.diversity_richness = length(unique(taxa)),
+          dplyr::summarize(max.abundance = max(abundance, na.rm = TRUE),
+            total.abundance = sum(abundance, na.rm = TRUE),
             .groups = "drop") %>% 
-          dplyr::mutate(alpha.design.level = "exp.name",
+          dplyr::mutate(dom.design.level = "exp.name",
             .after = year)
         
         # Add to list
@@ -359,7 +354,10 @@ dplyr::glimpse(dom_des1)
 dom_deslists <- list(dom_des1, dom_des2, dom_des3, dom_des4, dom_expname)
 
 # Unlist them to create an 'all scales' table
-dom_allscales <- purrr::list_rbind(x = dom_deslists)
+dom_allscales <- purrr::list_rbind(x = dom_deslists) %>% 
+  # Then actually calculate dominance
+  dplyr::mutate(dominance = ifelse(total.abundance > 0,
+    yes = max.abundance / total.abundance, no = 0))
 
 # Check structure
 dplyr::glimpse(dom_allscales)
