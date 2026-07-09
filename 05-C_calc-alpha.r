@@ -51,7 +51,7 @@ alpha_v2 <- alpha_v1 %>%
 dplyr::glimpse(alpha_v2)
 
 ## ------------------------------------------- ##
-# Calculate Beta Dispersion ----
+# Calculate Alpha Diversity ----
 ## ------------------------------------------- ##
 
 # Create a list for storing outputs
@@ -88,7 +88,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
       yr_sub <- dplyr::filter(trt_sub, year == focal_yr)
       
       ## ------------------------ ##
-      # Beta Disp for Design 1 ----
+      # Alpha for Design 1 ----
       ## ------------------------ ##
       
       # Loop across most granular level of experimental design
@@ -98,7 +98,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
         # Subset yet again
         des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
         
-        # Calculate beta dispersion
+        # Calculate
         des1_alpha <- des1_sub %>% 
           dplyr::filter(abundance > 0) %>% 
           dplyr::group_by(dplyr::across(
@@ -114,7 +114,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
       } # Close "exp.design.1" loop
       
       ## ------------------------ ##
-      # Beta Disp for Design 2 ----
+      # Alpha for Design 2 ----
       ## ------------------------ ##
       
       # Loop across experimental design level 2
@@ -142,7 +142,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
       } # Close "exp.design.2" loop
       
       ## ------------------------ ##
-      # Beta Disp for Design 3 ----
+      # Alpha for Design 3 ----
       ## ------------------------ ##
       
       # Loop across experimental design level 3
@@ -189,7 +189,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
       } # Close "exp.design.3" loop
       
       ## ------------------------ ##
-      # Beta Disp for Design 4 ----
+      # Alpha for Design 4 ----
       ## ------------------------ ##
       
       # Loop across experimental design level 4
@@ -255,7 +255,7 @@ for(focal_src in setdiff(x = sort(unique(alpha_v2$source)),
       } # Close "exp.design.4" loop
       
       ## ------------------------ ##
-      # Beta Disp for Exp.Name ----
+      # Alpha for Exp.Name ----
       ## ------------------------ ##
       
       # Loop across experimental design level 4
