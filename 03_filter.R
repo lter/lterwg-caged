@@ -285,7 +285,7 @@ sub_v7 %>%
 synch <- sub_v7 %>% 
   dplyr::group_by(source, exp.name) %>% 
   dplyr::summarize(yr_ct = length(unique(year)), .groups = "keep") %>% 
-  dplyr::filter(yr_ct > 3) %>% 
+  dplyr::filter(yr_ct > 2) %>% 
   as.data.frame() %>%
   write_csv("caged-3years-timeseries.csv")
 
