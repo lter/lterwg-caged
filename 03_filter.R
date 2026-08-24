@@ -281,13 +281,6 @@ sub_v7 %>%
   dplyr::filter(yr_ct > 1) %>% 
   as.data.frame()
 
-# How many datasets have three yeras of data - for synchrony proposal
-synch <- sub_v7 %>% 
-  dplyr::group_by(source, exp.name) %>% 
-  dplyr::summarize(yr_ct = length(unique(year)), .groups = "keep") %>% 
-  dplyr::filter(yr_ct > 2) %>% 
-  as.data.frame() %>%
-  write_csv("caged-3years-timeseries.csv")
 
 # List for outputs
 sub_list <- list()
