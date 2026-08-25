@@ -23,7 +23,7 @@ rm(list = ls()); gc()
 
 ## ------------------------------------------- ##
 # Load Data ----
-# these dfs were created in script 08 script
+# these dfs were created in script 08 and 09 script
 ## ------------------------------------------- ##
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 
@@ -73,7 +73,7 @@ dim(df1) # 289 effect sizes
 
 range(df1$mean.beta.lrr) 
 hist(df1$mean.beta.lrr) # there is a pretty strong outlier? - its an ashton paper
-# outlier is gone now
+# outlier is gone now because i filtered at line 67
 
 
 
@@ -94,24 +94,26 @@ df1$var_upper.source <- as.factor(df1$var_upper.source)
 
 str(df1$var_grassy_v_stubtidal)
 str(df1$abs.lat)
-str(df1$var_upper.source)
+str(df1$var_upper.source) # this should be the random effect 
 
 
 ## ------------------------------------------- ##
 # Models 
 ## ------------------------------------------- ##
+# Beta dispersion 
 beta.mod1 <- lmer(mean.beta.lrr ~ abs.lat +
                    var_grassy_v_stubtidal +
                    (1|var_upper.source), 
-               data = df1) # interaction is not sig
+               data = df1) # interaction is not sig, so we removed
 
 summary(beta.mod1) 
 glance(beta.mod1)
-car::Anova(beta.mod1, type =2) # grassy vs subtidal is almost sig 
+car::Anova(beta.mod1, type =2) # nothing is significant
 check_model(beta.mod1) # haven't check this yet, not showing
 
 plot(allEffects(beta.mod1)) # increasing with abs latitude 
 # why are we keeping both late and early successional again? i canʻt find anything in our notes
+
 
 
 # Alpha Diversity
@@ -119,7 +121,7 @@ alpha.mod1 <- lmer(mean.alpha.lrr ~
                        abs.lat +
                        var_grassy_v_stubtidal +
                        (1|var_upper.source),
-                     data = df1)  # interaction is not significant
+                     data = df1)  # interaction is not significant, so removed
 glance(alpha.mod1)
 summary(alpha.mod1)
 car::Anova(alpha.mod1, type = 2) # grassy vs subtidal is sig 
