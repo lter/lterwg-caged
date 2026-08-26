@@ -34,14 +34,16 @@ meta_v1 <- read.csv(file.path("data", "07_tidy-sitelevel-metadata.csv"))
 library(dplyr)
 
 result <- multi.times %>%
-  left_join(multi.year, by = join_by(source, exp.name)) %>%
+  full_join(multi.year, by = join_by(source, exp.name)) %>%
   left_join(meta_v1, by = join_by(source, exp.name)) %>%
   select(source, exp.name, lat, long, var_aq.or.terr, time.ct, yr_ct) %>%
   # filter out any i think are not relevant based on metadata notes
   filter(!source %in% c("lter-cdr_cedarcreek_herbivorenutrients_1984-1985_herbivores_vegetation.csv",
                         "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv",
                         "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv",
-                        "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv")) %>%
+                        "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv",
+                        "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv"
+                        )) %>%
   write_csv("data/synchrony_df.csv")
  
 
