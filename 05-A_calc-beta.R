@@ -393,8 +393,7 @@ dplyr::glimpse(beta_allscales)
 ## ------------------------------------------- ##
 # Identify 'Finest Scale' of Beta Dispersion ----
 ## ------------------------------------------- ##
-
-# Ultimately we want only the best dispersion available in a given dataset
+# Ultimately, we want only the best dispersion available in a given dataset
 ## Regardless of which design level that is for that experiment
 
 # Make a list for storing outputs
@@ -405,20 +404,21 @@ beta_fine_v1 <- dplyr::filter(beta_allscales, !is.na(betadisp.comm.dist))
 
 # To do this, we'll loop across sources and experiments
 for(finest_src in sort(unique(beta_allscales$source))){
-  
+  # finest_src <- "spiecker_newzealand_intertidalexclosure_2017-2018_herbivores_intertidal.csv"
+
   # Subset to that source
   beta_fine_src <- dplyr::filter(beta_fine_v1, source == finest_src)
 
   # Loop across exp.names
   for(finest_name in sort(unique(beta_fine_src$exp.name))){
-    # finest_name <- "Palmas_Exposed-Cool"
+    # finest_name <- "TMB"
     
     # Progress message
     message("Identifying finest scale for '", finest_name, "'")
     
     # Subset the beta dispersion table to only this source
     beta_fine_sub <- dplyr::filter(beta_fine_src, exp.name == finest_name)
-    
+
     # Make another subset for each design level
     beta_fine_sub_des1 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.1")
     beta_fine_sub_des2 <- dplyr::filter(beta_fine_sub, betadisp.design.level == "exp.design.2")
@@ -428,7 +428,9 @@ for(finest_src in sort(unique(beta_allscales$source))){
     
     # Work through the design levels sequentially (lowest to highest)
     ## And add the lowest one with beta dispersion for both standardized cage treatments to the output list
-    if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des1$cage.treatment_std))){
+    if(
+      all(unique(paste0(beta_fine_sub$exp.design.1, beta_fine_sub$cage.treatment_std)) %in% unique(paste0(beta_fine_sub_des1$exp.design.1, beta_fine_sub_des1$cage.treatment_std)))
+    ){
       
       # Add to list
       beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des1
@@ -437,22 +439,30 @@ for(finest_src in sort(unique(beta_allscales$source))){
       message("For '", finest_name, "' exp.design.1 was the finest level with beta dispersion for both treatments") }
     
     # Do the same for design 2
-    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des2$cage.treatment_std))){
+    else if(
+      all(unique(paste0(beta_fine_sub$exp.design.2, beta_fine_sub$cage.treatment_std)) %in% unique(paste0(beta_fine_sub_des2$exp.design.2, beta_fine_sub_des2$cage.treatment_std)))
+    ){
       beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des2
       message("For '", finest_name, "' exp.design.2 was the finest level with beta dispersion for both treatments") }
     
     # And design 3
-    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des3$cage.treatment_std))){
+    else if(
+      all(unique(paste0(beta_fine_sub$exp.design.3, beta_fine_sub$cage.treatment_std)) %in% unique(paste0(beta_fine_sub_des3$exp.design.3, beta_fine_sub_des3$cage.treatment_std)))
+    ){
       beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des3
       message("For '", finest_name, "' exp.design.3 was the finest level with beta dispersion for both treatments") }
     
     # And design 4
-    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_des4$cage.treatment_std))){
+    else if(
+      all(unique(paste0(beta_fine_sub$exp.design.4, beta_fine_sub$cage.treatment_std)) %in% unique(paste0(beta_fine_sub_des4$exp.design.4, beta_fine_sub_des4$cage.treatment_std)))
+    ){
       beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_des4
       message("For '", finest_name, "' exp.design.4 was the finest level with beta dispersion for both treatments") }
     
     # And the experiment name
-    else if(all(c("caged", "uncaged") %in% unique(beta_fine_sub_name$cage.treatment_std))){
+    else if(
+      all(unique(paste0(beta_fine_sub$exp.name, beta_fine_sub$cage.treatment_std)) %in% unique(paste0(beta_fine_sub_name$exp.name, beta_fine_sub_name$cage.treatment_std)))
+    ){
       beta_finelist[[paste0(finest_src, finest_name)]] <- beta_fine_sub_name
       message("For '", finest_name, "' exp.name was the finest level with beta dispersion for both treatments") }
     
@@ -525,8 +535,8 @@ for(lost_exp in dropped_names){
 beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source) # 117
-unique(beta_v99$exp.name) # 347
+unique(beta_v99$source) # 118
+unique(beta_v99$exp.name) # 352
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
@@ -540,7 +550,7 @@ dplyr::glimpse(beta_allscales)
 
 # Export locally
 write.csv(x = beta_allscales, na = '', row.names = F,
-          file = file.path("data", paste0(beta_name, "_all-scales.csv")))
+  file = file.path("data", paste0(beta_name, "_all-scales.csv")))
 
 # End ----
 
