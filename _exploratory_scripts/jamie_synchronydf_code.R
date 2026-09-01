@@ -44,9 +44,11 @@ result <- multi.times %>%
                         "villar_brazil_car-cbo-ita_2009-2016_tapirs_forest.csv",
                         "lter-cdr_cedarcreekecosystem_herbivorybyN_1982-2011_deer_vegetation.csv"
                         )) %>%
+  unique() %>%
   write_csv("data/synchrony_df.csv")
  
 
 
 
-
+unique(result$source) # 61
+unique(result$exp.name) # 111
