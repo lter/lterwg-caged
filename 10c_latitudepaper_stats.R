@@ -25,6 +25,7 @@ rm(list = ls()); gc()
 # Load Data ----
 # these dfs were created in script 08 and 09 script
 ## ------------------------------------------- ##
+# effect size df
 caged_effectsize <- read.csv(file.path("data", "08_caged_prepped-effect-size.csv"))
 
 dim(caged_effectsize) # 404 rows (effect size calculated for each consumer level original treatment)
@@ -33,7 +34,7 @@ dim(caged_effectsize) # 404 rows (effect size calculated for each consumer level
 unique(caged_effectsize$source) # 117
 unique(caged_effectsize$exp.name) # 347
 
-
+# raw beta disperison df
 caged_raw <- read.csv(file.path("data", "08-A_caged_w.meta-beta-disp_fine-scales.csv"))
 
 dim(caged_raw) # 13964    46
@@ -54,7 +55,7 @@ range(caged_effectsize$mean.beta.lrr)
 # clean up the data
 # need to replace
 df1 <- caged_effectsize %>%
-  # no longer just using late successional 
+  # no longer just using late successional because we looking at effect size 
   #filter(var_succ.vs.late == "late") %>%
   # get rid of royo NA
   drop_na(mean.beta.lrr)%>% 
@@ -101,7 +102,8 @@ str(df1$var_upper.source) # this should be the random effect
 # Models 
 ## ------------------------------------------- ##
 # Beta dispersion 
-beta.mod1 <- lmer(mean.beta.lrr ~ abs.lat +
+beta.mod1 <- lmer(mean.beta.lrr ~ poly(lat, degree=2) +
+                    # trying out poly latitude instead of abslat - still no sig 
                    var_grassy_v_stubtidal +
                    (1|var_upper.source), 
                data = df1) # interaction is not sig, so we removed
@@ -118,7 +120,7 @@ plot(allEffects(beta.mod1)) # increasing with abs latitude
 
 # Alpha Diversity
 alpha.mod1 <- lmer(mean.alpha.lrr ~
-                       abs.lat +
+                     poly(lat, degree=2) +
                        var_grassy_v_stubtidal +
                        (1|var_upper.source),
                      data = df1)  # interaction is not significant, so removed
@@ -130,7 +132,7 @@ plot(allEffects(alpha.mod1))
 
 # Dominance
 dom.mod1 <- lmer(mean.dom.lrr ~
-                        abs.lat +
+                   poly(lat, degree=2) +
                         var_grassy_v_stubtidal +
                         (1|var_upper.source),
                       data = df1) # interaction not sig
@@ -142,7 +144,7 @@ plot(allEffects(dom.mod1))
 
 # Centroid
 cent.mod1 <- lmer(mean.cent.lrr ~
-                            abs.lat +
+                    poly(lat, degree=2) +
                             var_grassy_v_stubtidal +
                             (1|var_upper.source),
                           data = df1) # interaction is not significant
@@ -150,6 +152,8 @@ glance(cent.mod1)
 summary(cent.mod1)
 car::Anova(cent.mod1, type = 2) # not sig
 plot(allEffects(cent.mod1)) 
+# Our centroid anova values are exactly the same as beta dispersion --> probalby because we are averaging to create an effect size
+# should we calculate composition in another way? or use raw values instead of effect size?
 
 
 # How does dominance influence our beta LRR? 
@@ -158,9 +162,11 @@ dom.df.tyler <- df1 %>%
                              mean.dom.lrr < 0 ~ "Decreases Dom"))
 
 beta.dom.mod1 <- lmer(mean.beta.lrr ~ 
-                        abs.lat * inc.dom * var_grassy_v_stubtidal +
+                        poly(lat, degree=2) * inc.dom
+                      * var_grassy_v_stubtidal +
                         (1|var_upper.source), 
                       data = dom.df.tyler)
+
 
 summary(beta.dom.mod1)
 glance(beta.dom.mod1)
@@ -168,6 +174,21 @@ check_model(beta.dom.mod1)
 car::Anova(beta.dom.mod1, type =2) # three way interaction is sig 
 
 plot(allEffects(beta.dom.mod1))
+
+
+beta.dom.mod2 <- lmer(
+  mean.beta.lrr ~ 
+    poly(lat, degree = 2) + inc.dom + var_grassy_v_stubtidal +
+    (1 | var_upper.source), 
+  data = dom.df.tyler
+) # nothing is sig once we change to poly
+
+summary(beta.dom.mod2)
+glance(beta.dom.mod2)
+check_model(beta.dom.mod2)
+car::Anova(beta.dom.mod2, type =2) # three way interaction is sig 
+
+plot(allEffects(beta.dom.mod2))
 
 
 
