@@ -102,8 +102,7 @@ str(df1$var_upper.source) # this should be the random effect
 # Models 
 ## ------------------------------------------- ##
 # Beta dispersion 
-beta.mod1 <- lmer(mean.beta.lrr ~ poly(lat, degree=2) +
-                    # trying out poly latitude instead of abslat - still no sig 
+beta.mod1 <- lmer(mean.beta.lrr ~ abs.lat +
                    var_grassy_v_stubtidal +
                    (1|var_upper.source), 
                data = df1) # interaction is not sig, so we removed
@@ -120,7 +119,7 @@ plot(allEffects(beta.mod1)) # increasing with abs latitude
 
 # Alpha Diversity
 alpha.mod1 <- lmer(mean.alpha.lrr ~
-                     poly(lat, degree=2) +
+                     abs.lat +
                        var_grassy_v_stubtidal +
                        (1|var_upper.source),
                      data = df1)  # interaction is not significant, so removed
@@ -132,7 +131,7 @@ plot(allEffects(alpha.mod1))
 
 # Dominance
 dom.mod1 <- lmer(mean.dom.lrr ~
-                   poly(lat, degree=2) +
+                   abs.lat +
                         var_grassy_v_stubtidal +
                         (1|var_upper.source),
                       data = df1) # interaction not sig
@@ -144,7 +143,7 @@ plot(allEffects(dom.mod1))
 
 # Centroid
 cent.mod1 <- lmer(mean.cent.lrr ~
-                    poly(lat, degree=2) +
+                    abs.lat +
                             var_grassy_v_stubtidal +
                             (1|var_upper.source),
                           data = df1) # interaction is not significant
@@ -162,7 +161,7 @@ dom.df.tyler <- df1 %>%
                              mean.dom.lrr < 0 ~ "Decreases Dom"))
 
 beta.dom.mod1 <- lmer(mean.beta.lrr ~ 
-                        poly(lat, degree=2) * inc.dom
+                        abs.lat * inc.dom
                       * var_grassy_v_stubtidal +
                         (1|var_upper.source), 
                       data = dom.df.tyler)
@@ -178,7 +177,9 @@ plot(allEffects(beta.dom.mod1))
 
 beta.dom.mod2 <- lmer(
   mean.beta.lrr ~ 
-    poly(lat, degree = 2) + inc.dom + var_grassy_v_stubtidal +
+    abs.lat + 
+    inc.dom + 
+    var_grassy_v_stubtidal +
     (1 | var_upper.source), 
   data = dom.df.tyler
 ) # nothing is sig once we change to poly
