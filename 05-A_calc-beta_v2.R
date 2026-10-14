@@ -19,7 +19,7 @@ rm(list = ls()); gc()
 
 # Load needed tool(s)
 purrr::walk(.x = dir(path = "tools", pattern = "fxn_"),
-            .f = ~ source(file.path("tools", .x)) )
+  .f = ~ source(file.path("tools", .x)) )
 
 # Define the minimum number of replicates for which we want to calculate beta dispersion
 ## Inclusive of this number (so 5 becomes >= 5)
@@ -52,14 +52,14 @@ unique(beta_v1$exp.name) # 367
 zero_abun <- beta_v1 %>% 
   # Calculate total abundance within design 1
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-                  exp.design.2, exp.design.1, cage.treatment_std) %>% 
-  dplyr::summarize(tot_abundance = sum(abundance, na.rm = T),
-                    .groups = "drop") %>% 
-# Filter to only rows with a total abundance of zero
+    exp.design.2, exp.design.1, cage.treatment_std) %>% 
+  dplyr::summarize(tot_abundance = sum(abundance, na.rm = TRUE),
+    .groups = "drop") %>% 
+  # Filter to only rows with a total abundance of zero
   dplyr::filter(tot_abundance == 0) %>% 
   # Identify datasets with more than one of these zero abundance replicates
   dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-                  exp.design.2, cage.treatment_std) %>% 
+    exp.design.2, cage.treatment_std) %>% 
   dplyr::mutate(rep_ct = seq_along(along.with = unique(exp.design.1))) %>% 
   dplyr::ungroup() %>%
   # Filter to only instances with more than one replicate with a total abundance of 0
@@ -74,7 +74,7 @@ fake_abun <- beta_v1 %>%
   dplyr::filter(source %in% c(zero_abun$source) & exp.name %in% c(zero_abun$exp.name)) %>%
   # Overwrite the taxa and abundance columns with hard-coded values
   dplyr::mutate(taxa = "FAKE.SPECIES_added.to.solve.BC.algebra.problem",
-                abundance = 0.01) %>%
+    abundance = 0.01) %>%
   # Drop non-unique rows
   dplyr::distinct()
 
@@ -91,8 +91,8 @@ dplyr::glimpse(beta_v2)
 
 # How many fake abundances were inserted?
 message(nrow(fake_abun), " fake abundances added (", 
-        round(nrow(fake_abun) / nrow(beta_v2) * 100, digits = 2), 
-        "% of the total)")
+  round(nrow(fake_abun) / nrow(beta_v2) * 100, digits = 2), 
+  "% of the total)")
 
 ## ------------------------------------------- ##
 # Calculate Beta Dispersion ----
@@ -107,30 +107,26 @@ beta_name_list <- list()
 
 # Loop across original data source
 for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
-                         # Manually (temporarily) removing datasets as/if needed
-                         y = c(""))){
+    # Manually (temporarily) removing datasets as/if needed
+    y = c(""))){
   # focal_src <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
   
-  # Subset data
-  src_sub <- dplyr::filter(beta_v2, source == focal_src)
-  
   # Loop across treatments
   for(focal_trt in unique(src_sub$cage.treatment_orig)){
     # focal_trt <- "NG"
     
-    # Subset again
-    trt_sub <- dplyr::filter(src_sub, cage.treatment_orig == focal_trt)
-    
     # Loop across study years
     for(focal_yr in unique(trt_sub$year)){
       # focal_yr <- "2012"
-      
-      # Subset again
+        
+      # Subset data to focal source, treatment, and year
+      src_sub <- dplyr::filter(beta_v2, source == focal_src)
+      trt_sub <- dplyr::filter(src_sub, cage.treatment_orig == focal_trt)
       yr_sub <- dplyr::filter(trt_sub, year == focal_yr)
-      
+        
       ## ------------------------ ##
       # Beta Disp for Design 1 ----
       ## ------------------------ ##
