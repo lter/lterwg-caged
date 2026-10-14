@@ -47,36 +47,13 @@ unique(beta_v1$exp.name) # 367
 # Data Preparation ----
 ## ------------------------------------------- ##
 
-# Bray-Curtis doesn't work for 2 or more replicates with a total abundance of zero
-## For datasets with that problem then, we need to pick one (at random) and drop the other
-zero_abun <- beta_v1 %>% 
-  # Calculate total abundance within design 1
-  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-    exp.design.2, exp.design.1, cage.treatment_std) %>% 
-  dplyr::summarize(tot_abundance = sum(abundance, na.rm = TRUE),
-    .groups = "drop") %>% 
-  # Filter to only rows with a total abundance of zero
-  dplyr::filter(tot_abundance == 0) %>% 
-  # Identify datasets with more than one of these zero abundance replicates
-  dplyr::group_by(source, exp.name, exp.design.4, exp.design.3,
-    exp.design.2, cage.treatment_std) %>% 
-  dplyr::mutate(rep_ct = seq_along(along.with = unique(exp.design.1))) %>% 
-  dplyr::ungroup() %>%
-  # Filter to only instances with more than one replicate with a total abundance of 0
-  dplyr::filter(rep_ct > 1)
-
-# Check structure
-dplyr::glimpse(zero_abun)
-
-# Create a dataframe of fake abundances for those replicates
-fake_abun <- beta_v1 %>%
-  # Filter to only reps flagged in above pipe
-  dplyr::filter(source %in% c(zero_abun$source) & exp.name %in% c(zero_abun$exp.name)) %>%
-  # Overwrite the taxa and abundance columns with hard-coded values
+# Bray-Curtis starts to run into issues when replicates have a total abundance of zero
+# So we'll make a fake taxon with negligible abundance and add it to all of the data
+fake_abun <- beta_v1 %>% 
+  dplyr::select(-taxa, -abundance) %>% 
+  dplyr::distinct() %>% 
   dplyr::mutate(taxa = "FAKE.SPECIES_added.to.solve.BC.algebra.problem",
-    abundance = 0.01) %>%
-  # Drop non-unique rows
-  dplyr::distinct()
+    abundance = 0.01)
 
 # Check structure
 dplyr::glimpse(fake_abun)
@@ -106,256 +83,247 @@ beta_des4_list <- list()
 beta_name_list <- list()
 
 # Loop across original data source
-for(focal_src in setdiff(x = sort(unique(beta_v2$source)),
-    # Manually (temporarily) removing datasets as/if needed
-    y = c(""))){
-  # focal_src <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
+for(focal_src in sort(unique(beta_v2$source))){
+  # focal_src <- "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
   
-  # Loop across treatments
-  for(focal_trt in unique(src_sub$cage.treatment_orig)){
-    # focal_trt <- "NG"
+  # Subset data to focal source
+  src_sub <- dplyr::filter(beta_v2, source == focal_src)
+
+  # Loop across study years
+  for(focal_yr in sort(unique(src_sub$year))){
+    # focal_yr <- "2007"
+  
+    # Subset to focal year
+    yr_sub <- dplyr::filter(src_sub, year == focal_yr)
     
-    # Loop across study years
-    for(focal_yr in unique(trt_sub$year)){
-      # focal_yr <- "2012"
-        
-      # Subset data to focal source, treatment, and year
-      src_sub <- dplyr::filter(beta_v2, source == focal_src)
-      trt_sub <- dplyr::filter(src_sub, cage.treatment_orig == focal_trt)
-      yr_sub <- dplyr::filter(trt_sub, year == focal_yr)
-        
-      ## ------------------------ ##
-      # Beta Disp for Design 1 ----
-      ## ------------------------ ##
+    ## ------------------------ ##
+    # Beta Disp for Design 1 ----
+    ## ------------------------ ##
+    
+    # Loop across most granular level of experimental design
+    for(focal_des1 in unique(yr_sub$exp.design.1)){
+      # focal_des1 <- "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv__9"
       
-      # Loop across most granular level of experimental design
-      for(focal_des1 in unique(yr_sub$exp.design.1)){
-        # focal_des1 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv__1"
-        
-        # Subset yet again
-        des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
-        
-        # Calculate beta dispersion
-        des1_beta <- calc_betadisp(df = des1_sub, floor = min_reps,
-                                   taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = pref_dist_method, result_prefix = "exp.design.1") %>% 
-          # Wrangle that output slightly
-          tidy_betadisp(beta = ., result_prefix = "exp.design.1")
-        
-        # Add to list
-        beta_des1_list[[paste0(focal_src, focal_trt, focal_des1)]] <- des1_beta
-        
-      } # Close "exp.design.1" loop
+      # Subset yet again
+      des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
       
-      ## ------------------------ ##
-      # Beta Disp for Design 2 ----
-      ## ------------------------ ##
+      # Calculate beta dispersion
+      des1_beta <- calc_betadisp(df = des1_sub, floor = min_reps,
+          group_col = "cage.treatment_orig", taxa_col = "taxa", abun_col = "abundance",
+          dist_method = pref_dist_method, result_prefix = "exp.design.1") %>% 
+        # Wrangle that output slightly
+        tidy_betadisp(beta = ., result_prefix = "exp.design.1")
       
-      # Loop across experimental design level 2
-      for(focal_des2 in unique(yr_sub$exp.design.2)){
-        # focal_des2 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
-        
-        # Subset yet again
-        des2_sub <- dplyr::filter(yr_sub, exp.design.2 == focal_des2)
-        
-        # Calculate beta dispersion
-        des2_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
-                                   taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = pref_dist_method, result_prefix = "exp.design.2") %>% 
-          # Wrangle that output slightly
-          tidy_betadisp(beta = ., result_prefix = "exp.design.2")
-        
-        # Add to list
-        beta_des2_list[[paste0(focal_src, focal_trt, focal_des2)]] <- des2_beta
-        
-      } # Close "exp.design.2" loop
+      # Add to list
+      beta_des1_list[[paste0(focal_src, focal_des1)]] <- des1_beta
       
-      ## ------------------------ ##
-      # Beta Disp for Design 3 ----
-      ## ------------------------ ##
+    } # Close "exp.design.1" loop
+  
+    ## ------------------------ ##
+    # Beta Disp for Design 2 ----
+    ## ------------------------ ##
+    
+    # Loop across experimental design level 2
+    for(focal_des2 in unique(yr_sub$exp.design.2)){
+      # focal_des2 <- "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv"
       
-      # Loop across experimental design level 3
-      for(focal_des3 in unique(yr_sub$exp.design.3)){
-        # focal_des3 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
-        
-        # Subset yet again
-        des3_sub <- dplyr::filter(yr_sub, exp.design.3 == focal_des3)
-        
-        # Identify the number of psuedoreplicates at lower design levels
-        des3_pseudorep_ct <- des3_sub %>% 
-          dplyr::group_by(exp.design.2) %>% 
-          dplyr::summarize(des1.ct = length(unique(exp.design.1)),
-                           .groups = "drop")
-        
-        # If there are X pseudoreplicates...
-        if(any(des3_pseudorep_ct$des1.ct >= max_pseudoreps) & 
-           length(unique(des3_sub$exp.design.2)) > 1){
-          
-          # Average across experimental design 1 (within exp. design 2 levels)
-          des3_sub %<>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
-                                      y = c("exp.design.1", "abundance"))))) %>% 
-            dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                             .groups = "drop")
-          
-        } # Close conditional aggregation
-        
-        # Calculate beta dispersion
-        des3_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
-                                   taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = pref_dist_method, result_prefix = "exp.design.3") %>% 
-          # Wrangle that output slightly
-          tidy_betadisp(beta = ., result_prefix = "exp.design.3")
-        
-        # Add to list
-        beta_des3_list[[paste0(focal_src, focal_trt, focal_des3)]] <- des3_beta
-        
-      } # Close "exp.design.3" loop
+      # Subset yet again
+      des2_sub <- dplyr::filter(yr_sub, exp.design.2 == focal_des2)
       
-      ## ------------------------ ##
-      # Beta Disp for Design 4 ----
-      ## ------------------------ ##
+      # Calculate beta dispersion
+      des2_beta <- calc_betadisp(df = des2_sub, floor = min_reps,
+          group_col = "cage.treatment_orig", taxa_col = "taxa", abun_col = "abundance",
+          dist_method = pref_dist_method, result_prefix = "exp.design.2") %>% 
+        tidy_betadisp(beta = ., result_prefix = "exp.design.2")
       
-      # Loop across experimental design level 4
-      for(focal_des4 in unique(yr_sub$exp.design.4)){
-        # focal_des4 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
-        
-        # Subset yet again
-        des4_sub <- dplyr::filter(yr_sub, exp.design.4 == focal_des4)  
-        
-        # Identify the number of psuedoreplicates at lower design levels
-        des4_pseudorep_ct <- des4_sub %>% 
-          dplyr::group_by(exp.design.3, exp.design.2) %>% 
-          dplyr::summarize(des1.ct = length(unique(exp.design.1)),
-                          .groups = "drop")
-        
-        # If there are X pseudoreplicates...
-        if(any(des4_pseudorep_ct$des1.ct >= max_pseudoreps) & 
-           length(unique(des4_sub$exp.design.2)) > 1){
-          
-          # Average across experimental design 1 (within exp. design 2 levels)
-          des4_sub %<>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
-                                      y = c("exp.design.1", "abundance"))))) %>% 
-            dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                            .groups = "drop")
-          
-        } # Close conditional aggregation
-        
-        # Re-identify the number of psuedoreplicates at design level 2
-        des4_pseudorep_ct <- des4_sub %>% 
-          dplyr::group_by(exp.design.3) %>% 
-          dplyr::summarize(des2.ct = length(unique(exp.design.2)),
-                          .groups = "drop")
-        
-        # If there are X pseudoreplicates...
-        if(any(des4_pseudorep_ct$des2.ct >= max_pseudoreps) & 
-           length(unique(des4_sub$exp.design.3)) > 1){
-          
-          # Average across experimental design 2 (within exp. design 3 levels)
-          des4_sub %<>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
-                                      y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
-            dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                            .groups = "drop")
-          
-        } # Close conditional aggregation
-        
-        # Calculate beta dispersion
-        des4_beta <- calc_betadisp(df = des4_sub, floor = min_reps,
-                                   taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = pref_dist_method, result_prefix = "exp.design.4") %>% 
-          # Wrangle that output slightly
-          tidy_betadisp(beta = ., result_prefix = "exp.design.4")
-        
-        # Add to list
-        beta_des4_list[[paste0(focal_src, focal_trt, focal_des4)]] <- des4_beta
-        
-      } # Close "exp.design.4" loop
+      # Add to list
+      beta_des2_list[[paste0(focal_src, focal_des2)]] <- des2_beta
       
-      ## ------------------------ ##
-      # Beta Disp for Exp.Name ----
-      ## ------------------------ ##
+    } # Close "exp.design.2" loop
+  
+    ## ------------------------ ##
+    # Beta Disp for Design 3 ----
+    ## ------------------------ ##
+    
+    # Loop across experimental design level 3
+    for(focal_des3 in unique(yr_sub$exp.design.3)){
+      # focal_des3 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
       
-      # Loop across experimental design level 4
-      for(focal_name in unique(yr_sub$exp.name)){
-        # focal_name <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
+      # Subset yet again
+      des3_sub <- dplyr::filter(yr_sub, exp.design.3 == focal_des3)
+      
+      # Identify the number of psuedoreplicates at lower design levels
+      des3_pseudorep_ct <- des3_sub %>% 
+        dplyr::group_by(exp.design.2) %>% 
+        dplyr::summarize(des1.ct = length(unique(exp.design.1)),
+          .groups = "drop")
+      
+      # If there are X pseudoreplicates...
+      if(any(des3_pseudorep_ct$des1.ct >= max_pseudoreps) & 
+          length(unique(des3_sub$exp.design.2)) > 1){
         
-        # Subset yet again
-        name_sub <- dplyr::filter(yr_sub, exp.name == focal_name)
+        # Average across experimental design 1 (within exp. design 2 levels)
+        des3_sub %<>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(yr_sub), 
+            y = c("exp.design.1", "abundance"))))) %>% 
+          dplyr::summarize(abundance = mean(abundance, na.rm = TRUE),
+            .groups = "drop")
         
-        # Identify the number of psuedoreplicates at lower design levels
-        name_pseudorep_ct <- name_sub %>% 
-          dplyr::group_by(exp.design.4, exp.design.3, exp.design.2) %>% 
-          dplyr::summarize(des1.ct = length(unique(exp.design.1)),
-                          .groups = "drop")
+      } # Close conditional aggregation
+      
+      # Calculate beta dispersion
+      des3_beta <- calc_betadisp(df = des3_sub, floor = min_reps,
+          group_col = "cage.treatment_orig", taxa_col = "taxa", abun_col = "abundance",
+          dist_method = pref_dist_method, result_prefix = "exp.design.3") %>% 
+        tidy_betadisp(beta = ., result_prefix = "exp.design.3")
+      
+      # Add to list
+      beta_des3_list[[paste0(focal_src, focal_des3)]] <- des3_beta
+      
+    } # Close "exp.design.3" loop
+  
+    ## ------------------------ ##
+    # Beta Disp for Design 4 ----
+    ## ------------------------ ##
+    
+    # Loop across experimental design level 4
+    for(focal_des4 in unique(yr_sub$exp.design.4)){
+      # focal_des4 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
+      
+      # Subset yet again
+      des4_sub <- dplyr::filter(yr_sub, exp.design.4 == focal_des4)  
+      
+      # Identify the number of psuedoreplicates at lower design levels
+      des4_pseudorep_ct <- des4_sub %>% 
+        dplyr::group_by(exp.design.3, exp.design.2) %>% 
+        dplyr::summarize(des1.ct = length(unique(exp.design.1)),
+          .groups = "drop")
+      
+      # If there are X pseudoreplicates...
+      if(any(des4_pseudorep_ct$des1.ct >= max_pseudoreps) & 
+          length(unique(des4_sub$exp.design.2)) > 1){
         
-        # If there are X pseudoreplicates...
-        if(any(name_pseudorep_ct$des1.ct >= max_pseudoreps) & 
-           length(unique(name_sub$exp.design.2)) > 1){
-          # Average across experimental design 1 (within exp. design 2 levels)
-          name_sub %<>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
-                                      y = c("exp.design.1", "abundance"))))) %>% 
-            dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                            .groups = "drop")
-          
-        } # Close conditional aggregation
+        # Average across experimental design 1 (within exp. design 2 levels)
+        des4_sub %<>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(yr_sub), 
+            y = c("exp.design.1", "abundance"))))) %>% 
+          dplyr::summarize(abundance = mean(abundance, na.rm = TRUE),
+            .groups = "drop")
         
-        # Re-identify the number of psuedoreplicates at design level 2
-        name_pseudorep_ct <- name_sub %>% 
-          dplyr::group_by(exp.design.4, exp.design.3) %>% 
-          dplyr::summarize(des2.ct = length(unique(exp.design.2)),
-                          .groups = "drop")
+      } # Close conditional aggregation
+      
+      # Re-identify the number of psuedoreplicates at design level 2
+      des4_pseudorep_ct <- des4_sub %>% 
+        dplyr::group_by(exp.design.3) %>% 
+        dplyr::summarize(des2.ct = length(unique(exp.design.2)),
+          .groups = "drop")
+      
+      # If there are X pseudoreplicates...
+      if(any(des4_pseudorep_ct$des2.ct >= max_pseudoreps) & 
+          length(unique(des4_sub$exp.design.3)) > 1){
         
-        # If there are X pseudoreplicates...
-        if(any(name_pseudorep_ct$des2.ct >= max_pseudoreps) & 
-           length(unique(name_sub$exp.design.3)) > 1){
-          # Average across experimental design 2 (within exp. design 3 levels)
-          name_sub %<>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
-                                      y = c("exp.design.2", "exp.design.1", "abundance"))))) %>% 
-            dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                            .groups = "drop")
-          
-        } # Close conditional aggregation
+        # Average across experimental design 2 (within exp. design 3 levels)
+        des4_sub %<>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(yr_sub), 
+            y = c(paste0("exp.design.", 1:2), "abundance"))))) %>% 
+          dplyr::summarize(abundance = mean(abundance, na.rm = T),
+            .groups = "drop")
         
-        # Re-re-identify the number of psuedoreplicates at design level 3
-        name_pseudorep_ct <- name_sub %>% 
-          dplyr::group_by(exp.design.4) %>% 
-          dplyr::summarize(des3.ct = length(unique(exp.design.3)),
-                          .groups = "drop")
+      } # Close conditional aggregation
+      
+      # Calculate beta dispersion
+      des4_beta <- calc_betadisp(df = des4_sub, floor = min_reps,
+          group_col = "cage.treatment_orig", taxa_col = "taxa", abun_col = "abundance",
+          dist_method = pref_dist_method, result_prefix = "exp.design.4") %>% 
+        tidy_betadisp(beta = ., result_prefix = "exp.design.4")
+      
+      # Add to list
+      beta_des4_list[[paste0(focal_src, focal_des4)]] <- des4_beta
+      
+    } # Close "exp.design.4" loop
+    
+    ## ------------------------ ##
+    # Beta Disp for Exp.Name ----
+    ## ------------------------ ##
+    
+    # Loop across experimental design level 4
+    for(focal_name in unique(yr_sub$exp.name)){
+      # focal_name <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
+      
+      # Subset yet again
+      name_sub <- dplyr::filter(yr_sub, exp.name == focal_name)
+      
+      # Identify the number of psuedoreplicates at lower design levels
+      name_pseudorep_ct <- name_sub %>% 
+        dplyr::group_by(exp.design.4, exp.design.3, exp.design.2) %>% 
+        dplyr::summarize(des1.ct = length(unique(exp.design.1)),
+          .groups = "drop")
+      
+      # If there are X pseudoreplicates...
+      if(any(name_pseudorep_ct$des1.ct >= max_pseudoreps) & 
+          length(unique(name_sub$exp.design.2)) > 1){
+
+        # Average across experimental design 1 (within exp. design 2 levels)
+        name_sub %<>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(yr_sub), 
+            y = c("exp.design.1", "abundance"))))) %>% 
+          dplyr::summarize(abundance = mean(abundance, na.rm = T),
+            .groups = "drop")
         
-        # If there are X pseudoreplicates...
-        if(any(name_pseudorep_ct$des3.ct >= max_pseudoreps) & 
-           length(unique(name_sub$exp.design.4)) > 1){
-          
-          # Average across experimental design 3 (within exp. design 4 levels)
-          name_sub %<>% 
-            dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(trt_sub), 
-                                      y = c("exp.design.3", "exp.design.2", 
-                                            "exp.design.1", "abundance"))))) %>% 
-            dplyr::summarize(abundance = mean(abundance, na.rm = T),
-                              .groups = "drop")
-          
-        } # Close conditional aggregation
+      } # Close conditional aggregation
+      
+      # Re-identify the number of psuedoreplicates at design level 2
+      name_pseudorep_ct <- name_sub %>% 
+        dplyr::group_by(exp.design.4, exp.design.3) %>% 
+        dplyr::summarize(des2.ct = length(unique(exp.design.2)),
+          .groups = "drop")
+      
+      # If there are X pseudoreplicates...
+      if(any(name_pseudorep_ct$des2.ct >= max_pseudoreps) & 
+          length(unique(name_sub$exp.design.3)) > 1){
+
+        # Average across experimental design 2 (within exp. design 3 levels)
+        name_sub %<>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(yr_sub), 
+            y = c(paste0("exp.design.", 1:2), "abundance"))))) %>% 
+          dplyr::summarize(abundance = mean(abundance, na.rm = T),
+            .groups = "drop")
         
-        # Calculate beta dispersion
-        name_beta <- calc_betadisp(df = name_sub, floor = min_reps,
-                                   taxa_col = "taxa", abun_col = "abundance",
-                                   dist_method = pref_dist_method, result_prefix = "exp.name") %>% 
-          # Wrangle that output slightly
-          tidy_betadisp(beta = ., result_prefix = "exp.name")
+      } # Close conditional aggregation
+      
+      # Re-re-identify the number of psuedoreplicates at design level 3
+      name_pseudorep_ct <- name_sub %>% 
+        dplyr::group_by(exp.design.4) %>% 
+        dplyr::summarize(des3.ct = length(unique(exp.design.3)),
+          .groups = "drop")
+      
+      # If there are X pseudoreplicates...
+      if(any(name_pseudorep_ct$des3.ct >= max_pseudoreps) & 
+          length(unique(name_sub$exp.design.4)) > 1){
         
-        # Add to list
-        beta_name_list[[paste0(focal_src, focal_trt, focal_name)]] <- name_beta
+        # Average across experimental design 3 (within exp. design 4 levels)
+        name_sub %<>% 
+          dplyr::group_by(dplyr::across(dplyr::all_of(setdiff(x = names(yr_sub), 
+            y = c(paste0("exp.design.", 1:3), "abundance"))))) %>% 
+          dplyr::summarize(abundance = mean(abundance, na.rm = TRUE),
+            .groups = "drop")
         
-      } # Close "exp.name" loop
-    } # Close year loop
-  } # Close treatment loop
+      } # Close conditional aggregation
+      
+      # Calculate beta dispersion
+      name_beta <- calc_betadisp(df = name_sub, floor = min_reps,
+          group_col = "cage.treatment_orig", taxa_col = "taxa", abun_col = "abundance",
+          dist_method = pref_dist_method, result_prefix = "exp.name") %>% 
+        tidy_betadisp(beta = ., result_prefix = "exp.name")
+      
+      # Add to list
+      beta_name_list[[paste0(focal_src, focal_name)]] <- name_beta
+      
+    } # Close "exp.name" loop
+  } # Close year loop
 } # Close source loop
 
 ## ------------------------------------------- ##
@@ -549,4 +517,3 @@ write.csv(x = beta_allscales, na = '', row.names = F,
   file = file.path("data", paste0(beta_name, "_all-scales.csv")))
 
 # End ----
-
