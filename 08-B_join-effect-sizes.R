@@ -232,8 +232,10 @@ join_all <- join_v4
 join_fine <- join_v5
 
 # How many sources/experiments
-length(unique(join_all$source)); length(unique(join_all$exp.name))
+length(unique(join_all$source)); length(unique(join_all$exp.name)) 
 length(unique(join_fine$source)); length(unique(join_fine$exp.name))
+
+# oct 19 - join_all has one more exp.name now than join_fine? 
 
 # Check their structure
 dplyr::glimpse(join_all)

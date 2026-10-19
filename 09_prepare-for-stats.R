@@ -38,6 +38,7 @@ dplyr::glimpse(effectsizes_v1)
 unique(effectsizes_v1$source) # 117
 unique(effectsizes_v1$exp.name) # 347
 
+# now this is bigger? oct 19 - 119 and 361
 
 unique(betadisp_v1$source) # 117
 unique(betadisp_v1$exp.name) # 347
@@ -49,6 +50,7 @@ dim(effectsizes_v1) # 620 53
 dim(betadisp_v1) # 13964    46
 dim(betadisp_v1) # 13964    46
 
+# oct 19 - this is a larger number again 
 
 
 ## ------------------------------------------- ##

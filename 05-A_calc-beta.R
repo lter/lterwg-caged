@@ -502,6 +502,8 @@ beta_v99 <- beta_fine_v2
 unique(beta_v99$source) # 118
 unique(beta_v99$exp.name) # 352
 
+# oct 19 - now the number of sources and exp name has increased? not sure why
+
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
 beta_path <- file.path("data", paste0(beta_name, "_finest-scales.csv"))

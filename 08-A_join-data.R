@@ -269,4 +269,5 @@ write.csv(x = w.meta_fine, row.names = FALSE, na = '',
 length(unique(w.meta_all$source)); length(unique(w.meta_all$exp.name)) # 121 vs 367
 length(unique(w.meta_fine$source)); length(unique(w.meta_fine$exp.name)) # 119 vs 361
 
+# when we join the data it looks ok (oct 19)
 # End ----
