@@ -50,10 +50,13 @@ calc_betadisp <- function(df = NULL, floor = 4,
   comm_wide <- dplyr::select(df_wide, -dplyr::all_of(c(group_col, misc_cols)))
   
   # Identify number of replicates
-  reps <- nrow(comm_wide)
+  reps <- df_wide %>% 
+    dplyr::group_by(dplyr::across(dplyr::all_of({{group_col}}))) %>% 
+    dplyr::summarize(ct = dplyr::n(),
+      .groups = "drop")
   
   # Calculate beta dispersion _if_ there are enough reps
-  if(reps >= floor){
+  if(all(reps$ct >= floor)){
     
     # Get distance/dissimilarity matrix
     dist_val <- vegan::vegdist(x = comm_wide, method = dist_method)
@@ -80,9 +83,14 @@ calc_betadisp <- function(df = NULL, floor = 4,
     bad_names = c("groups", "median"),
     good_names = c(group_col, paste0(result_prefix, ".betadisp.median")))
   
+  # So does replicate counting
+  beta_reps <- supportR::safe_rename(data = reps,
+    bad_names = "ct", good_names = paste0(result_prefix, ".n"))
+  
   # Add critical information to output
   ## Number of replicates
-  beta_out[[paste0(result_prefix, ".n")]] <- reps
+  beta_out <- dplyr::left_join(x = beta_out, y = beta_reps,
+    by = dplyr::join_by({{group_col}}))
   ## Per-community beta dispersion distance from median
   beta_out[[paste0(result_prefix, ".betadisp.site.dist")]] <- beta_dists
   ## Median beta dispersion
