@@ -84,7 +84,7 @@ beta_name_list <- list()
 
 # Loop across original data source
 for(focal_src in sort(unique(beta_v2$source))){
-  # focal_src <- "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv"
+  # focal_src <- "alderson_netherlands_saltwaterlake_2018-2023_geese_vegetation.csv"
   
   # Progress message
   message("Processing source '", focal_src, "'")
@@ -94,7 +94,7 @@ for(focal_src in sort(unique(beta_v2$source))){
 
   # Loop across study years
   for(focal_yr in sort(unique(src_sub$year))){
-    # focal_yr <- "2007"
+    # focal_yr <- "2023"
   
     # Subset to focal year
     yr_sub <- dplyr::filter(src_sub, year == focal_yr)
@@ -105,7 +105,7 @@ for(focal_src in sort(unique(beta_v2$source))){
     
     # Loop across most granular level of experimental design
     for(focal_des1 in unique(yr_sub$exp.design.1)){
-      # focal_des1 <- "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv__9"
+      # focal_des1 <- "1_control__3__9"
       
       # Subset yet again
       des1_sub <-  dplyr::filter(yr_sub, exp.design.1 == focal_des1)
@@ -128,7 +128,7 @@ for(focal_src in sort(unique(beta_v2$source))){
     
     # Loop across experimental design level 2
     for(focal_des2 in unique(yr_sub$exp.design.2)){
-      # focal_des2 <- "nopp-mayer_austria_ungulateherbivory_1989-2007_ungulates_trees.csv"
+      # focal_des2 <- "1_control__1"
       
       # Subset yet again
       des2_sub <- dplyr::filter(yr_sub, exp.design.2 == focal_des2)
@@ -150,7 +150,7 @@ for(focal_src in sort(unique(beta_v2$source))){
     
     # Loop across experimental design level 3
     for(focal_des3 in unique(yr_sub$exp.design.3)){
-      # focal_des3 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
+      # focal_des3 <- "2_control"
       
       # Subset yet again
       des3_sub <- dplyr::filter(yr_sub, exp.design.3 == focal_des3)
@@ -191,7 +191,7 @@ for(focal_src in sort(unique(beta_v2$source))){
     
     # Loop across experimental design level 4
     for(focal_des4 in unique(yr_sub$exp.design.4)){
-      # focal_des4 <- "alberti_argentina_mudflat_2012_snailgrazers_microalgae.csv"
+      # focal_des4 <- "1_control"
       
       # Subset yet again
       des4_sub <- dplyr::filter(yr_sub, exp.design.4 == focal_des4)  
@@ -499,10 +499,8 @@ for(lost_exp in dropped_names){
 beta_v99 <- beta_fine_v2
 
 # How many sources and exp.name got through the pipeline?
-unique(beta_v99$source) # 118
-unique(beta_v99$exp.name) # 352
-
-# oct 19 - now the number of sources and exp name has increased? not sure why
+unique(beta_v99$source) # 117
+unique(beta_v99$exp.name) # 341
 
 # Identify tidy file name / path
 beta_name <- "05-A_caged_beta-disp"
