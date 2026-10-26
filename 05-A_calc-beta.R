@@ -446,6 +446,7 @@ supportR::diff_check(old = unique(beta_allscales$source), new = unique(beta_fine
 # Did we lose any experiments (from sources that were not completely dropped)?
 beta_test <- dplyr::filter(beta_allscales, source %in% beta_fine_v2$source)
 supportR::diff_check(old = unique(beta_test$exp.name), new = unique(beta_fine_v2$exp.name))
+# now this has more that were lost that weren't before? (e.g., jamie's chagos tiles)
 
 ## ------------------------------------------- ##
 # Diagnose Lost Sources ----
