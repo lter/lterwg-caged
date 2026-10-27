@@ -56,7 +56,7 @@ calc_betadisp <- function(df = NULL, floor = 4,
       .groups = "drop")
   
   # Calculate beta dispersion _if_ there are enough reps
-  if(all(reps$ct >= floor)){
+  if(nrow(comm_wide) >= floor){
     
     # Get distance/dissimilarity matrix
     dist_val <- vegan::vegdist(x = comm_wide, method = dist_method)
@@ -77,15 +77,18 @@ calc_betadisp <- function(df = NULL, floor = 4,
     beta_median <- data.frame("groups" = NA, "median" = NA)
     beta_dists <- NA
   }
-  
+
+  # Assemble some needed column names
+  median_col <- paste0(result_prefix, ".betadisp.median")
+  n_col <- paste0(result_prefix, ".n")
+
   # Median beta dispersion requires extra tweaks
   beta_median <- supportR::safe_rename(data = beta_median,
-    bad_names = c("groups", "median"),
-    good_names = c(group_col, paste0(result_prefix, ".betadisp.median")))
+    bad_names = c("groups", "median"), good_names = c(group_col, median_col))
   
   # So does replicate counting
   beta_reps <- supportR::safe_rename(data = reps,
-    bad_names = "ct", good_names = paste0(result_prefix, ".n"))
+    bad_names = "ct", good_names = n_col)
   
   # Add critical information to output
   ## Number of replicates
@@ -96,8 +99,13 @@ calc_betadisp <- function(df = NULL, floor = 4,
   ## Median beta dispersion
   beta_out <- dplyr::left_join(x = beta_out, y = beta_median,
     by = dplyr::join_by({{group_col}}))
-
+  
+  # Replace values below the relevant number of replicates with NA
+  beta_final <- beta_out %>% 
+    dplyr::mutate(dplyr::across(.cols = dplyr::contains("betadisp"),
+      .fns = ~ ifelse({{n_col}} < floor, yes = NA, no = .)))
+  
   # Return that object
-  return(beta_out)
+  return(beta_final)
   
 } # Close function
